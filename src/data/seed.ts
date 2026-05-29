@@ -1,0 +1,109 @@
+import type { Project } from '@/types'
+import { uid } from '@/lib/id'
+
+/** A fresh, empty project with every stage initialised to its default shape. */
+export function emptyProject(): Project {
+  return {
+    id: uid(),
+    name: '',
+    type: '',
+    description: '',
+    targetDate: '',
+    createdAt: new Date().toISOString(),
+    totalXp: 0,
+    completedStages: [],
+    currentStage: 0,
+    stageData: {
+      define: { statement: '', scope: '', successLooks: '', whyNow: '' },
+      groups: { groups: [] },
+      sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationPath: '' },
+      stakeholders: { rows: [] },
+      risk: { items: [] },
+      comms: { channels: [], keyMessages: '', schedule: [] },
+      training: { items: [] },
+      milestones: { owners: [], goLiveDate: '', launchChecklist: [] },
+      adoption: { metrics: [], notes: '' },
+      resistance: { items: [], generalPlan: '' },
+      executive: { generated: false },
+      sustainment: { reinforcementOwner: '', checkpointDates: '', metrics: '', risks: '', recognitionPlan: '' },
+      closeout: { wins: '', lessons: '', shoutouts: '' },
+    },
+  }
+}
+
+/** Demo project shown on first run (ported from the artifact's SEED). */
+export function createSeed(): Project {
+  const p = emptyProject()
+  p.id = 1001
+  p.name = 'Salesforce CRM Rollout'
+  p.type = 'Software / Technology Rollout'
+  p.stageData.define = {
+    statement: 'Replacing legacy CRM with Salesforce to unify pipeline visibility across Sales and CS.',
+    scope: 'Sales (42), CS (18), RevOps (6) — 66 people',
+    successLooks: '90% of reps logging in Salesforce by end of Q3.',
+    whyNow: 'Board requested unified CRM data for fundraising metrics.',
+  }
+  p.stageData.groups = {
+    groups: [
+      { id: 1, name: 'Sales Team', size: '42', impact: 'High', readiness: 'Medium' },
+      { id: 2, name: 'Customer Success', size: '18', impact: 'High', readiness: 'Low' },
+      { id: 3, name: 'RevOps', size: '6', impact: 'Medium', readiness: 'High' },
+    ],
+  }
+  p.stageData.sponsor = {
+    name: 'Elena Torres',
+    role: 'Chief Revenue Officer',
+    sponsorActions: [
+      "Communicate the 'why' to their direct reports",
+      'Attend and speak at all-hands launch event',
+      'Remove identified blockers',
+    ],
+    commitments: 'Personal video to all staff, co-present at all-hands, monthly check-in with project lead.',
+    escalationPath: 'Go-live blockers escalate to Elena same-day. Budget decisions go to Elena + CFO.',
+  }
+  p.stageData.stakeholders = {
+    rows: [
+      { id: 1, name: 'Priya Sharma', role: 'VP Sales', influence: 'High', support: 'Advocate', action: 'Co-present at all-hands' },
+      { id: 2, name: 'Marcus Webb', role: 'Head of CS', influence: 'High', support: 'Neutral', action: '1:1 demo before all-hands' },
+      { id: 3, name: 'Dan Frisco', role: 'Sr. AE', influence: 'Medium', support: 'Resistant', action: 'Include in pilot group' },
+    ],
+  }
+  p.stageData.risk = {
+    items: [
+      { id: 1, category: 'People / Culture', description: 'Sales resistant to logging calls', likelihood: 4, impact: 4, mitigation: 'Position as time-saver, show AI-assisted logging' },
+      { id: 2, category: 'Technical', description: 'Data migration may be incomplete', likelihood: 3, impact: 5, mitigation: 'Run parallel systems for 2 weeks' },
+    ],
+  }
+  p.stageData.comms = {
+    channels: ['All-Hands Meeting', 'Manager Cascade', 'Email Blast'],
+    keyMessages: 'Moving to Salesforce to give everyone better visibility and cut manual reporting.',
+    schedule: [
+      { id: 9101, phase: 'before', when: '4 weeks out', audience: 'All Sales + CS', channel: 'All-Hands Meeting', message: 'Why we’re moving to Salesforce and what’s changing' },
+      { id: 9102, phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Manager Cascade', message: 'It’s live — how to log in and log your first deal' },
+      { id: 9103, phase: 'after', when: 'Week 2', audience: 'Sales managers', channel: '1:1 Check-ins', message: 'How’s it going? Surface blockers early' },
+    ],
+  }
+  p.stageData.milestones = {
+    owners: [{ id: 1, name: 'Priya Sharma', workstream: 'Sales Readiness', email: 'priya@co.com' }],
+    goLiveDate: '2025-09-15',
+    launchChecklist: ['Executive sponsor briefed', 'IT/systems ready', 'Comms sent', 'Success metrics defined'],
+  }
+  p.stageData.adoption = {
+    metrics: [
+      { id: 1, name: 'Active Salesforce users', target: '60', current: '38', unit: '%' },
+      { id: 2, name: 'Training completion', target: '100', current: '72', unit: '%' },
+    ],
+    notes: 'Sales ops strong. CS lagging — dedicated coaching added weeks 3-4.',
+  }
+  p.stageData.resistance = {
+    items: [
+      { id: 1, type: 'Fear of job loss', group: 'Sales Team', severity: 'Medium', intervention: 'Town hall with Elena + demo of AI-assisted logging to show time savings' },
+      { id: 2, type: 'Extra workload', group: 'Customer Success', severity: 'High', intervention: 'Dedicated CS onboarding sprint with hands-on support for 2 weeks post-launch' },
+    ],
+    generalPlan: 'Weekly pulse survey for 8 weeks. Any score below 3/5 triggers manager check-in within 48 hours.',
+  }
+  p.completedStages = ['define', 'groups', 'sponsor', 'stakeholders', 'risk', 'comms', 'milestones', 'adoption']
+  p.currentStage = 8
+  p.totalXp = 910
+  return p
+}
