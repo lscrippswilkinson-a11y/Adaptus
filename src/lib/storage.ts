@@ -43,6 +43,26 @@ export function loadProjects(): Project[] {
   }
 }
 
+/** Serialise the project list for a downloadable backup file. */
+export function projectsToJson(projects: Project[]): string {
+  return JSON.stringify(projects, null, 2)
+}
+
+/**
+ * Parse an uploaded backup file into projects, running each through migration
+ * so older/foreign backups load safely. Returns null if the file isn't valid.
+ */
+export function parseImportedProjects(json: string): Project[] | null {
+  try {
+    const parsed = JSON.parse(json)
+    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    if (!parsed.every((p) => p && typeof p === 'object' && 'stageData' in p)) return null
+    return parsed.map(migrateProject)
+  } catch {
+    return null
+  }
+}
+
 /** Persist the project list. Swallows quota / serialisation errors. */
 export function saveProjects(projects: Project[]): void {
   if (typeof localStorage === 'undefined') return

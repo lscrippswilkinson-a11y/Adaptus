@@ -1,13 +1,29 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useApp } from '@/state/AppContext'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
+import { parseImportedProjects, projectsToJson } from '@/lib/storage'
 import { emptyProject } from '@/data/seed'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
+import { EditProjectModal } from '@/components/EditProjectModal'
+import type { Project } from '@/types'
+
+const ghostBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: '10px',
+  padding: '10px 14px',
+  color: 'rgba(255,255,255,0.7)',
+  fontWeight: 600,
+  fontSize: '13px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+}
 
 export function Dashboard() {
   const { state, dispatch } = useApp()
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [editing, setEditing] = useState<Project | null>(null)
 
   const completed = state.projects.filter(isComplete).length
   const total = state.projects.length
@@ -15,6 +31,41 @@ export function Dashboard() {
   const createProject = (draft: ProjectDraft) => {
     const project = { ...emptyProject(), name: draft.name, type: draft.type, description: draft.description, targetDate: draft.targetDate }
     dispatch({ type: 'ADD_PROJECT', project })
+  }
+
+  const deleteProject = (proj: Project) => {
+    if (confirm(`Delete "${proj.name}"? This permanently removes the project and all its planning. This can't be undone.`)) {
+      dispatch({ type: 'DELETE_PROJECT', id: proj.id })
+    }
+  }
+
+  // Backup (download) / restore (upload) all projects as a JSON file.
+  const fileRef = useRef<HTMLInputElement>(null)
+  const backup = () => {
+    const blob = new Blob([projectsToJson(state.projects)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `adaptus-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+  const restore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const projects = parseImportedProjects(String(reader.result))
+      if (!projects) {
+        alert('That doesn’t look like a valid Adaptus backup file.')
+        return
+      }
+      if (confirm(`Restore ${projects.length} project${projects.length === 1 ? '' : 's'} from this backup? This replaces your current projects.`)) {
+        dispatch({ type: 'SET_PROJECTS', projects })
+      }
+    }
+    reader.readAsText(file)
   }
 
   const howItWorks = [
@@ -37,13 +88,24 @@ export function Dashboard() {
             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Guided Change Management</div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setWizardOpen(true)}
-          style={{ background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '10px 20px', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
-        >
-          + New Project
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {state.projects.length > 0 && (
+            <button type="button" onClick={backup} style={ghostBtn} title="Download a backup file of all your projects">
+              ⤓ Back up
+            </button>
+          )}
+          <button type="button" onClick={() => fileRef.current?.click()} style={ghostBtn} title="Restore projects from a backup file">
+            ⤒ Restore
+          </button>
+          <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={restore} />
+          <button
+            type="button"
+            onClick={() => setWizardOpen(true)}
+            style={{ background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '10px 20px', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            + New Project
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: '28px 34px' }}>
@@ -111,6 +173,8 @@ export function Dashboard() {
                   coreDone={essentialsDone(proj)}
                   complete={isComplete(proj)}
                   onClick={() => dispatch({ type: 'OPEN_PROJECT', id: proj.id, stageIdx: proj.currentStage })}
+                  onEdit={() => setEditing(proj)}
+                  onDelete={() => deleteProject(proj)}
                 />
               )
             })}
@@ -133,6 +197,16 @@ export function Dashboard() {
       </div>
 
       {wizardOpen && <Wizard onClose={() => setWizardOpen(false)} onCreate={createProject} />}
+      {editing && (
+        <EditProjectModal
+          project={editing}
+          onClose={() => setEditing(null)}
+          onSave={(updated) => {
+            dispatch({ type: 'UPDATE_PROJECT', project: updated })
+            setEditing(null)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -146,10 +220,32 @@ interface ProjectCardProps {
   coreDone: number
   complete: boolean
   onClick: () => void
+  onEdit: () => void
+  onDelete: () => void
 }
 
-function ProjectCard({ name, type, p2, stageTag, avg, coreDone, complete, onClick }: ProjectCardProps) {
+const cardIconBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.06)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: '7px',
+  width: '26px',
+  height: '26px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '12px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  lineHeight: 1,
+}
+
+function ProjectCard({ name, type, p2, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
   const [hover, setHover] = useState(false)
+  // Buttons sit inside the clickable card, so stop the click from opening it.
+  const stop = (fn: () => void) => (e: React.MouseEvent) => {
+    e.stopPropagation()
+    fn()
+  }
   const riskRgb = avg === null ? '' : avg <= 3 ? '34,197,94' : avg <= 6 ? '245,158,11' : '239,68,68'
   return (
     <div
@@ -171,9 +267,17 @@ function ProjectCard({ name, type, p2, stageTag, avg, coreDone, complete, onClic
           <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '3px' }}>{name}</div>
           <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{type}</div>
         </div>
-        {complete && (
-          <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}>✓ Complete</div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          {complete && (
+            <div style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}>✓ Complete</div>
+          )}
+          {hover && (
+            <>
+              <button type="button" style={cardIconBtn} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}>✎</button>
+              <button type="button" style={{ ...cardIconBtn, color: '#fca5a5' }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}>🗑</button>
+            </>
+          )}
+        </div>
       </div>
       <div style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>

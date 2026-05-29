@@ -16,6 +16,8 @@ export type AppAction =
   | { type: 'GO_TO_STAGE'; stageIdx: number }
   | { type: 'ADD_PROJECT'; project: Project }
   | { type: 'UPDATE_PROJECT'; project: Project }
+  | { type: 'DELETE_PROJECT'; id: number }
+  | { type: 'SET_PROJECTS'; projects: Project[] }
   | { type: 'COMPLETE_STAGE' }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -43,6 +45,19 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         projects: state.projects.map((p) => (p.id === action.project.id ? action.project : p)),
       }
+
+    case 'DELETE_PROJECT': {
+      const projects = state.projects.filter((p) => p.id !== action.id)
+      // If the deleted project was the one open, return home.
+      if (state.activeId === action.id) {
+        return { ...state, projects, view: 'dashboard', activeId: null, stageIdx: 0 }
+      }
+      return { ...state, projects }
+    }
+
+    case 'SET_PROJECTS':
+      // Replace the whole project list (e.g. restoring a backup) and return home.
+      return { ...state, projects: action.projects, view: 'dashboard', activeId: null, stageIdx: 0 }
 
     case 'COMPLETE_STAGE': {
       const proj = state.projects.find((p) => p.id === state.activeId)
