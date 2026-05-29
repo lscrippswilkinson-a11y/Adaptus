@@ -10,16 +10,17 @@ export function Dashboard() {
   const [wizardOpen, setWizardOpen] = useState(false)
 
   const completed = state.projects.filter(isComplete).length
+  const total = state.projects.length
 
   const createProject = (draft: ProjectDraft) => {
     const project = { ...emptyProject(), name: draft.name, type: draft.type, description: draft.description, targetDate: draft.targetDate }
     dispatch({ type: 'ADD_PROJECT', project })
   }
 
-  const stats = [
-    { label: 'Active Projects', value: state.projects.length, icon: '📋' },
-    { label: 'Core steps done', value: state.projects.reduce((s, p) => s + essentialsDone(p), 0), icon: '✅' },
-    { label: 'Completed', value: completed, icon: '🏆' },
+  const howItWorks = [
+    { icon: '🗺️', title: '1. Plan', desc: 'Define the change, line up your sponsor, and get the right people on board.' },
+    { icon: '🚀', title: '2. Prepare to launch', desc: 'Turn the plan into a checklist and track your readiness to go live.' },
+    { icon: '📈', title: '3. Post-launch', desc: 'Measure how it’s landing and print a report on how the launch went.' },
   ]
 
   const active = state.projects.find((p) => !isComplete(p))
@@ -46,18 +47,45 @@ export function Dashboard() {
       </div>
 
       <div style={{ padding: '28px 34px' }}>
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '24px' }}>
-          {stats.map((s) => (
-            <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '16px 18px' }}>
-              <div style={{ fontSize: '18px', marginBottom: '6px' }}>{s.icon}</div>
-              <div style={{ fontSize: '20px', fontWeight: 800, color: '#fff', marginBottom: '3px' }}>{s.value}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '1px' }}>{s.label}</div>
+        {/* Welcome hero */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'linear-gradient(135deg, rgba(91,134,163,0.18), rgba(62,101,128,0.06))', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '16px', padding: '28px 30px', marginBottom: '26px' }}>
+          <div style={{ flex: 1 }}>
+            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>Lead your change with confidence</h1>
+            <p style={{ margin: '10px 0 18px', fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, maxWidth: '580px' }}>
+              Adaptus walks you through rolling out a change from start to finish — planning it, getting everyone ready,
+              launching, and making it stick. No change-management experience required.
+            </p>
+            <button
+              type="button"
+              onClick={() => setWizardOpen(true)}
+              style={{ background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '11px 22px', color: '#fff', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {total === 0 ? 'Start your first project →' : '+ Start a new project'}
+            </button>
+          </div>
+          <div style={{ fontSize: '76px', flexShrink: 0, lineHeight: 1 }}>⚗️</div>
+        </div>
+
+        {/* How it works */}
+        <div style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '12px' }}>How it works</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: '12px', marginBottom: '30px' }}>
+          {howItWorks.map((h) => (
+            <div key={h.title} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '18px 20px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '10px' }}>{h.icon}</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', marginBottom: '5px' }}>{h.title}</div>
+              <div style={{ fontSize: '12.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{h.desc}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '14px' }}>Your Projects</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
+          {total > 0 && (
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>
+              {total} project{total === 1 ? '' : 's'} · {completed} complete
+            </span>
+          )}
+        </div>
 
         {state.projects.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 40px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px' }}>

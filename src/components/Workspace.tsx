@@ -105,24 +105,29 @@ export function Workspace({ project }: { project: Project }) {
             })}
           </div>
 
-          {/* Advanced-steps toggle */}
-          <button
-            type="button"
-            onClick={() => setShowAdvanced((v) => !v)}
-            style={{ margin: '8px 14px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            {showAdvanced ? '− Hide advanced steps' : `+ Show advanced steps (${advancedCount})`}
-          </button>
-          <div style={{ margin: '8px 16px 6px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(255,255,255,0.4)' }}>
-            Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
-            <div style={{ marginTop: '8px' }}>
-              <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots of
-              people affected, you're replacing an important system, or a rough rollout would really hurt. They help you
-              win people over, plan for problems, and avoid nasty surprises.
-            </div>
-            <div style={{ marginTop: '6px' }}>
-              <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Skip them</span> for small, low-risk
-              changes only a few people touch — the core steps above are plenty.
+          {/* Advanced-steps toggle, with hover-revealed help */}
+          <div className="adv-help-wrap" style={{ position: 'relative', margin: '8px 14px 4px' }}>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {showAdvanced ? '− Hide advanced steps' : `+ Show advanced steps (${advancedCount}) ⓘ`}
+            </button>
+            <div
+              className="adv-help"
+              style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: '#13132b', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(255,255,255,0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
+            >
+              Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
+              <div style={{ marginTop: '8px' }}>
+                <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots
+                of people affected, you're replacing an important system, or a rough rollout would really hurt. They help
+                you win people over, plan for problems, and avoid nasty surprises.
+              </div>
+              <div style={{ marginTop: '6px' }}>
+                <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
+                changes only a few people touch — the core steps above are plenty.
+              </div>
             </div>
           </div>
         </div>

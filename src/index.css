@@ -460,6 +460,14 @@ option {
   }
 }
 
+/* Hover-revealed help popover for the advanced-steps toggle. */
+.adv-help {
+  display: none;
+}
+.adv-help-wrap:hover .adv-help {
+  display: block;
+}
+
 /* Dashboard "From your plan" cards. */
 .summary-card {
   text-align: left;
