@@ -31,7 +31,7 @@ export function totalXp(projects: Project[]): number {
 
 /* ---- Launch preparedness (Stage 2 dashboard) ---- */
 
-export type TaskSource = 'checklist' | 'testing' | 'dependencies' | 'training' | 'custom'
+export type TaskSource = 'checklist' | 'testing' | 'dependencies' | 'training' | 'custom' | 'checkoff'
 
 /** A single launch-readiness task aggregated from across the planning sections. */
 export interface PrepTask {
@@ -70,6 +70,36 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   m.customTasks.forEach((c) =>
     tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
   )
+
+  // Planning items with no completion field of their own — tracked via the
+  // dashboard's checkoff map, so checking them here doesn't alter the plan.
+  const ck = m.checkoff ?? {}
+  p.stageData.sponsor.sponsorActions.forEach((a) =>
+    tasks.push({ key: `sp:${a}`, label: a, group: 'Sponsor commitments', done: !!ck[`sp:${a}`], source: 'checkoff' }),
+  )
+  p.stageData.stakeholders.rows.forEach((r) => {
+    if (!r.name.trim()) return
+    const key = `sh:${r.id}`
+    tasks.push({ key, label: `Engage ${r.name}${r.role ? ` (${r.role})` : ''}`, group: 'Stakeholders', done: !!ck[key], source: 'checkoff' })
+  })
+  p.stageData.comms.schedule.forEach((c) => {
+    const key = `cm:${c.id}`
+    tasks.push({ key, label: `${c.when || 'Touchpoint'}: ${c.audience || '—'}`, group: 'Communications', done: !!ck[key], source: 'checkoff' })
+  })
+  p.stageData.risk.items.forEach((r) => {
+    const key = `rk:${r.id}`
+    tasks.push({ key, label: `Mitigate: ${r.description || 'risk'}`, group: 'Risks', done: !!ck[key], source: 'checkoff' })
+  })
+  p.stageData.resistance.items.forEach((r) => {
+    const key = `rs:${r.id}`
+    tasks.push({ key, label: `Address: ${r.type}${r.group ? ` (${r.group})` : ''}`, group: 'Resistance', done: !!ck[key], source: 'checkoff' })
+  })
+  p.stageData.groups.groups.forEach((g) => {
+    if (!g.name.trim()) return
+    const key = `gr:${g.id}`
+    tasks.push({ key, label: `Prepare ${g.name}`, group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
+  })
+
   return tasks
 }
 

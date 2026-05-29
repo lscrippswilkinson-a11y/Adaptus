@@ -146,6 +146,12 @@ export interface MilestonesData {
   launchChecklist: string[]
   /** Ad-hoc tasks the user adds on the dashboard, beyond the readiness checklist. */
   customTasks: LaunchTask[]
+  /**
+   * Dashboard checked-off state for planning items that have no completion
+   * field of their own (sponsor commitments, stakeholders, comms touchpoints,
+   * risks, resistance, groups). Keyed by the task's stable key.
+   */
+  checkoff: Record<string, boolean>
 }
 
 /* ---- Testing & Validation (Planning) ---- */

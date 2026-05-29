@@ -8,7 +8,19 @@ import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type P
 import { uid } from '@/lib/id'
 
 const prepColor = (p: number) => (p >= 80 ? '#22c55e' : p >= 50 ? '#f59e0b' : '#ef4444')
-const GROUP_ORDER = ['Launch readiness', 'Testing', 'Dependencies', 'Training', 'Your tasks']
+const GROUP_ORDER = [
+  'Launch readiness',
+  'Sponsor commitments',
+  'Stakeholders',
+  'Communications',
+  'Training',
+  'Testing',
+  'Dependencies',
+  'Risks',
+  'Resistance',
+  'Impacted groups',
+  'Your tasks',
+]
 
 /** Live ticking countdown to the go-live date (handles today / past gracefully). */
 function GoLiveCountdown({ date }: { date: string }) {
@@ -94,6 +106,9 @@ export function DashboardStage() {
         break
       case 'dependencies':
         updateDeps({ items: sd.dependencies.items.map((i) => (i.id === t.refId ? { ...i, status: i.status === 'Ready' ? 'Not started' : 'Ready' } : i)) })
+        break
+      case 'checkoff':
+        updateMilestones({ checkoff: { ...(milestones.checkoff ?? {}), [t.key]: !t.done } })
         break
     }
   }

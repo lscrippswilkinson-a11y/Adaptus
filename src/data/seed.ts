@@ -23,7 +23,7 @@ export function emptyProject(): Project {
       training: { items: [] },
       testing: { items: [] },
       dependencies: { items: [] },
-      milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [] },
+      milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {} },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
       executive: { generated: false },
@@ -113,6 +113,12 @@ export function createSeed(): Project {
       { id: 1, label: 'Book launch-day comms slot', done: true },
       { id: 2, label: 'Prepare go-live FAQ doc', done: false },
     ],
+    checkoff: {
+      "sp:Communicate the 'why' to their direct reports": true,
+      'sp:Attend and speak at all-hands launch event': true,
+      'sh:1': true,
+      'cm:9101': true,
+    },
   }
   p.stageData.adoption = {
     metrics: [
