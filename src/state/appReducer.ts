@@ -1,7 +1,5 @@
-import type { AppView, Level, Project, Stage } from '@/types'
+import type { AppView, Project } from '@/types'
 import { STAGES } from '@/data/stages'
-import { getLvl } from '@/data/levels'
-import { totalXp } from '@/lib/format'
 
 export interface AppState {
   /** Persisted: the user's change projects. */
@@ -10,8 +8,6 @@ export interface AppState {
   view: AppView
   activeId: number | null
   stageIdx: number
-  celebration: Stage | null
-  levelUp: Level | null
 }
 
 export type AppAction =
@@ -21,8 +17,6 @@ export type AppAction =
   | { type: 'ADD_PROJECT'; project: Project }
   | { type: 'UPDATE_PROJECT'; project: Project }
   | { type: 'COMPLETE_STAGE' }
-  | { type: 'DISMISS_CELEBRATION' }
-  | { type: 'DISMISS_LEVELUP' }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -60,28 +54,15 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...proj,
         completedStages: [...proj.completedStages, stage.id],
         currentStage: Math.max(proj.currentStage, nextIdx),
-        totalXp: proj.totalXp + stage.xp,
       }
 
-      const projects = state.projects.map((p) => (p.id === updated.id ? updated : p))
-
-      // Level-up is based on XP summed across all projects.
-      const oldLevel = getLvl(totalXp(state.projects))
-      const newLevel = getLvl(totalXp(projects))
-      const levelUp = newLevel.level > oldLevel.level ? newLevel : null
-
-      return { ...state, projects, celebration: stage, levelUp }
-    }
-
-    case 'DISMISS_CELEBRATION':
       return {
         ...state,
-        celebration: null,
-        stageIdx: Math.min(state.stageIdx + 1, STAGES.length - 1),
+        projects: state.projects.map((p) => (p.id === updated.id ? updated : p)),
+        // Move straight on to the next step (no XP fanfare).
+        stageIdx: nextIdx,
       }
-
-    case 'DISMISS_LEVELUP':
-      return { ...state, levelUp: null }
+    }
 
     default:
       return state

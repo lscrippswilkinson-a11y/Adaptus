@@ -24,8 +24,6 @@ function init(): AppState {
     view: 'dashboard',
     activeId: null,
     stageIdx: 0,
-    celebration: null,
-    levelUp: null,
   }
 }
 

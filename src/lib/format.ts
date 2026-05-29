@@ -1,10 +1,20 @@
 import type { Project, RiskItem } from '@/types'
-import { STAGES } from '@/data/stages'
+import { ESSENTIAL_COUNT, ESSENTIAL_IDS } from '@/data/stages'
 import { LAUNCH_ITEMS } from '@/data/constants'
 
-/** Percentage of the 13 stages completed for a project. */
+/** Completed essential steps for a project (advanced steps are optional bonus). */
+export function essentialsDone(project: Project): number {
+  return project.completedStages.filter((id) => ESSENTIAL_IDS.has(id)).length
+}
+
+/** Progress through the core path: completed essentials ÷ total essentials. */
 export function pct(project: Project): number {
-  return Math.round((project.completedStages.length / STAGES.length) * 100)
+  return Math.round((essentialsDone(project) / ESSENTIAL_COUNT) * 100)
+}
+
+/** A project is "complete" once all its essential steps are done. */
+export function isComplete(project: Project): boolean {
+  return essentialsDone(project) === ESSENTIAL_COUNT
 }
 
 /** Colour for a 1–10 risk score. */

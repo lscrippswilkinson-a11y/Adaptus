@@ -1,24 +1,25 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { PHASES, STAGES } from '@/data/stages'
-import { getLvl, getLvlPct } from '@/data/levels'
-import { pct, preparedness, totalXp } from '@/lib/format'
-import { LevelBadge } from '@/components/LevelBadge'
+import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
 
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
-  const xp = totalXp(state.projects)
-  const curLv = getLvl(xp)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const p2 = pct(project)
   const stage = STAGES[state.stageIdx]
   const done = project.completedStages.includes(stage.id)
   const StageComponent = STAGE_COMPONENTS[stage.id]
 
-  // The Launch Preparation Dashboard can only be "completed" once fully prepared.
+  // The Launch Preparation Dashboard can only be marked complete once fully prepared.
   const prep = preparedness(project)
   const canComplete = stage.id !== 'milestones' || prep.pct === 100
+
+  // Reveal advanced steps if the one being viewed is itself advanced.
+  const showAdv = showAdvanced || stage.tier === 'advanced'
+  const advancedCount = STAGES.filter((s) => s.tier === 'advanced').length
 
   // Scroll the content panel back to the top whenever the stage (or project) changes.
   const mainRef = useRef<HTMLDivElement>(null)
@@ -28,8 +29,8 @@ export function Workspace({ project }: { project: Project }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0d0d1e' }}>
-      {/* Header */}
-      <div style={{ padding: '12px 22px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
+      {/* Header — quiet progress only */}
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
         <button
           type="button"
           onClick={() => dispatch({ type: 'SET_VIEW', view: 'dashboard' })}
@@ -40,19 +41,10 @@ export function Workspace({ project }: { project: Project }) {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
             <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>{project.name}</span>
-            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{p2}% complete</span>
+            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{p2}% of the core steps done</span>
           </div>
           <div style={{ height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
-          </div>
-        </div>
-        <div style={{ minWidth: '170px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
-            <LevelBadge level={curLv} />
-            <span style={{ fontSize: '11px', color: '#F0523D', fontWeight: 600 }}>⚡ {xp} XP</span>
-          </div>
-          <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden', marginTop: '4px' }}>
-            <div style={{ height: '100%', width: `${getLvlPct(xp)}%`, background: curLv.color, borderRadius: '2px', transition: 'width 0.5s' }} />
           </div>
         </div>
       </div>
@@ -60,70 +52,99 @@ export function Workspace({ project }: { project: Project }) {
       {/* Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar — sections grouped by phase */}
-        <div style={{ width: '240px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '14px 0', overflowY: 'auto' }}>
-          {PHASES.map((phase, pi) => {
-            const items = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
-            const doneCount = items.filter(({ s }) => project.completedStages.includes(s.id)).length
-            return (
-              <div key={phase.id} style={{ marginBottom: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
-                  <span>{pi + 1}. {phase.label}</span>
-                  <span style={{ color: '#5B86A3' }}>{doneCount}/{items.length}</span>
-                </div>
-                {items.map(({ s, i }) => {
-                  const isDone = project.completedStages.includes(s.id)
-                  const active = i === state.stageIdx
-                  const locked = i > project.currentStage
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className={'sb-btn' + (active ? ' active' : '') + (locked ? ' locked' : '')}
-                      onClick={() => !locked && dispatch({ type: 'GO_TO_STAGE', stageIdx: i })}
-                    >
-                      <div
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          borderRadius: '50%',
-                          flexShrink: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(255,255,255,0.08)',
-                          color: isDone || active ? '#fff' : 'rgba(255,255,255,0.3)',
-                        }}
+        <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1 }}>
+            {PHASES.map((phase, pi) => {
+              const all = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
+              const visible = all.filter(({ s }) => s.tier === 'essential' || showAdv)
+              const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
+              return (
+                <div key={phase.id} style={{ marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                    <span>{pi + 1}. {phase.label}</span>
+                    <span style={{ color: '#5B86A3' }}>{doneCount}/{visible.length}</span>
+                  </div>
+                  {visible.map(({ s, i }) => {
+                    const isDone = project.completedStages.includes(s.id)
+                    const active = i === state.stageIdx
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className={'sb-btn' + (active ? ' active' : '')}
+                        onClick={() => dispatch({ type: 'GO_TO_STAGE', stageIdx: i })}
                       >
-                        {isDone ? '✓' : i + 1}
-                      </div>
-                      <span style={{ fontSize: '12px', color: active ? '#B8D0DE' : isDone ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {s.label}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            )
-          })}
+                        <div
+                          style={{
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(255,255,255,0.08)',
+                            color: isDone || active ? '#fff' : 'rgba(255,255,255,0.3)',
+                          }}
+                        >
+                          {isDone ? '✓' : ''}
+                        </div>
+                        <span style={{ flex: 1, fontSize: '12px', color: active ? '#B8D0DE' : isDone ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {s.label}
+                        </span>
+                        {s.tier === 'advanced' && (
+                          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Advanced-steps toggle */}
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            style={{ margin: '8px 14px 0', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            {showAdvanced ? '− Hide advanced steps' : `+ Show advanced steps (${advancedCount})`}
+          </button>
+          <div style={{ margin: '8px 16px 6px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(255,255,255,0.4)' }}>
+            Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
+            <div style={{ marginTop: '8px' }}>
+              <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots of
+              people affected, you're replacing an important system, or a rough rollout would really hurt. They help you
+              win people over, plan for problems, and avoid nasty surprises.
+            </div>
+            <div style={{ marginTop: '6px' }}>
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Skip them</span> for small, low-risk
+              changes only a few people touch — the core steps above are plenty.
+            </div>
+          </div>
         </div>
 
         {/* Main */}
         <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '22px' }}>
             <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '14px' }}>{stage.icon}</span>
-                <span style={{ fontSize: '11px', color: '#B8D0DE', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{stage.tag}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
+                  <span style={{ fontSize: '14px' }}>{stage.icon}</span>
+                  <span style={{ fontSize: '11px', color: '#B8D0DE', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{stage.tag}</span>
+                </div>
+                {stage.tier === 'advanced' && (
+                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
+                )}
               </div>
-              <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: '#fff' }}>
-                Stage {state.stageIdx + 1}: {stage.label}
-              </h2>
+              <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: '#fff' }}>{stage.label}</h2>
             </div>
             {done && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
-                ✓ Complete · +{stage.xp} XP
+                ✓ Complete
               </div>
             )}
           </div>
@@ -141,8 +162,8 @@ export function Workspace({ project }: { project: Project }) {
                 onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
               >
                 {canComplete
-                  ? `Complete stage → earn ${stage.xp} XP`
-                  : `Reach 100% preparedness to complete (currently ${prep.pct}%)`}
+                  ? '✓ Mark this step complete'
+                  : `Complete the launch tasks to finish (currently ${prep.pct}%)`}
               </button>
             </div>
           )}

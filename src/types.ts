@@ -27,6 +27,9 @@ export interface Phase {
   label: string
 }
 
+/** Essential steps form the core path; advanced steps are optional depth. */
+export type StageTier = 'essential' | 'advanced'
+
 export interface Stage {
   id: StageId
   label: string
@@ -34,6 +37,7 @@ export interface Stage {
   tag: string
   xp: number
   phase: PhaseId
+  tier: StageTier
 }
 
 /* ---- Shared enums (used by <select>s) ---- */
