@@ -19,12 +19,21 @@ export interface Level {
 
 /* ---- Stage metadata ---- */
 
+/** The three macro-phases the sections are grouped into. */
+export type PhaseId = 'planning' | 'launch' | 'postlaunch'
+
+export interface Phase {
+  id: PhaseId
+  label: string
+}
+
 export interface Stage {
   id: StageId
   label: string
   icon: string
   tag: string
   xp: number
+  phase: PhaseId
 }
 
 /* ---- Shared enums (used by <select>s) ---- */
@@ -125,10 +134,49 @@ export interface MilestoneOwner {
   workstream: string
   email: string
 }
+/** A user-added task on the Launch Preparation Dashboard. */
+export interface LaunchTask {
+  id: number
+  label: string
+  done: boolean
+}
 export interface MilestonesData {
   owners: MilestoneOwner[]
   goLiveDate: string
   launchChecklist: string[]
+  /** Ad-hoc tasks the user adds on the dashboard, beyond the readiness checklist. */
+  customTasks: LaunchTask[]
+}
+
+/* ---- Testing & Validation (Planning) ---- */
+
+export type TestStatus = 'Not started' | 'In progress' | 'Passed' | 'Failed'
+export interface TestItem {
+  id: number
+  name: string
+  type: string
+  owner: string
+  status: TestStatus
+  notes: string
+}
+export interface TestingData {
+  items: TestItem[]
+}
+
+/* ---- Cross-functional Dependencies (Planning) ---- */
+
+export type DependencyType = 'Team' | 'System' | 'Vendor' | 'Other'
+export type DependencyStatus = 'Not started' | 'In progress' | 'Ready' | 'At risk'
+export interface Dependency {
+  id: number
+  name: string
+  type: DependencyType
+  owner: string
+  neededBy: string
+  status: DependencyStatus
+}
+export interface DependenciesData {
+  items: Dependency[]
 }
 
 export interface AdoptionMetric {
@@ -179,13 +227,15 @@ export interface StageData {
   sponsor: SponsorData
   stakeholders: StakeholdersData
   risk: RiskData
+  resistance: ResistanceData
   comms: CommsData
   training: TrainingData
+  testing: TestingData
+  dependencies: DependenciesData
   milestones: MilestonesData
   adoption: AdoptionData
-  resistance: ResistanceData
-  executive: ExecutiveData
   sustainment: SustainmentData
+  executive: ExecutiveData
   closeout: CloseoutData
 }
 

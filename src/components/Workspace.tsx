@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import type { Project } from '@/types'
 import { useApp } from '@/state/AppContext'
-import { STAGES } from '@/data/stages'
+import { PHASES, STAGES } from '@/data/stages'
 import { getLvl, getLvlPct } from '@/data/levels'
-import { pct, totalXp } from '@/lib/format'
+import { pct, preparedness, totalXp } from '@/lib/format'
 import { LevelBadge } from '@/components/LevelBadge'
 import { STAGE_COMPONENTS } from '@/components/stages'
 
@@ -15,6 +15,10 @@ export function Workspace({ project }: { project: Project }) {
   const stage = STAGES[state.stageIdx]
   const done = project.completedStages.includes(stage.id)
   const StageComponent = STAGE_COMPONENTS[stage.id]
+
+  // The Launch Preparation Dashboard can only be "completed" once fully prepared.
+  const prep = preparedness(project)
+  const canComplete = stage.id !== 'milestones' || prep.pct === 100
 
   // Scroll the content panel back to the top whenever the stage (or project) changes.
   const mainRef = useRef<HTMLDivElement>(null)
@@ -55,40 +59,52 @@ export function Workspace({ project }: { project: Project }) {
 
       {/* Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <div style={{ width: '220px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '18px 0', overflowY: 'auto' }}>
-          {STAGES.map((s, i) => {
-            const isDone = project.completedStages.includes(s.id)
-            const active = i === state.stageIdx
-            const locked = i > project.currentStage
+        {/* Sidebar — sections grouped by phase */}
+        <div style={{ width: '240px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '14px 0', overflowY: 'auto' }}>
+          {PHASES.map((phase, pi) => {
+            const items = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
+            const doneCount = items.filter(({ s }) => project.completedStages.includes(s.id)).length
             return (
-              <button
-                key={s.id}
-                type="button"
-                className={'sb-btn' + (active ? ' active' : '') + (locked ? ' locked' : '')}
-                onClick={() => !locked && dispatch({ type: 'GO_TO_STAGE', stageIdx: i })}
-              >
-                <div
-                  style={{
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(255,255,255,0.08)',
-                    color: isDone || active ? '#fff' : 'rgba(255,255,255,0.3)',
-                  }}
-                >
-                  {isDone ? '✓' : i + 1}
+              <div key={phase.id} style={{ marginBottom: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  <span>{pi + 1}. {phase.label}</span>
+                  <span style={{ color: '#5B86A3' }}>{doneCount}/{items.length}</span>
                 </div>
-                <span style={{ fontSize: '12px', color: active ? '#B8D0DE' : isDone ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {s.label}
-                </span>
-              </button>
+                {items.map(({ s, i }) => {
+                  const isDone = project.completedStages.includes(s.id)
+                  const active = i === state.stageIdx
+                  const locked = i > project.currentStage
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className={'sb-btn' + (active ? ' active' : '') + (locked ? ' locked' : '')}
+                      onClick={() => !locked && dispatch({ type: 'GO_TO_STAGE', stageIdx: i })}
+                    >
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          flexShrink: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(255,255,255,0.08)',
+                          color: isDone || active ? '#fff' : 'rgba(255,255,255,0.3)',
+                        }}
+                      >
+                        {isDone ? '✓' : i + 1}
+                      </div>
+                      <span style={{ fontSize: '12px', color: active ? '#B8D0DE' : isDone ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {s.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             )
           })}
         </div>
@@ -113,12 +129,20 @@ export function Workspace({ project }: { project: Project }) {
           </div>
 
           {/* Remount on stage/project change so input-local state resets cleanly */}
-          <StageComponent key={`${project.id}-${stage.id}`} />
+          {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
 
           {!done && (
             <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-              <button type="button" className="cq-complete-btn" onClick={() => dispatch({ type: 'COMPLETE_STAGE' })}>
-                Complete stage → earn {stage.xp} XP
+              <button
+                type="button"
+                className="cq-complete-btn"
+                disabled={!canComplete}
+                style={canComplete ? undefined : { opacity: 0.5, cursor: 'not-allowed' }}
+                onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
+              >
+                {canComplete
+                  ? `Complete stage → earn ${stage.xp} XP`
+                  : `Reach 100% preparedness to complete (currently ${prep.pct}%)`}
               </button>
             </div>
           )}

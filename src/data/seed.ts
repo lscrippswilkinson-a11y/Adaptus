@@ -21,7 +21,9 @@ export function emptyProject(): Project {
       risk: { items: [] },
       comms: { channels: [], keyMessages: '', schedule: [] },
       training: { items: [] },
-      milestones: { owners: [], goLiveDate: '', launchChecklist: [] },
+      testing: { items: [] },
+      dependencies: { items: [] },
+      milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [] },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
       executive: { generated: false },
@@ -83,10 +85,34 @@ export function createSeed(): Project {
       { id: 9103, phase: 'after', when: 'Week 2', audience: 'Sales managers', channel: '1:1 Check-ins', message: 'How’s it going? Surface blockers early' },
     ],
   }
+  p.stageData.training = {
+    items: [
+      { id: 1, title: 'Salesforce basics workshop', audience: 'All Sales + CS', format: 'Workshop', duration: '90 min', owner: 'Priya Sharma', done: true },
+      { id: 2, title: 'Manager briefing', audience: 'People managers', format: 'Webinar', duration: '45 min', owner: 'Elena Torres', done: false },
+    ],
+  }
+  p.stageData.testing = {
+    items: [
+      { id: 1, name: 'UAT with 5 pilot reps', type: 'User acceptance (UAT)', owner: 'RevOps', status: 'Passed', notes: 'Pilot group signed off' },
+      { id: 2, name: 'Legacy data migration check', type: 'Data migration', owner: 'IT', status: 'In progress', notes: '' },
+      { id: 3, name: 'Email→Salesforce integration', type: 'Integration', owner: 'IT', status: 'Not started', notes: '' },
+    ],
+  }
+  p.stageData.dependencies = {
+    items: [
+      { id: 1, name: 'Salesforce vendor provisioning', type: 'Vendor', owner: 'Elena Torres', neededBy: '2025-09-01', status: 'Ready' },
+      { id: 2, name: 'IT account provisioning', type: 'System', owner: 'IT', neededBy: '2025-09-10', status: 'In progress' },
+      { id: 3, name: 'Finance data export sign-off', type: 'Team', owner: 'Finance', neededBy: '2025-09-05', status: 'At risk' },
+    ],
+  }
   p.stageData.milestones = {
     owners: [{ id: 1, name: 'Priya Sharma', workstream: 'Sales Readiness', email: 'priya@co.com' }],
-    goLiveDate: '2025-09-15',
+    goLiveDate: new Date(Date.now() + 45 * 86400000).toISOString().slice(0, 10),
     launchChecklist: ['Executive sponsor briefed', 'IT/systems ready', 'Comms sent', 'Success metrics defined'],
+    customTasks: [
+      { id: 1, label: 'Book launch-day comms slot', done: true },
+      { id: 2, label: 'Prepare go-live FAQ doc', done: false },
+    ],
   }
   p.stageData.adoption = {
     metrics: [
@@ -102,8 +128,8 @@ export function createSeed(): Project {
     ],
     generalPlan: 'Weekly pulse survey for 8 weeks. Any score below 3/5 triggers manager check-in within 48 hours.',
   }
-  p.completedStages = ['define', 'groups', 'sponsor', 'stakeholders', 'risk', 'comms', 'milestones', 'adoption']
-  p.currentStage = 8
-  p.totalXp = 910
+  p.completedStages = ['define', 'groups', 'sponsor', 'stakeholders', 'risk', 'resistance', 'comms', 'training', 'testing', 'dependencies']
+  p.currentStage = 10 // Launch Preparation Dashboard
+  p.totalXp = 1140
   return p
 }

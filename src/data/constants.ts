@@ -77,6 +77,22 @@ export const TRAINING_FORMATS = [
 
 export const METRIC_UNITS = ['%', 'count', 'score', '$', 'days', 'hrs']
 
+export const TEST_TYPES = [
+  'User acceptance (UAT)',
+  'Functional',
+  'Integration',
+  'Data migration',
+  'Performance / load',
+  'Security',
+  'Pilot / dry run',
+]
+
+export const TEST_STATUSES = ['Not started', 'In progress', 'Passed', 'Failed'] as const
+
+export const DEPENDENCY_TYPES = ['Team', 'System', 'Vendor', 'Other'] as const
+
+export const DEPENDENCY_STATUSES = ['Not started', 'In progress', 'Ready', 'At risk'] as const
+
 export const LAUNCH_EXPLAINERS: Record<string, string> = {
   'Executive sponsor briefed':
     'Your sponsor needs to know what\'s launching, what their visible role is on day one, and how to answer questions from their peers. An uninformed sponsor undermines credibility immediately.',

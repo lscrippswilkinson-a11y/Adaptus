@@ -275,6 +275,66 @@ export const coaching = {
   },
 
   /* ------------------------------------------------------------ MILESTONES */
+  /* --------------------------------------------------------------- TESTING */
+  testing: {
+    icon: '🧪',
+    intro: (
+      <>
+        {strong('Don’t take it on faith that it works — check.')} Before you ask everyone to switch, prove the new way
+        actually holds up: real people doing real tasks, your data carried over correctly, and the connections to other
+        systems working. List what you’ll test, who owns it, and where each one stands. A passed test now beats a nasty
+        surprise on launch day.
+      </>
+    ),
+    /** Shown when any test is marked Failed. */
+    failed: {
+      tone: 'warn',
+      text: 'You’ve got a failed test. Don’t schedule go-live around it — fix the cause and re-test until it passes, or you’ll be launching a known problem.',
+    } satisfies Insight,
+  },
+
+  /* ---------------------------------------------------------- DEPENDENCIES */
+  dependencies: {
+    icon: '🔗',
+    intro: (
+      <>
+        {strong('What does your launch quietly rely on?')} Most rollouts depend on other people delivering something
+        first — IT provisioning accounts, a vendor flipping a switch, finance exporting data. List each one, who owns
+        it, and when you need it. Naming them turns invisible risks into things you can actually chase.
+      </>
+    ),
+    /** Shown when any dependency is flagged At risk. */
+    atRisk: {
+      tone: 'warn',
+      text: 'A dependency is flagged “At risk.” These are the classic launch-stallers — chase the owner now and agree a date, before it quietly slips and takes your go-live with it.',
+    } satisfies Insight,
+  },
+
+  /* ------------------------------------------------------------- DASHBOARD */
+  dashboard: {
+    icon: '🚀',
+    intro: (
+      <>
+        {strong('This is your mission control for go-live.')} It pulls together everything you planned and turns it into
+        one checklist. Your <strong style={{ color: '#B8D0DE' }}>Launch Preparedness</strong> score is simply the share
+        of these tasks that are done — tick things off (here, or back in their own sections) and watch it climb. Don’t
+        set a firm launch date until it’s comfortably high.
+      </>
+    ),
+  },
+
+  /* ---------------------------------------------------------------- REPORT */
+  report: {
+    icon: '📊',
+    intro: (
+      <>
+        {strong('Tell the story of how the launch went.')} This pulls your plan and your real adoption numbers into a
+        one-page summary you can print or save as a PDF for leadership. Fill in the wins, lessons, and shoutouts below —
+        capturing them is how your organisation gets better at change, one launch at a time.
+      </>
+    ),
+  },
+
   milestones: {
     icon: '🚀',
     intro: (

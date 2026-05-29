@@ -1,7 +1,29 @@
-import type { Project } from '@/types'
-import { createSeed } from '@/data/seed'
+import type { Project, StageData } from '@/types'
+import { createSeed, emptyProject } from '@/data/seed'
+import { STAGES } from '@/data/stages'
 
 export const STORAGE_KEY = 'adaptus.projects.v1'
+
+/**
+ * Bring a persisted project up to the current schema: backfill any stageData
+ * slices/fields added since it was saved (e.g. testing, dependencies,
+ * customTasks), drop completed-section ids that no longer exist, and clamp the
+ * current-section index. Deep-merges each slice over the empty-project default.
+ */
+function migrateProject(p: Project): Project {
+  const base = emptyProject()
+  const baseData = base.stageData as unknown as Record<string, object>
+  const savedData = (p.stageData ?? {}) as unknown as Record<string, object>
+  const merged = Object.fromEntries(
+    Object.keys(baseData).map((k) => [k, { ...baseData[k], ...(savedData[k] ?? {}) }]),
+  ) as unknown as StageData
+
+  const validIds = new Set(STAGES.map((s) => s.id))
+  const completedStages = (p.completedStages ?? []).filter((id) => validIds.has(id))
+  const currentStage = Math.min(Math.max(p.currentStage ?? 0, 0), STAGES.length - 1)
+
+  return { ...p, stageData: merged, completedStages, currentStage }
+}
 
 /**
  * Load the project list from localStorage. On first run (or any read/parse
@@ -13,8 +35,8 @@ export function loadProjects(): Project[] {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return [createSeed()]
     const parsed = JSON.parse(raw) as Project[]
-    if (!Array.isArray(parsed)) return [createSeed()]
-    return parsed
+    if (!Array.isArray(parsed) || parsed.length === 0) return [createSeed()]
+    return parsed.map(migrateProject)
   } catch (err) {
     console.warn('[adaptus] failed to load saved projects; starting fresh', err)
     return [createSeed()]
