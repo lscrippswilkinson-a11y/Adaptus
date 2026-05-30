@@ -80,6 +80,21 @@ export const coaching = {
         That tells you exactly where to spend your time.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-question-per-group flow. */
+    wizard: {
+      name: {
+        label: 'Who is one group this change affects?',
+        why: 'Name a specific group of people — a team, role, or department — rather than “everyone.” Concrete groups like “Billing team” or “Field technicians” let you plan for each one’s real needs. You’ll be able to add more groups after this one.',
+      },
+      impact: {
+        label: 'How much does this change their day-to-day work?',
+        why: 'Impact means how much this group’s actual work changes — new tools, new steps, or a changed role. The groups whose jobs change the most are where a rollout most often stalls, so this tells you where to spend your energy.',
+      },
+      readiness: {
+        label: 'How ready is this group for the change?',
+        why: 'Readiness is how prepared this group is to take the change on — their awareness of it, their willingness, and their capacity. A group that’s heavily affected but not ready is your biggest risk; one that’s affected and ready can become your champions.',
+      },
+    },
     /** Live coaching for a group from its impact + readiness combination. */
     insight(g: ImpactedGroup): Insight | null {
       if (!g.name.trim()) return null
