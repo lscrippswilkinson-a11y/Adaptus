@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
-import { FieldCoach, InsightCallout, Card, Label, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, InsightCallout, Card, Label, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 
@@ -174,15 +173,5 @@ export function SponsorStage() {
     },
   ]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.sponsor.icon}>{coaching.sponsor.intro}</StageIntro>
-          <TipBox stageId="sponsor" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="sponsor" icon={coaching.sponsor.icon} blurb={coaching.sponsor.intro} steps={steps} />
 }

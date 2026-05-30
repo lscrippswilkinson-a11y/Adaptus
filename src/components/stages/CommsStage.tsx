@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
-import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, Select, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { CHANNELS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -264,15 +263,5 @@ export function CommsStage() {
     },
   ]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.comms.icon}>{coaching.comms.intro}</StageIntro>
-          <TipBox stageId="comms" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="comms" icon={coaching.comms.icon} blurb={coaching.comms.intro} steps={steps} />
 }

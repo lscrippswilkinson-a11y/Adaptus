@@ -1,6 +1,6 @@
 import { Printer } from 'lucide-react'
 import { useActiveProject, useStageEditor } from '@/state/AppContext'
-import { FieldCoach, StageIntro, TextArea } from '@/components/ui'
+import { FieldCoach, TextArea } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { avgRisk, preparedness, riskLabel } from '@/lib/format'
@@ -68,7 +68,7 @@ export function ReportStage() {
 
   return (
     <div>
-      <StageFlow intro={<StageIntro icon={coaching.report.icon}>{coaching.report.intro}</StageIntro>} steps={steps} />
+      <StageFlow stageId="executive" icon={coaching.report.icon} blurb={coaching.report.intro} steps={steps} />
 
       <button
         type="button"

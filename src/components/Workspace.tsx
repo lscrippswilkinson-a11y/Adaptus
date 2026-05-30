@@ -5,11 +5,15 @@ import { useApp } from '@/state/AppContext'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
+import { StageGateProvider } from '@/components/StageFlow'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
   const [showAdvanced, setShowAdvanced] = useState(false)
+  // Whether to show the "Mark this step complete" button. The guided wizard hides
+  // it until the review screen; non-wizard stages leave it on (default true).
+  const [showComplete, setShowComplete] = useState(true)
   const p2 = pct(project)
   const stage = STAGES[state.stageIdx]
   const done = project.completedStages.includes(stage.id)
@@ -27,6 +31,8 @@ export function Workspace({ project }: { project: Project }) {
   const mainRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
+    // Reset the gate on stage change; the new stage's wizard (if any) re-sets it.
+    setShowComplete(true)
   }, [state.stageIdx, project.id])
 
   return (
@@ -159,9 +165,11 @@ export function Workspace({ project }: { project: Project }) {
           </div>
 
           {/* Remount on stage/project change so input-local state resets cleanly */}
-          {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
+          <StageGateProvider onChange={setShowComplete}>
+            {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
+          </StageGateProvider>
 
-          {!done && (
+          {!done && showComplete && (
             <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(var(--fg),0.06)' }}>
               <button
                 type="button"

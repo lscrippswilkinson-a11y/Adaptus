@@ -1,10 +1,23 @@
 import {
+  createContext,
+  useContext,
   useEffect,
   useState,
   type CSSProperties,
   type ReactNode,
 } from 'react'
 import { Plus, X } from 'lucide-react'
+
+/**
+ * Lets an ancestor switch FieldCoach into a larger "hero" presentation — used by
+ * the guided wizard so a single question reads like a headline rather than a
+ * dense form field. Defaults to the compact form used everywhere else.
+ */
+const FieldCoachVariantCtx = createContext<'default' | 'hero'>('default')
+
+export function FieldCoachVariant({ variant, children }: { variant: 'default' | 'hero'; children: ReactNode }) {
+  return <FieldCoachVariantCtx.Provider value={variant}>{children}</FieldCoachVariantCtx.Provider>
+}
 
 /** Section card (.cq-card). */
 export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
@@ -208,10 +221,20 @@ const linkBtnStyle: CSSProperties = {
  */
 export function FieldCoach({ label, why, example, onUseExample, children }: FieldCoachProps) {
   const [showExample, setShowExample] = useState(false)
+  const hero = useContext(FieldCoachVariantCtx) === 'hero'
+  const cardStyle: CSSProperties | undefined = hero
+    ? { borderRadius: '20px', padding: '34px 36px', boxShadow: '0 12px 40px rgba(0,0,0,0.10)', marginBottom: 0 }
+    : undefined
   return (
-    <Card>
-      <Label>{label}</Label>
-      <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
+    <Card style={cardStyle}>
+      {hero ? (
+        <h2 style={{ margin: '0 0 12px', fontSize: '24px', lineHeight: 1.3, fontWeight: 800, color: 'var(--text)' }}>{label}</h2>
+      ) : (
+        <Label>{label}</Label>
+      )}
+      <div style={hero
+        ? { fontSize: '15px', color: 'rgba(var(--fg),0.5)', lineHeight: 1.7, margin: '0 0 22px' }
+        : { fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
       {children}
       {example && (
         <div style={{ marginTop: '10px' }}>

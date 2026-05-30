@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { AdoptionMetric } from '@/types'
-import { AddButton, DelButton, FieldCoach, InsightCallout, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { AddButton, DelButton, FieldCoach, InsightCallout, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { METRIC_UNITS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -65,15 +64,5 @@ export function AdoptionStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.adoption.icon}>{coaching.adoption.intro}</StageIntro>
-          <TipBox stageId="adoption" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="adoption" icon={coaching.adoption.icon} blurb={coaching.adoption.intro} steps={steps} />
 }

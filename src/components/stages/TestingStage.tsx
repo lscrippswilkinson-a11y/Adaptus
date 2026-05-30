@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TestItem, TestStatus } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { TEST_TYPES, TEST_STATUSES } from '@/data/constants'
 import { uid } from '@/lib/id'
@@ -73,15 +72,5 @@ export function TestingStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.testing.icon}>{coaching.testing.intro}</StageIntro>
-          <TipBox stageId="testing" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="testing" icon={coaching.testing.icon} blurb={coaching.testing.intro} steps={steps} />
 }

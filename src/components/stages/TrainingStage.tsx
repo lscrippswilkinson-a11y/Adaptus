@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TrainingItem } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { TRAINING_FORMATS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -68,15 +67,5 @@ export function TrainingStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.training.icon}>{coaching.training.intro}</StageIntro>
-          <TipBox stageId="training" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="training" icon={coaching.training.icon} blurb={coaching.training.intro} steps={steps} />
 }

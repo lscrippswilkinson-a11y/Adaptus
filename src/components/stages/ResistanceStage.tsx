@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ResistanceItem, Severity } from '@/types'
-import { AddButton, DelButton, FieldCoach, InsightCallout, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { AddButton, DelButton, FieldCoach, InsightCallout, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { RESISTANCE_TYPES } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -74,15 +73,5 @@ export function ResistanceStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.resistance.icon}>{coaching.resistance.intro}</StageIntro>
-          <TipBox stageId="resistance" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="resistance" icon={coaching.resistance.icon} blurb={coaching.resistance.intro} steps={steps} />
 }

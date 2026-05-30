@@ -1,7 +1,6 @@
 import { useStageEditor } from '@/state/AppContext'
-import { FieldCoach, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 
 export function DefineStage() {
@@ -75,15 +74,5 @@ export function DefineStage() {
     },
   ]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.define.icon}>{coaching.define.intro}</StageIntro>
-          <TipBox stageId="define" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="define" icon={coaching.define.icon} blurb={coaching.define.intro} steps={steps} />
 }

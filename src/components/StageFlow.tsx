@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Check, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
+import type { StageId } from '@/types'
+import { STAGES } from '@/data/stages'
 import { useWizardMode } from '@/state/WizardModeContext'
+import { FieldCoachVariant, StageIntro } from '@/components/ui'
+import { TipBox } from '@/components/TipBox'
 
 export interface WizardStep {
   /** Stable key, e.g. 'statement'. */
@@ -15,30 +19,57 @@ export interface WizardStep {
   isFilled?: boolean
 }
 
-const accentBtn: CSSProperties = {
+export interface StageFlowProps {
+  /** The stage's id — used to look up its title and tips. */
+  stageId: StageId
+  /** Emoji used on the intro screen and the summary-mode banner. */
+  icon: string
+  /** 2–3 sentence "what & why" shown on the intro screen and summary banner. */
+  blurb: ReactNode
+  /** Extra summary-only chrome (e.g. a stage-level InsightCallout). */
+  extra?: ReactNode
+  steps: WizardStep[]
+}
+
+/**
+ * Lets the wizard tell the Workspace whether the "Mark this step complete" button
+ * should show. It's hidden while stepping through questions and revealed only on
+ * the review screen (or in summary view). Defaults to a no-op so stages rendered
+ * outside a Workspace (or without a wizard) keep showing the button.
+ */
+const StageGateCtx = createContext<(showComplete: boolean) => void>(() => {})
+
+export function StageGateProvider({ onChange, children }: { onChange: (showComplete: boolean) => void; children: ReactNode }) {
+  return <StageGateCtx.Provider value={onChange}>{children}</StageGateCtx.Provider>
+}
+
+const CONTENT_MAX = 680
+
+const pillBtn: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '6px',
+  gap: '8px',
   background: 'linear-gradient(135deg,#5B86A3,#3E6580)',
   border: 'none',
-  borderRadius: '10px',
-  padding: '11px 22px',
+  borderRadius: '999px',
+  padding: '13px 30px',
   color: 'var(--on-accent)',
-  fontWeight: 600,
-  fontSize: '14px',
+  fontWeight: 700,
+  fontSize: '15px',
   cursor: 'pointer',
   fontFamily: 'inherit',
+  boxShadow: '0 6px 18px rgba(62,101,128,0.35)',
 }
 
 const ghostBtn: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   gap: '6px',
-  background: 'rgba(var(--fg),0.04)',
-  border: '1px solid rgba(var(--fg),0.12)',
-  borderRadius: '10px',
-  padding: '11px 18px',
-  color: 'rgba(var(--fg),0.65)',
+  background: 'transparent',
+  border: '1px solid rgba(var(--fg),0.15)',
+  borderRadius: '999px',
+  padding: '12px 20px',
+  color: 'rgba(var(--fg),0.6)',
   fontWeight: 600,
   fontSize: '14px',
   cursor: 'pointer',
@@ -74,17 +105,28 @@ function ModeToggle() {
 /**
  * Wraps a stage's fields so they can be worked through one screen at a time
  * (guided mode, TurboTax-style) or all at once (summary mode = the original
- * full-page layout). The step index is local state, so it resets to the first
- * step whenever the stage/project remounts.
+ * full-page layout). The step index is local state, so it resets to the intro
+ * screen whenever the stage/project remounts.
  */
-export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardStep[] }) {
+export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps) {
   const { mode } = useWizardMode()
-  // Index in 0..steps.length; the final value (=== steps.length) is the review screen.
-  const [step, setStep] = useState(0)
+  const setShowComplete = useContext(StageGateCtx)
+  // -1 = intro screen, 0..steps.length-1 = questions, steps.length = review.
+  const [step, setStep] = useState(-1)
   const topRef = useRef<HTMLDivElement>(null)
   const mounted = useRef(false)
 
-  // Scroll each new step to the top of the scroll panel (skip the first render).
+  const total = steps.length
+  const onReview = step >= total
+  const title = STAGES.find((s) => s.id === stageId)?.label ?? ''
+
+  // The complete button belongs on the review screen / summary view only.
+  useEffect(() => {
+    setShowComplete(mode === 'summary' || onReview)
+    return () => setShowComplete(true)
+  }, [mode, onReview, setShowComplete])
+
+  // Scroll each new screen to the top (skip the first render).
   useEffect(() => {
     if (!mounted.current) {
       mounted.current = true
@@ -93,10 +135,10 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
     topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
   }, [step])
 
-  // Commit any focused input (TextInput/TextArea commit on blur) before moving.
+  // Commit any focused input (they commit on blur) before moving.
   const go = (next: number) => {
     ;(document.activeElement as HTMLElement | null)?.blur?.()
-    setStep(Math.max(0, Math.min(next, steps.length)))
+    setStep(Math.max(-1, Math.min(next, total)))
   }
 
   const header = (
@@ -109,7 +151,9 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
     return (
       <div>
         {header}
-        {intro}
+        <StageIntro icon={icon}>{blurb}</StageIntro>
+        <TipBox stageId={stageId} />
+        {extra}
         {steps.map((s) => (
           <div key={s.id}>{s.node}</div>
         ))}
@@ -118,27 +162,39 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
   }
 
   // ---- Guided mode ----
-  const onReview = step >= steps.length
-  const total = steps.length
-  const current = Math.min(step, total - 1)
+  const current = Math.min(Math.max(step, 0), total - 1)
   const progressPct = onReview ? 100 : Math.round(((current + 1) / total) * 100)
 
+  // Intro screen — context and motivation only, no inputs.
+  if (step < 0) {
+    return (
+      <div style={{ maxWidth: `${CONTENT_MAX}px`, margin: '0 auto' }}>
+        {header}
+        <div ref={topRef} style={{ textAlign: 'center', padding: '36px 0 24px' }}>
+          <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '14px' }}>{icon}</div>
+          <h1 style={{ margin: '0 0 18px', fontSize: '28px', fontWeight: 800, color: 'var(--text)' }}>{title}</h1>
+          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.6)', maxWidth: '560px', margin: '0 auto 30px' }}>
+            {blurb}
+          </div>
+          <button type="button" style={pillBtn} onClick={() => go(0)}>
+            Let’s go <ChevronRight size={18} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div>
-      {/* Guided mode is deliberately bare: just the toggle, a step counter, the
-          one current question, and Back/Next. The stage overview + tips (intro)
-          are summary-mode only, so each question fills the screen on its own. */}
+    <div style={{ maxWidth: `${CONTENT_MAX}px`, margin: '0 auto' }}>
       {header}
 
       {/* Progress indicator */}
-      <div style={{ margin: '4px 0 18px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+      <div style={{ margin: '4px 0 8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '7px' }}>
           <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--accent-text)', textTransform: 'uppercase' }}>
             {onReview ? 'Review' : `Step ${current + 1} of ${total}`}
           </span>
-          {!onReview && (
-            <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{steps[current].title}</span>
-          )}
+          {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{steps[current].title}</span>}
         </div>
         <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
           <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${progressPct}%`, borderRadius: '3px', transition: 'width 0.4s' }} />
@@ -146,16 +202,25 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
       </div>
 
       {onReview ? (
-        <ReviewScreen steps={steps} onEdit={(i) => go(i)} />
+        <div style={{ padding: '24px 0 0' }}>
+          <ReviewScreen steps={steps} onEdit={(i) => go(i)} />
+          <div style={{ marginTop: '22px' }}>
+            <button type="button" style={ghostBtn} onClick={() => go(total - 1)}>
+              <ChevronLeft size={16} /> Back to questions
+            </button>
+          </div>
+        </div>
       ) : (
         <>
-          {steps[current].node}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px' }}>
-            <button type="button" style={{ ...ghostBtn, visibility: current === 0 ? 'hidden' : 'visible' }} onClick={() => go(current - 1)}>
+          <div style={{ padding: '28px 0 32px' }}>
+            <FieldCoachVariant variant="hero">{steps[current].node}</FieldCoachVariant>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button type="button" style={ghostBtn} onClick={() => go(current - 1)}>
               <ChevronLeft size={16} /> Back
             </button>
-            <button type="button" style={accentBtn} onClick={() => go(current + 1)}>
-              {current === total - 1 ? 'Review' : 'Next'} <ChevronRight size={16} />
+            <button type="button" style={pillBtn} onClick={() => go(current + 1)}>
+              {current === total - 1 ? 'Review' : 'Next'} <ChevronRight size={18} />
             </button>
           </div>
         </>
@@ -167,9 +232,9 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
 function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: number) => void }) {
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', fontSize: '17px', fontWeight: 700, color: 'var(--text)' }}>Review your answers</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: '19px', fontWeight: 800, color: 'var(--text)' }}>Review your answers</h3>
       <p style={{ margin: '0 0 18px', fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6 }}>
-        Here’s everything you entered for this step. Click any item to go back and change it — then mark the step complete below.
+        Here’s everything you entered. Click any item to change it — then mark the step complete below.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {steps.map((s, i) => (
@@ -185,7 +250,7 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
               width: '100%',
               background: 'rgba(var(--fg),0.02)',
               border: '1px solid rgba(var(--fg),0.08)',
-              borderRadius: '10px',
+              borderRadius: '12px',
               padding: '14px 16px',
               cursor: 'pointer',
               fontFamily: 'inherit',

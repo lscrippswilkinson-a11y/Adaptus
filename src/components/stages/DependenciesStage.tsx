@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Dependency, DependencyStatus, DependencyType } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { DEPENDENCY_TYPES, DEPENDENCY_STATUSES } from '@/data/constants'
 import { uid } from '@/lib/id'
@@ -73,15 +72,5 @@ export function DependenciesStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.dependencies.icon}>{coaching.dependencies.intro}</StageIntro>
-          <TipBox stageId="dependencies" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="dependencies" icon={coaching.dependencies.icon} blurb={coaching.dependencies.intro} steps={steps} />
 }

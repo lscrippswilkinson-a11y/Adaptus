@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ImpactedGroup, Impact, Readiness } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
@@ -63,15 +62,5 @@ export function GroupsStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.groups.icon}>{coaching.groups.intro}</StageIntro>
-          <TipBox stageId="groups" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="groups" icon={coaching.groups.icon} blurb={coaching.groups.intro} steps={steps} />
 }

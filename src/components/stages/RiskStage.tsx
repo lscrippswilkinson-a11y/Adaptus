@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { RiskItem } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { RISK_CATS } from '@/data/constants'
 import { avgRisk, riskColor, riskLabel } from '@/lib/format'
@@ -86,15 +85,5 @@ export function RiskStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.risk.icon}>{coaching.risk.intro}</StageIntro>
-          <TipBox stageId="risk" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="risk" icon={coaching.risk.icon} blurb={coaching.risk.intro} steps={steps} />
 }

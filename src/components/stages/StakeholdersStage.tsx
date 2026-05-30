@@ -1,8 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Influence, StakeholderRow, Support } from '@/types'
-import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
@@ -74,15 +73,5 @@ export function StakeholdersStage() {
     ),
   }]
 
-  return (
-    <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.stakeholders.icon}>{coaching.stakeholders.intro}</StageIntro>
-          <TipBox stageId="stakeholders" />
-        </>
-      }
-      steps={steps}
-    />
-  )
+  return <StageFlow stageId="stakeholders" icon={coaching.stakeholders.icon} blurb={coaching.stakeholders.intro} steps={steps} />
 }

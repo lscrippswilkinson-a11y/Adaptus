@@ -1,7 +1,6 @@
 import { useStageEditor } from '@/state/AppContext'
-import { FieldCoach, InsightCallout, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, InsightCallout, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 
 export function SustainmentStage() {
@@ -93,14 +92,13 @@ export function SustainmentStage() {
 
   return (
     <StageFlow
-      intro={
-        <>
-          <StageIntro icon={coaching.sustainment.icon}>{coaching.sustainment.intro}</StageIntro>
-          <TipBox stageId="sustainment" />
-          <InsightCallout tone={coaching.sustainment.topNote.tone} style={{ marginBottom: '12px' }}>
-            {coaching.sustainment.topNote.text}
-          </InsightCallout>
-        </>
+      stageId="sustainment"
+      icon={coaching.sustainment.icon}
+      blurb={coaching.sustainment.intro}
+      extra={
+        <InsightCallout tone={coaching.sustainment.topNote.tone} style={{ marginBottom: '12px' }}>
+          {coaching.sustainment.topNote.text}
+        </InsightCallout>
       }
       steps={steps}
     />
