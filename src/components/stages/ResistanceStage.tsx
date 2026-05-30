@@ -26,7 +26,7 @@ export function ResistanceStage() {
       {data.items.map((item) => (
         <div className="cq-card" key={item.id}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-            <select className="cq-select" value={item.type} style={{ flex: 1, color: '#f9a8d4' }} onChange={(e) => setItem(item.id, { type: e.target.value })}>
+            <select className="cq-select" value={item.type} style={{ flex: 1, color: 'var(--text)' }} onChange={(e) => setItem(item.id, { type: e.target.value })}>
               {RESISTANCE_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
             <DelButton onClick={() => delItem(item.id)} />
@@ -45,7 +45,7 @@ export function ResistanceStage() {
           </div>
           <div>
             <div className="cq-lbl">Intervention — how will you address this?</div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginBottom: '6px' }}>Be specific: who does what, by when?</div>
+            <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginBottom: '6px' }}>Be specific: who does what, by when?</div>
             <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, dedicated coaching sprint..." />
           </div>
         </div>

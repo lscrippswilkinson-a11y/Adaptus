@@ -39,14 +39,14 @@ export function GroupsStage() {
                 <select className="cq-select" value={g.impact} style={{ background: IMPACT_BG[g.impact] }} onChange={(e) => setGroup(g.id, { impact: e.target.value as Impact })}>
                   {LEVELS_3.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px', lineHeight: 1.4 }}>{IMPACT_HELP[g.impact]}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{IMPACT_HELP[g.impact]}</div>
               </div>
               <div style={{ flex: 1 }}>
                 <div className="cq-lbl">Change Readiness</div>
                 <select className="cq-select" value={g.readiness} style={{ background: READY_BG[g.readiness] }} onChange={(e) => setGroup(g.id, { readiness: e.target.value as Readiness })}>
                   {LEVELS_3.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px', lineHeight: 1.4 }}>{READY_HELP[g.readiness]}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{READY_HELP[g.readiness]}</div>
               </div>
             </div>
             {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '12px' }}>{insight.text}</InsightCallout>}

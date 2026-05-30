@@ -1,4 +1,5 @@
 import { AppProvider, useApp } from '@/state/AppContext'
+import { ThemeProvider } from '@/state/ThemeContext'
 import { Dashboard } from '@/components/Dashboard'
 import { Workspace } from '@/components/Workspace'
 
@@ -10,8 +11,10 @@ function Root() {
 
 export default function App() {
   return (
-    <AppProvider>
-      <Root />
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <Root />
+      </AppProvider>
+    </ThemeProvider>
   )
 }

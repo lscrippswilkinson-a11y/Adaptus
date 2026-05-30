@@ -5,6 +5,8 @@
  * user's global level is a function of XP summed across all projects.
  */
 
+import type { LucideIcon } from 'lucide-react'
+
 /* ---- Gamification ---- */
 
 export interface Level {
@@ -33,7 +35,7 @@ export type StageTier = 'essential' | 'advanced'
 export interface Stage {
   id: StageId
   label: string
-  icon: string
+  icon: LucideIcon
   tag: string
   xp: number
   phase: PhaseId

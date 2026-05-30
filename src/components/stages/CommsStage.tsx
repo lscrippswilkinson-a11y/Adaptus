@@ -74,7 +74,7 @@ export function CommsStage() {
       {/* Structured, phased communication schedule */}
       <Card>
         <Label>{coaching.comms.schedule.label}</Label>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, margin: '0 0 16px' }}>
+        <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 16px' }}>
           {coaching.comms.schedule.why}
         </div>
 
@@ -89,11 +89,11 @@ export function CommsStage() {
           const items = schedule.filter((t) => t.phase === phase)
           return (
             <div key={phase} style={{ marginBottom: '18px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#B8D0DE', textTransform: 'uppercase', letterSpacing: '1px' }}>{meta.label}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '3px 0 10px', lineHeight: 1.5 }}>{meta.hint}</div>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px' }}>{meta.label}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', margin: '3px 0 10px', lineHeight: 1.5 }}>{meta.hint}</div>
 
               {items.map((t) => (
-                <div key={t.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
+                <div key={t.id} style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                     <TextInput value={t.when} onCommit={(v) => setTouchpoint(t.id, { when: v })} placeholder="When (e.g., 2 weeks out)" style={{ width: '150px', flexShrink: 0 }} />
                     <TextInput value={t.audience} onCommit={(v) => setTouchpoint(t.id, { audience: v })} placeholder="Audience" style={{ flex: 1, minWidth: 0 }} />
@@ -115,7 +115,7 @@ export function CommsStage() {
           <button
             type="button"
             onClick={loadExample}
-            style={{ background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '8px 14px', color: '#B8D0DE', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '8px 14px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             Load an example schedule →
           </button>

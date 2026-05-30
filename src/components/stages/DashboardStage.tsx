@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { useApp, useStageEditor } from '@/state/AppContext'
 import type { MilestoneOwner, StageId } from '@/types'
 import { AddButton, DelButton, StageIntro, TextInput } from '@/components/ui'
@@ -32,7 +33,7 @@ function GoLiveCountdown({ date }: { date: string }) {
   }, [date])
 
   if (!date) {
-    return <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>Set a target date to start the countdown →</div>
+    return <div style={{ fontSize: '14px', color: 'rgba(var(--fg),0.4)', marginTop: '4px' }}>Set a target date to start the countdown →</div>
   }
 
   const target = new Date(date + 'T00:00:00')
@@ -59,9 +60,9 @@ function GoLiveCountdown({ date }: { date: string }) {
   return (
     <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
       {boxes.map(([label, val]) => (
-        <div key={label} style={{ minWidth: '52px', textAlign: 'center', background: 'rgba(255,255,255,0.04)', border: `1px solid ${urgent ? 'rgba(245,158,11,0.4)' : 'rgba(91,134,163,0.3)'}`, borderRadius: '8px', padding: '8px 6px' }}>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: urgent ? '#fcd34d' : '#fff', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{String(val).padStart(2, '0')}</div>
-          <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>{label}</div>
+        <div key={label} style={{ minWidth: '52px', textAlign: 'center', background: 'rgba(var(--fg),0.04)', border: `1px solid ${urgent ? 'rgba(245,158,11,0.4)' : 'rgba(91,134,163,0.3)'}`, borderRadius: '8px', padding: '8px 6px' }}>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: urgent ? '#fcd34d' : 'var(--text)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{String(val).padStart(2, '0')}</div>
+          <div style={{ fontSize: '9px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>{label}</div>
         </div>
       ))}
     </div>
@@ -132,12 +133,13 @@ export function DashboardStage() {
 
   const groupsCount = sd.groups.groups.length
   const sponsorVal = sd.sponsor.name ? (sd.sponsor.role ? `${sd.sponsor.name} · ${sd.sponsor.role}` : sd.sponsor.name) : ''
-  const summary: { icon: string; label: string; value: string; empty: string; jump: StageId; color?: string }[] = [
-    { icon: '🎯', label: 'The change', value: sd.define.statement, empty: 'Define what’s changing', jump: 'define' },
-    { icon: '👥', label: 'Impacted groups', value: groupsCount ? `${groupsCount} group${groupsCount === 1 ? '' : 's'} mapped` : '', empty: 'List who’s affected', jump: 'groups' },
-    { icon: '🏅', label: 'Sponsor', value: sponsorVal, empty: 'Name your sponsor', jump: 'sponsor' },
-    { icon: '⚡', label: 'Overall risk', value: avg !== null ? `${riskLabel(avg)} · ${avg}/10` : '', empty: 'Log your risks', jump: 'risk', color: avg !== null ? riskColor(avg) : undefined },
-    { icon: '🤝', label: 'Coalition', value: sd.stakeholders.rows.length ? `${adv} advocate${adv === 1 ? '' : 's'} · ${res} resistant` : '', empty: 'Map stakeholders', jump: 'stakeholders' },
+  const iconFor = (id: StageId) => STAGES.find((s) => s.id === id)!.icon
+  const summary: { icon: LucideIcon; label: string; value: string; empty: string; jump: StageId; color?: string }[] = [
+    { icon: iconFor('define'), label: 'The change', value: sd.define.statement, empty: 'Define what’s changing', jump: 'define' },
+    { icon: iconFor('groups'), label: 'Impacted groups', value: groupsCount ? `${groupsCount} group${groupsCount === 1 ? '' : 's'} mapped` : '', empty: 'List who’s affected', jump: 'groups' },
+    { icon: iconFor('sponsor'), label: 'Sponsor', value: sponsorVal, empty: 'Name your sponsor', jump: 'sponsor' },
+    { icon: iconFor('risk'), label: 'Overall risk', value: avg !== null ? `${riskLabel(avg)} · ${avg}/10` : '', empty: 'Log your risks', jump: 'risk', color: avg !== null ? riskColor(avg) : undefined },
+    { icon: iconFor('stakeholders'), label: 'Coalition', value: sd.stakeholders.rows.length ? `${adv} advocate${adv === 1 ? '' : 's'} · ${res} resistant` : '', empty: 'Map stakeholders', jump: 'stakeholders' },
   ]
 
   return (
@@ -163,11 +165,11 @@ export function DashboardStage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '40px', fontWeight: 800, color: prepColor(prep.pct), lineHeight: 1 }}>{prep.pct}%</div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>Launch Preparedness</div>
+            <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>Launch Preparedness</div>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '6px' }}>{prep.done} of {prep.total} tasks complete</div>
-            <div style={{ height: '10px', background: 'rgba(255,255,255,0.08)', borderRadius: '5px', overflow: 'hidden' }}>
+            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginBottom: '6px' }}>{prep.done} of {prep.total} tasks complete</div>
+            <div style={{ height: '10px', background: 'rgba(var(--fg),0.08)', borderRadius: '5px', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${prep.pct}%`, background: prepColor(prep.pct), borderRadius: '5px', transition: 'width 0.4s' }} />
             </div>
           </div>
@@ -176,25 +178,25 @@ export function DashboardStage() {
 
       {/* Aggregated task list */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: '4px' }}>Launch tasks</div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section — your score updates either way.</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section — your score updates either way.</div>
 
         {GROUP_ORDER.map((group) => {
           const items = tasks.filter((t) => t.group === group)
           if (items.length === 0 && group !== 'Your tasks') return null
           return (
             <div key={group} style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#B8D0DE', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{group}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{group}</div>
               {items.map((t) => (
-                <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
                   <button
                     type="button"
                     onClick={() => toggle(t)}
-                    style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#fff', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(255,255,255,0.2)', fontFamily: 'inherit' }}
+                    style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
                   >
                     {t.done ? '✓' : ''}
                   </button>
-                  <span style={{ flex: 1, fontSize: '13px', color: t.done ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                  <span style={{ flex: 1, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
                   {t.source === 'custom' && <DelButton onClick={() => delCustom(t.refId!)} />}
                 </div>
               ))}
@@ -218,21 +220,21 @@ export function DashboardStage() {
 
       {/* Planning summary */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: '4px' }}>From your plan</div>
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '14px' }}>A snapshot of what you decided earlier. Tap any card to jump back and edit it.</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>From your plan</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>A snapshot of what you decided earlier. Tap any card to jump back and edit it.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: '10px' }}>
           {summary.map((s) => {
             const filled = !!s.value
             return (
               <button key={s.label} type="button" className="summary-card" onClick={() => goTo(s.jump)}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '16px' }}>{s.icon}</span>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>{s.label}</span>
+                  <s.icon size={16} color="#8FB3C7" />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(var(--fg),0.85)' }}>{s.label}</span>
                 </div>
-                <div style={{ fontSize: '13px', lineHeight: 1.45, color: filled ? (s.color ?? 'rgba(255,255,255,0.72)') : 'rgba(255,255,255,0.35)', fontStyle: filled ? 'normal' : 'italic', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                <div style={{ fontSize: '13px', lineHeight: 1.45, color: filled ? (s.color ?? 'rgba(var(--fg),0.72)') : 'rgba(var(--fg),0.35)', fontStyle: filled ? 'normal' : 'italic', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                   {filled ? s.value : s.empty}
                 </div>
-                <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: 600, color: filled ? '#B8D0DE' : '#fcd34d' }}>{filled ? 'Edit →' : 'Add →'}</div>
+                <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: 600, color: filled ? 'var(--accent-text)' : '#fcd34d' }}>{filled ? 'Edit →' : 'Add →'}</div>
               </button>
             )
           })}
@@ -241,7 +243,7 @@ export function DashboardStage() {
 
       {/* Workstream owners */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: '12px' }}>Workstream owners</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '12px' }}>Workstream owners</div>
         {milestones.owners.map((o) => (
           <div key={o.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
             <TextInput value={o.name} onCommit={(v) => setOwner(o.id, { name: v })} placeholder="Name" style={{ flex: 1 }} />

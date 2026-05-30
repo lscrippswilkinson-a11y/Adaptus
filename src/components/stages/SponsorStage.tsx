@@ -53,8 +53,8 @@ export function SponsorStage() {
                   alignItems: 'flex-start',
                   gap: '10px',
                   padding: '8px 12px',
-                  background: checked ? 'rgba(91,134,163,0.1)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${checked ? 'rgba(91,134,163,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                  background: checked ? 'rgba(91,134,163,0.1)' : 'rgba(var(--fg),0.02)',
+                  border: `1px solid ${checked ? 'rgba(91,134,163,0.3)' : 'rgba(var(--fg),0.06)'}`,
                   borderRadius: '8px',
                   cursor: 'pointer',
                 }}
@@ -71,14 +71,14 @@ export function SponsorStage() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '11px',
-                    color: '#fff',
+                    color: 'var(--on-accent)',
                     background: checked ? '#5B86A3' : 'transparent',
-                    borderColor: checked ? '#5B86A3' : 'rgba(255,255,255,0.2)',
+                    borderColor: checked ? '#5B86A3' : 'rgba(var(--fg),0.2)',
                   }}
                 >
                   {checked ? '✓' : ''}
                 </div>
-                <div style={{ fontSize: '13px', color: checked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '13px', color: checked ? 'rgba(var(--fg),0.9)' : 'rgba(var(--fg),0.6)', lineHeight: 1.5 }}>
                   {action}
                 </div>
               </div>

@@ -4,8 +4,8 @@ import { CHANGE_TYPES } from '@/data/constants'
 
 const sideBtn: React.CSSProperties = {
   flex: 1,
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(var(--fg),0.04)',
+  border: '1px solid rgba(var(--fg),0.1)',
   borderRadius: '10px',
   padding: '12px',
   cursor: 'pointer',
@@ -33,11 +33,11 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-      <div style={{ background: '#13132b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
+      <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
         <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>
           Edit project
         </div>
-        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: '#fff' }}>Project details</h2>
+        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Project details</h2>
 
         <div className="cq-lbl">Project name</div>
         <input
@@ -85,7 +85,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
         />
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '26px' }}>
-          <button type="button" style={{ ...sideBtn, color: 'rgba(255,255,255,0.4)' }} onClick={onClose}>
+          <button type="button" style={{ ...sideBtn, color: 'rgba(var(--fg),0.4)' }} onClick={onClose}>
             Cancel
           </button>
           <button
@@ -100,7 +100,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
               fontSize: '14px',
               fontFamily: 'inherit',
               background: isValid ? 'linear-gradient(135deg,#5B86A3,#3E6580)' : 'rgba(91,134,163,0.2)',
-              color: isValid ? '#fff' : 'rgba(255,255,255,0.3)',
+              color: isValid ? 'var(--on-accent)' : 'rgba(var(--fg),0.3)',
               cursor: isValid ? 'pointer' : 'default',
             }}
           >

@@ -1,3 +1,4 @@
+import { Printer } from 'lucide-react'
 import { useActiveProject, useStageEditor } from '@/state/AppContext'
 import { FieldCoach, StageIntro, TextArea } from '@/components/ui'
 import { coaching } from '@/data/coaching'
@@ -44,9 +45,9 @@ export function ReportStage() {
       <button
         type="button"
         onClick={() => window.print()}
-        style={{ background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '12px 26px', color: '#fff', fontWeight: 600, fontSize: '14px', cursor: 'pointer', margin: '8px 0 20px', fontFamily: 'inherit' }}
+        style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '12px 26px', color: 'var(--on-accent)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', margin: '8px 0 20px', fontFamily: 'inherit' }}
       >
-        🖨️ Print / Save as PDF
+        <Printer size={16} /> Print / Save as PDF
       </button>
 
       {/* The printable report */}

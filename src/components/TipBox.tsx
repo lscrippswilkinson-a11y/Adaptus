@@ -9,7 +9,7 @@ export function TipBox({ stageId }: { stageId: StageId }) {
     <div className="tip-box" style={{ background: tip.color, border: `1px solid ${tip.border}` }}>
       <div className="tip-hdr">
         <span style={{ fontSize: '16px' }}>{tip.icon}</span>
-        <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{tip.title}</span>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: 'rgba(var(--fg),0.85)' }}>{tip.title}</span>
       </div>
       {/* Static, trusted markup from data/tips.ts */}
       <div className="tip-body" dangerouslySetInnerHTML={{ __html: tip.body }} />

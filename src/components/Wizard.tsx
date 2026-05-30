@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowRight, Rocket } from 'lucide-react'
 import { CHANGE_TYPES } from '@/data/constants'
 
 export interface ProjectDraft {
@@ -16,8 +17,8 @@ const STEPS = [
 
 const sideBtn: React.CSSProperties = {
   flex: 1,
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
+  background: 'rgba(var(--fg),0.04)',
+  border: '1px solid rgba(var(--fg),0.1)',
   borderRadius: '10px',
   padding: '12px',
   cursor: 'pointer',
@@ -40,18 +41,18 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-      <div style={{ background: '#13132b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
+      <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
         <div style={{ display: 'flex', gap: '6px', marginBottom: '26px' }}>
           {STEPS.map((_, i) => (
-            <div key={i} style={{ flex: 1, height: '3px', borderRadius: '2px', background: i <= step ? '#5B86A3' : 'rgba(255,255,255,0.1)' }} />
+            <div key={i} style={{ flex: 1, height: '3px', borderRadius: '2px', background: i <= step ? '#5B86A3' : 'rgba(var(--fg),0.1)' }} />
           ))}
         </div>
 
         <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>
           Step {step + 1} of {STEPS.length}
         </div>
-        <h2 style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 700, color: '#fff' }}>{STEPS[step].title}</h2>
-        <p style={{ margin: '0 0 22px', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>{STEPS[step].sub}</p>
+        <h2 style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>{STEPS[step].title}</h2>
+        <p style={{ margin: '0 0 22px', color: 'rgba(var(--fg),0.4)', fontSize: '14px' }}>{STEPS[step].sub}</p>
 
         {step === 0 && (
           <>
@@ -106,18 +107,18 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
               value={draft.targetDate}
               onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })}
             />
-            <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(255,255,255,0.3)', lineHeight: 1.7 }}>
-              Guided roadmap for <strong style={{ color: 'rgba(255,255,255,0.6)' }}>{draft.name}</strong>. 13 stages. Step by step.
+            <div style={{ marginTop: '16px', fontSize: '13px', color: 'rgba(var(--fg),0.3)', lineHeight: 1.7 }}>
+              Guided roadmap for <strong style={{ color: 'rgba(var(--fg),0.6)' }}>{draft.name}</strong>. 13 stages. Step by step.
             </div>
           </>
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '26px' }}>
-          <button type="button" style={{ ...sideBtn, color: 'rgba(255,255,255,0.4)' }} onClick={onClose}>
+          <button type="button" style={{ ...sideBtn, color: 'rgba(var(--fg),0.4)' }} onClick={onClose}>
             Cancel
           </button>
           {step > 0 && (
-            <button type="button" style={{ ...sideBtn, color: 'rgba(255,255,255,0.6)' }} onClick={() => setStep(step - 1)}>
+            <button type="button" style={{ ...sideBtn, color: 'rgba(var(--fg),0.6)' }} onClick={() => setStep(step - 1)}>
               ← Back
             </button>
           )}
@@ -126,6 +127,10 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
             onClick={next}
             style={{
               flex: 2,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '7px',
               border: 'none',
               borderRadius: '10px',
               padding: '12px',
@@ -133,11 +138,15 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
               fontSize: '14px',
               fontFamily: 'inherit',
               background: isValid ? 'linear-gradient(135deg,#5B86A3,#3E6580)' : 'rgba(91,134,163,0.2)',
-              color: isValid ? '#fff' : 'rgba(255,255,255,0.3)',
+              color: isValid ? 'var(--on-accent)' : 'rgba(var(--fg),0.3)',
               cursor: isValid ? 'pointer' : 'default',
             }}
           >
-            {step < STEPS.length - 1 ? 'Continue →' : '🚀 Launch Project'}
+            {step < STEPS.length - 1 ? (
+              <>Continue <ArrowRight size={16} /></>
+            ) : (
+              <><Rocket size={16} /> Launch project</>
+            )}
           </button>
         </div>
       </div>

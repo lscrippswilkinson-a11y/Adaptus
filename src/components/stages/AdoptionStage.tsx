@@ -39,10 +39,10 @@ export function AdoptionStage() {
             </div>
             {hasProgress && (
               <>
-                <div style={{ height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ height: '6px', background: 'rgba(var(--fg),0.06)', borderRadius: '3px', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${p2}%`, background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', borderRadius: '3px', transition: 'width 0.4s' }} />
                 </div>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '3px' }}>{p2}% of target</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '3px' }}>{p2}% of target</div>
               </>
             )}
           </div>

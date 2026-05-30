@@ -18,40 +18,92 @@ body,
   height: 100%;
 }
 
+/*
+ * Theme tokens. Dark is the default (:root); light is opt-in via
+ * <html data-theme="light">. Most of the UI paints with rgba(var(--fg), α)
+ * for text/borders/overlays, so flipping --fg remaps the whole opacity
+ * hierarchy at once. Solid surfaces/accents get their own tokens.
+ */
+:root {
+  --fg: 255, 255, 255; /* foreground channel for rgba() text/borders/overlays */
+  --text: #ffffff; /* solid primary text */
+  --on-accent: #ffffff; /* text/icons sitting on an accent-coloured fill */
+  --surface-card: #13132b; /* solid raised card (e.g. project cards) */
+  --accent: #5b86a3;
+  --accent-2: #3e6580;
+  --accent-light: #8fb3c7;
+  --accent-text: #b8d0de; /* accent-tinted text that must stay readable */
+  --accent-rgb: 91, 134, 163;
+  /* Raised "box" surface + its border + elevation shadow (theme-aware). */
+  --surface-1: rgba(255, 255, 255, 0.03);
+  --surface-1-border: rgba(255, 255, 255, 0.07);
+  --box-shadow: none;
+  --bg-base: #0b0d18;
+  --bg-image:
+    radial-gradient(1100px 760px at 25% -10%, rgba(91, 134, 163, 0.16), transparent 60%),
+    radial-gradient(900px 650px at 95% 5%, rgba(91, 134, 163, 0.06), transparent 55%),
+    linear-gradient(165deg, #11141f 0%, #0c0e1a 55%, #090b14 100%);
+}
+
+:root[data-theme='light'] {
+  --fg: 44, 38, 25; /* warm near-black (brown-leaning) */
+  --text: #2c2619;
+  --on-accent: #ffffff;
+  --surface-card: #f9f1df; /* warm ivory card, lifts off the tan canvas */
+  --accent: #5b86a3;
+  --accent-2: #3e6580;
+  --accent-light: #6f9bb3;
+  --accent-text: #3e6580; /* darker slate so it reads on the warm canvas */
+  --accent-rgb: 91, 134, 163;
+  /* On the warm canvas, raised boxes are lighter (ivory) + carry a soft shadow. */
+  --surface-1: #fdf8ec;
+  --surface-1-border: rgba(44, 38, 25, 0.14);
+  --box-shadow: 0 1px 2px rgba(60, 45, 20, 0.06), 0 2px 7px rgba(60, 45, 20, 0.08);
+  --bg-base: #e9dabf;
+  --bg-image:
+    radial-gradient(1100px 760px at 25% -10%, rgba(250, 242, 224, 0.8), transparent 62%),
+    radial-gradient(900px 650px at 95% 5%, rgba(91, 134, 163, 0.08), transparent 55%),
+    linear-gradient(165deg, #f2e7d0 0%, #e9dabf 55%, #dccbab 100%);
+}
+
 body {
-  background: #0d0d1e;
-  color: #fff;
+  min-height: 100%;
+  background-color: var(--bg-base);
+  background-image: var(--bg-image);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  color: var(--text);
   font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .cq-root {
-  min-height: 600px;
-  background: #0d0d1e;
-  color: #fff;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--text);
   font-family: 'Inter', -apple-system, sans-serif;
 }
 .cq-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--fg), 0.05);
+  border: 1px solid rgba(var(--fg), 0.1);
   border-radius: 8px;
   padding: 9px 13px;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   outline: none;
   transition: border 0.15s;
   font-family: inherit;
 }
 .cq-input:focus {
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(91, 134, 163, 0.6);
 }
 .cq-textarea {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--fg), 0.05);
+  border: 1px solid rgba(var(--fg), 0.1);
   border-radius: 8px;
   padding: 9px 13px;
-  color: #fff;
+  color: var(--text);
   font-size: 14px;
   outline: none;
   resize: vertical;
@@ -59,14 +111,14 @@ body {
   font-family: inherit;
 }
 .cq-textarea:focus {
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(91, 134, 163, 0.6);
 }
 .cq-select {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--fg), 0.05);
+  border: 1px solid rgba(var(--fg), 0.1);
   border-radius: 8px;
   padding: 9px 10px;
-  color: #fff;
+  color: var(--text);
   font-size: 13px;
   outline: none;
   font-family: inherit;
@@ -74,26 +126,27 @@ body {
   width: 100%;
 }
 .cq-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-1-border);
+  box-shadow: var(--box-shadow);
   border-radius: 14px;
   padding: 18px 22px;
   margin-bottom: 14px;
 }
 .cq-lbl {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(var(--fg), 0.45);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 6px;
   font-weight: 600;
 }
 .cq-btn-add {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(var(--fg), 0.04);
+  border: 1px dashed rgba(var(--fg), 0.2);
   border-radius: 10px;
   padding: 11px 18px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--fg), 0.55);
   cursor: pointer;
   font-size: 14px;
   width: 100%;
@@ -101,8 +154,8 @@ body {
   font-family: inherit;
 }
 .cq-btn-add:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(91, 134, 163, 0.4);
+  color: rgba(var(--fg), 0.75);
 }
 .cq-btn-del {
   background: rgba(239, 68, 68, 0.1);
@@ -117,11 +170,11 @@ body {
   font-family: inherit;
 }
 .cq-complete-btn {
-  background: linear-gradient(135deg, #5B86A3, #3E6580);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   border: none;
   border-radius: 12px;
   padding: 13px 30px;
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
@@ -147,7 +200,7 @@ body {
   font-family: inherit;
 }
 .sb-btn.active {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(91, 134, 163, 0.15);
   border-left-color: #5B86A3;
 }
 .sb-btn.locked {
@@ -159,23 +212,24 @@ body {
   border-radius: 20px;
   font-size: 13px;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(var(--fg), 0.15);
+  background: rgba(var(--fg), 0.04);
+  color: rgba(var(--fg), 0.5);
   font-family: inherit;
   transition: background 0.1s, border-color 0.1s, color 0.1s;
 }
 .ch-btn.sel {
-  background: rgba(99, 102, 241, 0.25) !important;
-  border-color: rgba(99, 102, 241, 0.6) !important;
-  color: #CFE0EA !important;
+  background: rgba(91, 134, 163, 0.25) !important;
+  border-color: rgba(91, 134, 163, 0.6) !important;
+  color: var(--accent-text) !important;
 }
 input[type='range'] {
-  accent-color: #5B86A3;
+  accent-color: #5b86a3;
   width: 100%;
 }
 option {
-  background: #1a1a2e;
+  background: var(--surface-card);
+  color: var(--text);
 }
 .tip-box {
   border-radius: 12px;
@@ -191,11 +245,11 @@ option {
 .tip-body {
   font-size: 13px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(var(--fg), 0.65);
   padding: 4px 16px 14px;
 }
 .tip-body strong {
-  color: #B8D0DE;
+  color: var(--accent-text);
 }
 .tip-body .cg {
   display: grid;
@@ -204,7 +258,7 @@ option {
   margin-top: 10px;
 }
 .tip-body .cc {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(var(--fg), 0.06);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -217,12 +271,12 @@ option {
 }
 .tip-body .cc li {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(var(--fg), 0.55);
   margin-left: 14px;
   margin-bottom: 3px;
 }
 .launch-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(var(--fg), 0.05);
 }
 .launch-item:last-child {
   border-bottom: none;
@@ -236,7 +290,7 @@ option {
 }
 .launch-explainer {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--fg), 0.5);
   line-height: 1.6;
   padding: 0 0 10px 34px;
   display: none;
@@ -245,8 +299,8 @@ option {
   display: block;
 }
 .info-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--fg), 0.06);
+  border: 1px solid rgba(var(--fg), 0.1);
   border-radius: 50%;
   width: 18px;
   height: 18px;
@@ -254,7 +308,7 @@ option {
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(var(--fg), 0.4);
   cursor: pointer;
   flex-shrink: 0;
   margin-left: auto;
@@ -263,13 +317,15 @@ option {
 }
 .info-btn:hover,
 .info-btn.open {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(91, 134, 163, 0.2);
+  border-color: rgba(91, 134, 163, 0.4);
   color: #B8D0DE;
 }
 .brief-wrap {
-  background: rgba(99, 102, 241, 0.05);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  /* The executive report is a dark "island" in both themes — its content is
+     white-text styled and prints on a dark page, so the card stays dark. */
+  background: #11141f;
+  border: 1px solid rgba(91, 134, 163, 0.2);
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 16px;
@@ -325,7 +381,7 @@ option {
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(91, 134, 163, 0.2);
 }
 .bsg {
   display: grid;
@@ -376,9 +432,9 @@ option {
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 .btag.b {
-  background: rgba(99, 102, 241, 0.15);
+  background: rgba(91, 134, 163, 0.15);
   color: #B8D0DE;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(91, 134, 163, 0.25);
 }
 .bai {
   display: flex;
@@ -401,8 +457,8 @@ option {
   margin-top: 6px;
 }
 .brief-ft {
-  background: rgba(99, 102, 241, 0.06);
-  border-top: 1px solid rgba(99, 102, 241, 0.15);
+  background: rgba(91, 134, 163, 0.06);
+  border-top: 1px solid rgba(91, 134, 163, 0.15);
   padding: 14px 32px;
   display: flex;
   align-items: center;
@@ -471,8 +527,9 @@ option {
 /* Dashboard "From your plan" cards. */
 .summary-card {
   text-align: left;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--surface-1);
+  border: 1px solid var(--surface-1-border);
+  box-shadow: var(--box-shadow);
   border-radius: 12px;
   padding: 14px;
   cursor: pointer;

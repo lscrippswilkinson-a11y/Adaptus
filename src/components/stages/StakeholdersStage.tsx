@@ -44,19 +44,19 @@ export function StakeholdersStage() {
                 <select className="cq-select" value={r.influence} onChange={(e) => setRow(r.id, { influence: e.target.value as Influence })}>
                   {INFLUENCE_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px', lineHeight: 1.4 }}>{INFLUENCE_HELP[r.influence]}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{INFLUENCE_HELP[r.influence]}</div>
               </div>
               <div style={{ flex: 1 }}>
                 <div className="cq-lbl">Support Status</div>
                 <select className="cq-select" value={r.support} style={{ color: supportColor(r.support) }} onChange={(e) => setRow(r.id, { support: e.target.value as Support })}>
                   {SUPPORT_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
                 </select>
-                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px', lineHeight: 1.4 }}>{SUPPORT_HELP[r.support]}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{SUPPORT_HELP[r.support]}</div>
               </div>
             </div>
             <div>
               <div className="cq-lbl">Engagement action</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '6px' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', marginBottom: '6px' }}>
                 What will you do to move this person toward Advocate?
               </div>
               <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., 1:1 briefing before all-hands..." />

@@ -15,7 +15,7 @@ function Slider({ label, value, labels, onChange }: { label: string; value: numb
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
         <span className="cq-lbl">{label}</span>
-        <span style={{ fontSize: '12px', color: '#B8D0DE', fontWeight: 600 }}>{labels[value]}</span>
+        <span style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600 }}>{labels[value]}</span>
       </div>
       <input type="range" min={1} max={5} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} />
     </div>
@@ -43,14 +43,14 @@ export function RiskStage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div>
               <div style={{ fontSize: '34px', fontWeight: 800, color: riskColor(avg) }}>{avg}</div>
-              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Risk Score</div>
+              <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Risk Score</div>
             </div>
-            <div style={{ width: '1px', height: '44px', background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ width: '1px', height: '44px', background: 'rgba(var(--fg),0.08)' }} />
             <div>
               <div style={{ fontSize: '16px', fontWeight: 700, color: riskColor(avg) }}>{riskLabel(avg)} Risk</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>{data.items.length} items</div>
+              <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{data.items.length} items</div>
             </div>
-            <div style={{ flex: 1, height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ flex: 1, height: '8px', background: 'rgba(var(--fg),0.06)', borderRadius: '4px', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${(avg / 10) * 100}%`, background: riskColor(avg), borderRadius: '4px', transition: 'width 0.5s' }} />
             </div>
           </div>
@@ -62,7 +62,7 @@ export function RiskStage() {
       {data.items.map((r) => (
         <div className="cq-card" key={r.id}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '12px' }}>
-            <select className="cq-select" value={r.category} style={{ width: '160px', flexShrink: 0, color: '#B8D0DE' }} onChange={(e) => setItem(r.id, { category: e.target.value })}>
+            <select className="cq-select" value={r.category} style={{ width: '160px', flexShrink: 0, color: 'var(--accent-text)' }} onChange={(e) => setItem(r.id, { category: e.target.value })}>
               {RISK_CATS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
             <TextInput value={r.description} onCommit={(v) => setItem(r.id, { description: v })} placeholder="Describe the risk... (e.g., staff keep using the old system)" style={{ flex: 1 }} />

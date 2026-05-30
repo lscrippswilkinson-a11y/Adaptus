@@ -38,8 +38,8 @@ export function TrainingStage() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 background: t.done ? '#22c55e' : 'transparent',
-                borderColor: t.done ? '#22c55e' : 'rgba(255,255,255,0.2)',
-                color: '#fff',
+                borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)',
+                color: 'var(--text)',
                 fontSize: '12px',
                 fontFamily: 'inherit',
               }}

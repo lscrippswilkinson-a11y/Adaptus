@@ -7,7 +7,7 @@ import { DEPENDENCY_TYPES, DEPENDENCY_STATUSES } from '@/data/constants'
 import { uid } from '@/lib/id'
 
 const STATUS_BG: Record<DependencyStatus, string> = {
-  'Not started': 'rgba(255,255,255,0.05)',
+  'Not started': 'rgba(var(--fg),0.05)',
   'In progress': 'rgba(245,158,11,0.15)',
   Ready: 'rgba(34,197,94,0.15)',
   'At risk': 'rgba(239,68,68,0.15)',

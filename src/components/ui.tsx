@@ -4,6 +4,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
+import { Plus, X } from 'lucide-react'
 
 /** Section card (.cq-card). */
 export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
@@ -92,17 +93,24 @@ export function Select({ value, options, onChange, style }: SelectProps) {
 }
 
 export function AddButton({ label, onClick, style }: { label: string; onClick: () => void; style?: CSSProperties }) {
+  // Labels historically carried a leading "+ "; drop it in favour of the icon.
+  const text = label.replace(/^\+\s*/, '')
   return (
-    <button type="button" className="cq-btn-add" style={style} onClick={onClick}>
-      {label}
+    <button
+      type="button"
+      className="cq-btn-add"
+      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '7px', ...style }}
+      onClick={onClick}
+    >
+      <Plus size={16} /> {text}
     </button>
   )
 }
 
 export function DelButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="cq-btn-del" onClick={onClick} aria-label="Delete">
-      ×
+    <button type="button" className="cq-btn-del" onClick={onClick} aria-label="Delete" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+      <X size={16} />
     </button>
   )
 }
@@ -126,7 +134,7 @@ export function StageIntro({ icon = '🧭', children }: { icon?: string; childre
       }}
     >
       <span style={{ fontSize: '20px', flexShrink: 0 }}>{icon}</span>
-      <div style={{ fontSize: '13.5px', color: 'rgba(255,255,255,0.72)' }}>{children}</div>
+      <div style={{ fontSize: '13.5px', color: 'rgba(var(--fg),0.72)' }}>{children}</div>
     </div>
   )
 }
@@ -159,7 +167,7 @@ export function InsightCallout({ tone = 'info', icon, children, style }: { tone?
         padding: '9px 12px',
         fontSize: '12.5px',
         lineHeight: 1.55,
-        color: 'rgba(255,255,255,0.78)',
+        color: 'rgba(var(--fg),0.78)',
         ...style,
       }}
     >
@@ -185,7 +193,7 @@ interface FieldCoachProps {
 const linkBtnStyle: CSSProperties = {
   background: 'none',
   border: 'none',
-  color: '#B8D0DE',
+  color: 'var(--accent-text)',
   cursor: 'pointer',
   fontSize: '12px',
   fontWeight: 600,
@@ -203,7 +211,7 @@ export function FieldCoach({ label, why, example, onUseExample, children }: Fiel
   return (
     <Card>
       <Label>{label}</Label>
-      <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
+      <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
       {children}
       {example && (
         <div style={{ marginTop: '10px' }}>
@@ -212,13 +220,13 @@ export function FieldCoach({ label, why, example, onUseExample, children }: Fiel
           </button>
           {showExample && (
             <div style={{ marginTop: '8px', background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.2)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#B8D0DE', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Example</div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, fontStyle: 'italic' }}>“{example}”</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Example</div>
+              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.78)', lineHeight: 1.6, fontStyle: 'italic' }}>“{example}”</div>
               {onUseExample && (
                 <button
                   type="button"
                   onClick={onUseExample}
-                  style={{ marginTop: '12px', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '6px 12px', color: '#B8D0DE', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ marginTop: '12px', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '6px 12px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Use this example →
                 </button>

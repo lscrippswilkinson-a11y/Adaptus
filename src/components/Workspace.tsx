@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { ArrowLeft, Check } from 'lucide-react'
 import type { Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
@@ -28,31 +30,33 @@ export function Workspace({ project }: { project: Project }) {
   }, [state.stageIdx, project.id])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0d0d1e' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'transparent' }}>
       {/* Header — quiet progress only */}
-      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+      <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(var(--fg),0.06)', display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
         <button
           type="button"
           onClick={() => dispatch({ type: 'SET_VIEW', view: 'dashboard' })}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: '20px', padding: '4px 8px', borderRadius: '6px', fontFamily: 'inherit' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', display: 'flex', alignItems: 'center', padding: '4px 8px', borderRadius: '6px', fontFamily: 'inherit' }}
+          aria-label="Back to dashboard"
         >
-          ←
+          <ArrowLeft size={20} />
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-            <span style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>{project.name}</span>
-            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{p2}% of the core steps done</span>
+            <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>{project.name}</span>
+            <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>{p2}% of the core steps done</span>
           </div>
-          <div style={{ height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
           </div>
         </div>
+        <ThemeToggle />
       </div>
 
       {/* Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar — sections grouped by phase */}
-        <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(var(--fg),0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }}>
             {PHASES.map((phase, pi) => {
               const all = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
@@ -60,7 +64,7 @@ export function Workspace({ project }: { project: Project }) {
               const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.35)' }}>
                     <span>{pi + 1}. {phase.label}</span>
                     <span style={{ color: '#5B86A3' }}>{doneCount}/{visible.length}</span>
                   </div>
@@ -85,17 +89,17 @@ export function Workspace({ project }: { project: Project }) {
                             justifyContent: 'center',
                             fontSize: '11px',
                             fontWeight: 700,
-                            background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(255,255,255,0.08)',
-                            color: isDone || active ? '#fff' : 'rgba(255,255,255,0.3)',
+                            background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(var(--fg),0.08)',
+                            color: isDone || active ? 'var(--on-accent)' : 'rgba(var(--fg),0.3)',
                           }}
                         >
-                          {isDone ? '✓' : ''}
+                          {isDone && <Check size={12} strokeWidth={3} />}
                         </div>
-                        <span style={{ flex: 1, fontSize: '12px', color: active ? '#B8D0DE' : isDone ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {s.label}
                         </span>
                         {s.tier === 'advanced' && (
-                          <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
+                          <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.3)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
                         )}
                       </button>
                     )
@@ -110,13 +114,13 @@ export function Workspace({ project }: { project: Project }) {
             <button
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
-              style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(255,255,255,0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ width: '100%', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(var(--fg),0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
             >
               {showAdvanced ? '− Hide advanced steps' : `+ Show advanced steps (${advancedCount}) ⓘ`}
             </button>
             <div
               className="adv-help"
-              style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: '#13132b', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(255,255,255,0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
+              style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--surface-card)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(var(--fg),0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
             >
               Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
               <div style={{ marginTop: '8px' }}>
@@ -125,7 +129,7 @@ export function Workspace({ project }: { project: Project }) {
                 you win people over, plan for problems, and avoid nasty surprises.
               </div>
               <div style={{ marginTop: '6px' }}>
-                <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
+                <span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
                 changes only a few people touch — the core steps above are plenty.
               </div>
             </div>
@@ -138,18 +142,18 @@ export function Workspace({ project }: { project: Project }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
-                  <span style={{ fontSize: '14px' }}>{stage.icon}</span>
-                  <span style={{ fontSize: '11px', color: '#B8D0DE', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{stage.tag}</span>
+                  <stage.icon size={14} color="var(--accent-text)" />
+                  <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{stage.tag}</span>
                 </div>
                 {stage.tier === 'advanced' && (
-                  <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
                 )}
               </div>
-              <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: '#fff' }}>{stage.label}</h2>
+              <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>
             </div>
             {done && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
-                ✓ Complete
+                <Check size={15} strokeWidth={3} /> Complete
               </div>
             )}
           </div>
@@ -158,17 +162,21 @@ export function Workspace({ project }: { project: Project }) {
           {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
 
           {!done && (
-            <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(var(--fg),0.06)' }}>
               <button
                 type="button"
                 className="cq-complete-btn"
                 disabled={!canComplete}
-                style={canComplete ? undefined : { opacity: 0.5, cursor: 'not-allowed' }}
+                style={canComplete ? { display: 'inline-flex', alignItems: 'center', gap: '8px' } : { opacity: 0.5, cursor: 'not-allowed' }}
                 onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
               >
-                {canComplete
-                  ? '✓ Mark this step complete'
-                  : `Complete the launch tasks to finish (currently ${prep.pct}%)`}
+                {canComplete ? (
+                  <>
+                    <Check size={17} strokeWidth={3} /> Mark this step complete
+                  </>
+                ) : (
+                  `Complete the launch tasks to finish (currently ${prep.pct}%)`
+                )}
               </button>
             </div>
           )}

@@ -7,7 +7,7 @@ import { TEST_TYPES, TEST_STATUSES } from '@/data/constants'
 import { uid } from '@/lib/id'
 
 const STATUS_BG: Record<TestStatus, string> = {
-  'Not started': 'rgba(255,255,255,0.05)',
+  'Not started': 'rgba(var(--fg),0.05)',
   'In progress': 'rgba(245,158,11,0.15)',
   Passed: 'rgba(34,197,94,0.15)',
   Failed: 'rgba(239,68,68,0.15)',
