@@ -1,10 +1,10 @@
 import type { Project } from '@/types'
-import { uid } from '@/lib/id'
+import { newProjectId } from '@/lib/id'
 
 /** A fresh, empty project with every stage initialised to its default shape. */
 export function emptyProject(): Project {
   return {
-    id: uid(),
+    id: newProjectId(),
     name: '',
     type: '',
     description: '',
@@ -36,7 +36,6 @@ export function emptyProject(): Project {
 /** Demo project shown on first run (ported from the artifact's SEED). */
 export function createSeed(): Project {
   const p = emptyProject()
-  p.id = 1001
   p.name = 'Salesforce CRM Rollout'
   p.type = 'Software / Technology Rollout'
   p.stageData.define = {

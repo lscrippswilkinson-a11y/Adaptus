@@ -257,7 +257,7 @@ export type StageId = keyof StageData
 /* ---- Project ---- */
 
 export interface Project {
-  id: number
+  id: string
   name: string
   type: string
   description: string

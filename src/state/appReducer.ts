@@ -6,17 +6,17 @@ export interface AppState {
   projects: Project[]
   /** Ephemeral UI/navigation state. */
   view: AppView
-  activeId: number | null
+  activeId: string | null
   stageIdx: number
 }
 
 export type AppAction =
   | { type: 'SET_VIEW'; view: AppView }
-  | { type: 'OPEN_PROJECT'; id: number; stageIdx: number }
+  | { type: 'OPEN_PROJECT'; id: string; stageIdx: number }
   | { type: 'GO_TO_STAGE'; stageIdx: number }
   | { type: 'ADD_PROJECT'; project: Project }
   | { type: 'UPDATE_PROJECT'; project: Project }
-  | { type: 'DELETE_PROJECT'; id: number }
+  | { type: 'DELETE_PROJECT'; id: string }
   | { type: 'SET_PROJECTS'; projects: Project[] }
   | { type: 'COMPLETE_STAGE' }
 

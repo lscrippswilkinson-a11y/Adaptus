@@ -8,3 +8,8 @@ let counter = Date.now()
 export function uid(): number {
   return ++counter
 }
+
+/** Globally-unique project id (uuid), matching the Supabase `projects.id` column. */
+export function newProjectId(): string {
+  return crypto.randomUUID()
+}

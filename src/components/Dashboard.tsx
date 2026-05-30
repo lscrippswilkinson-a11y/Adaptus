@@ -5,6 +5,7 @@ import {
   Download,
   FlaskConical,
   Lightbulb,
+  LogOut,
   Map,
   Pencil,
   Plus,
@@ -22,8 +23,9 @@ import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
 import { parseImportedProjects, projectsToJson } from '@/lib/storage'
 import { createSeed, emptyProject } from '@/data/seed'
-import { uid } from '@/lib/id'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { hasSupabase } from '@/lib/supabase'
+import { useAuth } from '@/state/AuthContext'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -63,6 +65,7 @@ const primaryBtn: React.CSSProperties = {
 
 export function Dashboard() {
   const { state, dispatch } = useApp()
+  const { session, signOut } = useAuth()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
   const [query, setQuery] = useState('')
@@ -83,7 +86,7 @@ export function Dashboard() {
   }
 
   // Add the pre-filled demo without navigating into it, so it lands in the list.
-  const loadExample = () => dispatch({ type: 'SET_PROJECTS', projects: [...state.projects, { ...createSeed(), id: uid() }] })
+  const loadExample = () => dispatch({ type: 'SET_PROJECTS', projects: [...state.projects, createSeed()] })
 
   const deleteProject = (proj: Project) => {
     const snapshot = state.projects
@@ -162,6 +165,11 @@ export function Dashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
+          {hasSupabase && session && (
+            <button type="button" onClick={signOut} style={ghostBtn} title={`Sign out${session.user.email ? ` (${session.user.email})` : ''}`}>
+              <LogOut size={15} /> Sign out
+            </button>
+          )}
           {state.projects.length > 0 && (
             <button type="button" onClick={backup} style={ghostBtn} title="Download a backup file of all your projects">
               <Download size={15} /> Back up

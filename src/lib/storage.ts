@@ -10,7 +10,7 @@ export const STORAGE_KEY = 'adaptus.projects.v1'
  * customTasks), drop completed-section ids that no longer exist, and clamp the
  * current-section index. Deep-merges each slice over the empty-project default.
  */
-function migrateProject(p: Project): Project {
+export function migrateProject(p: Project): Project {
   const base = emptyProject()
   const baseData = base.stageData as unknown as Record<string, object>
   const savedData = (p.stageData ?? {}) as unknown as Record<string, object>
@@ -22,7 +22,10 @@ function migrateProject(p: Project): Project {
   const completedStages = (p.completedStages ?? []).filter((id) => validIds.has(id))
   const currentStage = Math.min(Math.max(p.currentStage ?? 0, 0), STAGES.length - 1)
 
-  return { ...p, stageData: merged, completedStages, currentStage }
+  // Legacy local data used numeric ids; project ids are strings now.
+  const id = String(p.id)
+
+  return { ...p, id, stageData: merged, completedStages, currentStage }
 }
 
 /**
@@ -40,6 +43,23 @@ export function loadProjects(): Project[] {
   } catch (err) {
     console.warn('[adaptus] failed to load saved projects; starting fresh', err)
     return [createSeed()]
+  }
+}
+
+/**
+ * Projects actually stored locally, with NO demo-seed fallback — used when
+ * migrating a user's real local work into a new cloud account.
+ */
+export function loadStoredProjects(): Project[] {
+  if (typeof localStorage === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as Project[]
+    if (!Array.isArray(parsed)) return []
+    return parsed.map(migrateProject)
+  } catch {
+    return []
   }
 }
 

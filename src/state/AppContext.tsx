@@ -5,22 +5,36 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
+  useState,
   type ReactNode,
 } from 'react'
 import type { Project, StageData, StageId } from '@/types'
 import { appReducer, type AppAction, type AppState } from '@/state/appReducer'
-import { loadProjects, saveProjects } from '@/lib/storage'
+import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
+import { newProjectId } from '@/lib/id'
+import { hasSupabase } from '@/lib/supabase'
+import { useAuth } from '@/state/AuthContext'
+import { deleteProjectRemote, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
 
 interface AppContextValue {
   state: AppState
   dispatch: React.Dispatch<AppAction>
+  /** False while the cloud project list is still loading. */
+  ready: boolean
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
 
+// When Supabase is configured the app is gated behind auth, so AppProvider only
+// mounts for a signed-in user; otherwise it runs in local (localStorage) mode.
+const cloud = hasSupabase
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function init(): AppState {
   return {
-    projects: loadProjects(),
+    projects: cloud ? [] : loadProjects(),
     view: 'dashboard',
     activeId: null,
     stageIdx: 0,
@@ -28,14 +42,81 @@ function init(): AppState {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [state, dispatch] = useReducer(appReducer, undefined, init)
+  const [ready, setReady] = useState(!cloud)
+  const lastSynced = useRef<Project[] | null>(null)
 
-  // Persist only the project list; view/nav state is ephemeral.
+  // Hydrate from Supabase once signed in (and migrate any local projects on first login).
   useEffect(() => {
-    saveProjects(state.projects)
-  }, [state.projects])
+    if (!cloud || !user) return
+    let cancelled = false
+    ;(async () => {
+      let projects: Project[] = []
+      try {
+        projects = await fetchProjects()
+      } catch (err) {
+        console.error('[adaptus] failed to load projects from Supabase', err)
+      }
 
-  const value = useMemo(() => ({ state, dispatch }), [state])
+      // Best-effort one-time migration of local projects — must not block the app.
+      const migrationKey = `adaptus.migrated.${user.id}`
+      if (projects.length === 0 && !localStorage.getItem(migrationKey)) {
+        try {
+          // Legacy local projects may carry non-uuid ids (old numeric ids / 1001 demo).
+          const local = loadStoredProjects().map((p) => (UUID_RE.test(p.id) ? p : { ...p, id: newProjectId() }))
+          if (local.length) {
+            await Promise.all(local.map((p) => insertProject(p, user.id)))
+            projects = local
+          }
+          localStorage.setItem(migrationKey, '1')
+        } catch (err) {
+          console.error('[adaptus] migration of local projects failed (continuing)', err)
+        }
+      }
+
+      if (cancelled) return
+      lastSynced.current = projects
+      dispatch({ type: 'SET_PROJECTS', projects })
+      setReady(true)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+
+  // Persist changes: localStorage in local mode; a debounced diff-sync to
+  // Supabase in cloud mode (upsert new/changed projects, delete removed ones).
+  useEffect(() => {
+    if (!ready) return
+    if (!cloud) {
+      saveProjects(state.projects)
+      return
+    }
+    if (!user) return
+    const prev = lastSynced.current
+    const handle = window.setTimeout(async () => {
+      try {
+        const current = state.projects
+        for (const p of current) {
+          const before = prev?.find((x) => x.id === p.id)
+          if (!before) await insertProject(p, user.id) // new project
+          else if (before !== p) await updateProject(p) // edited (reference changed)
+        }
+        if (prev) {
+          for (const p of prev) {
+            if (!current.find((x) => x.id === p.id)) await deleteProjectRemote(p.id)
+          }
+        }
+        lastSynced.current = current
+      } catch (err) {
+        console.error('[adaptus] failed to sync projects to Supabase', err)
+      }
+    }, 600)
+    return () => window.clearTimeout(handle)
+  }, [state.projects, ready, user])
+
+  const value = useMemo(() => ({ state, dispatch, ready }), [state, ready])
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
 

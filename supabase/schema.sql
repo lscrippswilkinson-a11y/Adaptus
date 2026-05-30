@@ -19,7 +19,8 @@ create table if not exists public.profiles (
 
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references auth.users on delete cascade,
+  -- Defaults to the signed-in user so inserts can't arrive without an owner.
+  owner_id uuid not null default auth.uid() references auth.users on delete cascade,
   name text not null default '',
   type text not null default '',
   description text not null default '',
@@ -128,22 +129,25 @@ drop policy if exists "profiles self update" on public.profiles;
 create policy "profiles self update" on public.profiles for update using (id = auth.uid());
 
 -- projects: members read; owner creates/deletes; owner+editor update.
-drop policy if exists "projects read" on public.projects;
-create policy "projects read" on public.projects for select using (public.is_member(id, 'viewer'));
-drop policy if exists "projects insert" on public.projects;
-create policy "projects insert" on public.projects for insert with check (owner_id = auth.uid());
-drop policy if exists "projects update" on public.projects;
-create policy "projects update" on public.projects for update using (public.is_member(id, 'editor'));
-drop policy if exists "projects delete" on public.projects;
-create policy "projects delete" on public.projects for delete using (public.is_member(id, 'owner'));
+-- Policies are scoped to the `authenticated` role. NOTE: the app writes with a
+-- real insert / update (never upsert) — an upsert drags the UPDATE policy into
+-- every insert's RLS check, which rejects brand-new rows.
+drop policy if exists "projects_select" on public.projects;
+create policy "projects_select" on public.projects for select to authenticated using (public.is_member(id, 'viewer'));
+drop policy if exists "projects_insert" on public.projects;
+create policy "projects_insert" on public.projects for insert to authenticated with check (owner_id = auth.uid());
+drop policy if exists "projects_update" on public.projects;
+create policy "projects_update" on public.projects for update to authenticated using (public.is_member(id, 'editor')) with check (public.is_member(id, 'editor'));
+drop policy if exists "projects_delete" on public.projects;
+create policy "projects_delete" on public.projects for delete to authenticated using (public.is_member(id, 'owner'));
 
 -- members & invites: visible to members, managed by the owner.
-drop policy if exists "members read" on public.project_members;
-create policy "members read" on public.project_members for select using (public.is_member(project_id, 'viewer'));
-drop policy if exists "members manage" on public.project_members;
-create policy "members manage" on public.project_members for all
+drop policy if exists "members_select" on public.project_members;
+create policy "members_select" on public.project_members for select to authenticated using (public.is_member(project_id, 'viewer'));
+drop policy if exists "members_manage" on public.project_members;
+create policy "members_manage" on public.project_members for all to authenticated
   using (public.is_member(project_id, 'owner')) with check (public.is_member(project_id, 'owner'));
 
-drop policy if exists "invites manage" on public.project_invites;
-create policy "invites manage" on public.project_invites for all
+drop policy if exists "invites_manage" on public.project_invites;
+create policy "invites_manage" on public.project_invites for all to authenticated
   using (public.is_member(project_id, 'owner')) with check (public.is_member(project_id, 'owner'));
