@@ -245,6 +245,39 @@ export const coaching = {
         { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the old system is going away' },
       ] as Omit<CommsTouchpoint, 'id'>[],
     },
+    /** The per-touchpoint communication drafter: style guidance + prompts. */
+    draft: {
+      label: 'Draft this communication',
+      why: 'Planning the touchpoint is half the job — the other half is the actual words. Work through the prompts below and the program will assemble a draft you can fine-tune and copy out.',
+      /** The anatomy of a message people will actually read and act on. */
+      anatomy: [
+        { k: 'Lead with relevant context', t: 'One or two plain sentences on why this, why now — so the message doesn’t land out of nowhere. People act on things they understand the reason for.' },
+        { k: 'Make the core message impossible to miss', t: 'The single thing they must walk away knowing. If you only had one sentence, this is it — put it up front, not buried at the bottom.' },
+        { k: 'End with one clear call to action', t: 'The one specific thing to do next, with a deadline. Vague asks get ignored; “Log in and enter one time entry by Friday” gets done.' },
+        { k: 'Write like a person', t: 'Acknowledge what’s changing for them, keep it short, skip the jargon, and always say where to get help. Warm and specific beats formal and vague.' },
+      ],
+      contextLabel: 'Relevant context — why this, why now',
+      contextPlaceholder: 'e.g., Our old billing system is being retired at the end of May, so we’re all moving to Clio.',
+      messageLabel: 'Core message — the one thing they must take away',
+      messagePlaceholder: 'e.g., From June 1 you enter your own time directly in Clio.',
+      ctaLabel: 'Call to action — the one thing to do next, with a deadline',
+      ctaPlaceholder: 'e.g., Complete the 20-minute Clio training before May 30 — book your slot via the link.',
+      build: 'Build a draft from these →',
+      rebuild: 'Rebuild draft from prompts',
+      draftLabel: 'Your draft — edit freely, then copy',
+      copy: 'Copy',
+      copied: 'Copied ✓',
+      /** Assembles the structured prompts into an editable starting draft. */
+      assemble(t: { audience?: string; context?: string; message?: string; cta?: string }): string {
+        const lines: string[] = []
+        if (t.audience?.trim()) lines.push(`Hi ${t.audience.trim()},`, '')
+        if (t.context?.trim()) lines.push(t.context.trim(), '')
+        if (t.message?.trim()) lines.push(t.message.trim(), '')
+        if (t.cta?.trim()) lines.push(`👉 ${t.cta.trim()}`, '')
+        lines.push('Questions? [where to get help].')
+        return lines.join('\n')
+      },
+    },
     /** Shown when the user hasn't picked the manager-cascade channel. */
     managerCascade: {
       tone: 'info',

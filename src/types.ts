@@ -111,7 +111,14 @@ export interface CommsTouchpoint {
   when: string
   audience: string
   channel: string
+  /** The one-line core message / headline for this touchpoint. */
   message: string
+  /** Why this, why now — background that makes the message land. */
+  context?: string
+  /** The single specific action this audience should take next. */
+  cta?: string
+  /** The assembled, editable communication ready to send/say. */
+  draft?: string
 }
 
 export interface CommsData {
