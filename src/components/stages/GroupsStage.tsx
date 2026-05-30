@@ -3,7 +3,7 @@ import { Check, Plus, Trash2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { ImpactedGroup, Impact, Readiness } from '@/types'
 import { InsightCallout, Label, TextInput } from '@/components/ui'
-import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { StageFlow, useStageNav, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
@@ -87,6 +87,16 @@ const addBtn: CSSProperties = {
 const removeBtn: CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: '5px', marginTop: '16px',
   background: 'none', border: 'none', color: 'rgba(var(--fg),0.45)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+}
+
+/** Adds a group and jumps to its first screen in one tap (uses wizard nav). */
+function AddAnotherButton({ onAdd }: { onAdd: () => void }) {
+  const nav = useStageNav()
+  return (
+    <button type="button" style={addBtn} onClick={() => { onAdd(); nav?.next() }}>
+      <Plus size={15} /> Add another group
+    </button>
+  )
 }
 
 export function GroupsStage() {
@@ -177,11 +187,7 @@ export function GroupsStage() {
           <div style={whyStyle}>{w.readiness.why}</div>
           <LevelPicker value={g.readiness} options={READINESS_LEVELS} onChange={(v) => setGroup(g.id, { readiness: v })} />
           {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}
-          {isLast && (
-            <button type="button" style={addBtn} onClick={addGroup}>
-              <Plus size={15} /> Add another group, then press Next
-            </button>
-          )}
+          {isLast && <AddAnotherButton onAdd={addGroup} />}
         </div>
       ),
     })

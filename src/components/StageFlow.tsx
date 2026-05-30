@@ -43,6 +43,16 @@ export function StageGateProvider({ onChange, children }: { onChange: (showCompl
   return <StageGateCtx.Provider value={onChange}>{children}</StageGateCtx.Provider>
 }
 
+/**
+ * Lets a step's own UI drive wizard navigation — e.g. an "Add another" button
+ * that appends an item and advances to it in one tap. Null outside a guided flow.
+ */
+const StageNavCtx = createContext<{ next: () => void; prev: () => void } | null>(null)
+
+export function useStageNav() {
+  return useContext(StageNavCtx)
+}
+
 const CONTENT_MAX = 680
 
 const pillBtn: CSSProperties = {
@@ -213,7 +223,9 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
       ) : (
         <>
           <div style={{ padding: '28px 0 32px' }}>
-            <FieldCoachVariant variant="hero">{steps[current].node}</FieldCoachVariant>
+            <StageNavCtx.Provider value={{ next: () => go(current + 1), prev: () => go(current - 1) }}>
+              <FieldCoachVariant variant="hero">{steps[current].node}</FieldCoachVariant>
+            </StageNavCtx.Provider>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button type="button" style={ghostBtn} onClick={() => go(current - 1)}>
