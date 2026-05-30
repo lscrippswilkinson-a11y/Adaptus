@@ -14,7 +14,7 @@ import { appReducer, type AppAction, type AppState } from '@/state/appReducer'
 import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
 import { createSeed } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
-import { hasSupabase } from '@/lib/supabase'
+import { hasSupabase, supabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
 import { deleteProjectRemote, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
 
@@ -76,19 +76,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Seed the demo project for brand-new cloud accounts (nothing in the cloud,
-      // nothing migrated) so the app is never empty on first sign-in. One-time:
-      // if the user later deletes it, we don't keep bringing it back.
-      const seededKey = `adaptus.seeded.${user.id}`
-      if (projects.length === 0 && !localStorage.getItem(seededKey)) {
+      // Seed the demo project once per account (existing + new) so everyone has a
+      // worked example to explore. Tracked in the user's Supabase metadata — not
+      // localStorage — so the seed happens once across all devices and a later
+      // deletion sticks. Skip the insert if the sample is already present (e.g.
+      // from an earlier seed) so we never create a duplicate.
+      const SAMPLE_NAME = 'Salesforce CRM Rollout'
+      if (user.user_metadata?.adaptus_seeded !== true) {
         try {
-          const demo = createSeed()
-          await insertProject(demo, user.id)
-          projects = [demo]
+          if (!projects.some((p) => p.name === SAMPLE_NAME)) {
+            const demo = createSeed()
+            await insertProject(demo, user.id)
+            projects = [...projects, demo]
+          }
+          await supabase.auth.updateUser({ data: { adaptus_seeded: true } })
         } catch (err) {
           console.error('[adaptus] failed to seed demo project (continuing)', err)
         }
-        localStorage.setItem(seededKey, '1')
       }
 
       if (cancelled) return
