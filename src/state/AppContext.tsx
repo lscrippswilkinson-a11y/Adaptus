@@ -12,6 +12,7 @@ import {
 import type { Project, StageData, StageId } from '@/types'
 import { appReducer, type AppAction, type AppState } from '@/state/appReducer'
 import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
+import { createSeed } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
@@ -73,6 +74,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           console.error('[adaptus] migration of local projects failed (continuing)', err)
         }
+      }
+
+      // Seed the demo project for brand-new cloud accounts (nothing in the cloud,
+      // nothing migrated) so the app is never empty on first sign-in. One-time:
+      // if the user later deletes it, we don't keep bringing it back.
+      const seededKey = `adaptus.seeded.${user.id}`
+      if (projects.length === 0 && !localStorage.getItem(seededKey)) {
+        try {
+          const demo = createSeed()
+          await insertProject(demo, user.id)
+          projects = [demo]
+        } catch (err) {
+          console.error('[adaptus] failed to seed demo project (continuing)', err)
+        }
+        localStorage.setItem(seededKey, '1')
       }
 
       if (cancelled) return
