@@ -22,7 +22,7 @@ export interface FieldCopy {
   example: string
 }
 
-const strong = (children: ReactNode) => <strong style={{ color: '#fff' }}>{children}</strong>
+const strong = (children: ReactNode) => <strong style={{ color: 'var(--text)' }}>{children}</strong>
 
 export const coaching = {
   /* ---------------------------------------------------------------- DEFINE */
@@ -60,7 +60,7 @@ export const coaching = {
           <>
             People will ask “why are we doing this?” — especially when it’s inconvenient. A clear, honest reason is what
             gets them to give the change a real chance. (This is the very first thing the ADKAR model says every person
-            needs: <strong style={{ color: '#B8D0DE' }}>Awareness</strong> of why the change is happening.)
+            needs: <strong style={{ color: 'var(--accent-text)' }}>Awareness</strong> of why the change is happening.)
           </>
         ),
         example:
@@ -316,7 +316,7 @@ export const coaching = {
     intro: (
       <>
         {strong('This is your mission control for go-live.')} It pulls together everything you planned and turns it into
-        one checklist. Your <strong style={{ color: '#B8D0DE' }}>Launch Preparedness</strong> score is simply the share
+        one checklist. Your <strong style={{ color: 'var(--accent-text)' }}>Launch Preparedness</strong> score is simply the share
         of these tasks that are done — tick things off (here, or back in their own sections) and watch it climb. Don’t
         set a firm launch date until it’s comfortably high.
       </>
@@ -467,7 +467,7 @@ export const coaching = {
         {strong('This is the plan that makes the change actually stick.')} Most changes don’t fail at launch — they fail
         quietly a few months later, when people drift back to the old way under pressure. Someone has to keep the new
         way alive until it’s just “how we do things.” (This is the part the ADKAR model calls{' '}
-        <strong style={{ color: '#B8D0DE' }}>Reinforcement</strong> — simply, keeping it going so it lasts.)
+        <strong style={{ color: 'var(--accent-text)' }}>Reinforcement</strong> — simply, keeping it going so it lasts.)
       </>
     ),
     topNote: {
