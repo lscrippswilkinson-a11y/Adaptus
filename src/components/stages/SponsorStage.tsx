@@ -1,4 +1,5 @@
 import { useStageEditor } from '@/state/AppContext'
+import { useAuth } from '@/state/AuthContext'
 import { FieldCoach, InsightCallout, Card, Label, StageIntro, TextArea, TextInput } from '@/components/ui'
 import { TipBox } from '@/components/TipBox'
 import { SPONSOR_ACTIONS } from '@/data/constants'
@@ -6,6 +7,14 @@ import { coaching } from '@/data/coaching'
 
 export function SponsorStage() {
   const { data, update } = useStageEditor('sponsor')
+  const { user } = useAuth()
+
+  /** Name to offer for the "this is me" shortcut, drawn from the Google profile. */
+  const myName =
+    (user?.user_metadata?.full_name as string | undefined) ||
+    (user?.user_metadata?.name as string | undefined) ||
+    user?.email ||
+    null
 
   const toggleAction = (action: string) => {
     const cur = new Set(data.sponsorActions)
@@ -28,6 +37,26 @@ export function SponsorStage() {
         onUseExample={() => update({ name: coaching.sponsor.fields.name.example })}
       >
         <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder="e.g., Elena Torres" />
+        {myName && data.name !== myName && (
+          <button
+            type="button"
+            onClick={() => update({ name: myName })}
+            style={{
+              marginTop: '8px',
+              background: 'rgba(91,134,163,0.15)',
+              border: '1px solid rgba(91,134,163,0.35)',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              color: 'var(--accent-text)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            The sponsor is me — use “{myName}”
+          </button>
+        )}
       </FieldCoach>
 
       <FieldCoach
