@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ResistanceItem, Severity } from '@/types'
 import { AddButton, DelButton, FieldCoach, InsightCallout, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { RESISTANCE_TYPES } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -19,10 +20,13 @@ export function ResistanceStage() {
 
   const hasHighSeverity = data.items.some((it) => it.severity === 'High')
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'resistance',
+    title: 'Plan for resistance',
+    isFilled: data.items.length > 0 || !!(data.generalPlan && data.generalPlan.trim()),
+    summary: data.items.length ? `${data.items.length} source${data.items.length === 1 ? '' : 's'} of resistance` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.resistance.icon}>{coaching.resistance.intro}</StageIntro>
-      <TipBox stageId="resistance" />
       {data.items.map((item) => (
         <div className="cq-card" key={item.id}>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
@@ -67,5 +71,18 @@ export function ResistanceStage() {
         <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder="e.g., Weekly pulse survey for 8 weeks, any score below 3/5 triggers manager check-in within 48 hours..." rows={4} />
       </FieldCoach>
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.resistance.icon}>{coaching.resistance.intro}</StageIntro>
+          <TipBox stageId="resistance" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

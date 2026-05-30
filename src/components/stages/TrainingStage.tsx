@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TrainingItem } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { TRAINING_FORMATS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -14,10 +15,13 @@ export function TrainingStage() {
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
   const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: 'Workshop', duration: '', owner: '', done: false }] })
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'training',
+    title: 'Plan the training',
+    isFilled: data.items.length > 0,
+    summary: data.items.length ? `${data.items.length} training activit${data.items.length === 1 ? 'y' : 'ies'}` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.training.icon}>{coaching.training.intro}</StageIntro>
-      <TipBox stageId="training" />
       <InsightCallout tone={coaching.training.managersFirst.tone} style={{ marginBottom: '16px' }}>
         {coaching.training.managersFirst.text}
       </InsightCallout>
@@ -61,5 +65,18 @@ export function TrainingStage() {
       ))}
       <AddButton label="+ Add Training Activity" onClick={addItem} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.training.icon}>{coaching.training.intro}</StageIntro>
+          <TipBox stageId="training" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

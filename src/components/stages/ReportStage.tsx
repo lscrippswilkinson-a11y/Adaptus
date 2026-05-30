@@ -1,6 +1,7 @@
 import { Printer } from 'lucide-react'
 import { useActiveProject, useStageEditor } from '@/state/AppContext'
 import { FieldCoach, StageIntro, TextArea } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { avgRisk, preparedness, riskLabel } from '@/lib/format'
 
@@ -27,20 +28,47 @@ export function ReportStage() {
 
   const fc = coaching.closeout.fields
 
+  // The editable closeout reflections (feed the printable report below) run
+  // through the guided/summary flow; the report itself always renders beneath.
+  const steps: WizardStep[] = [
+    {
+      id: 'wins',
+      title: 'Wins',
+      isFilled: !!closeout.wins.trim(),
+      summary: closeout.wins,
+      node: (
+        <FieldCoach label={fc.wins.label} why={fc.wins.why} example={fc.wins.example} onUseExample={() => update({ wins: fc.wins.example })}>
+          <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder="What worked? What would you repeat?" rows={3} />
+        </FieldCoach>
+      ),
+    },
+    {
+      id: 'lessons',
+      title: 'Lessons',
+      isFilled: !!closeout.lessons.trim(),
+      summary: closeout.lessons,
+      node: (
+        <FieldCoach label={fc.lessons.label} why={fc.lessons.why} example={fc.lessons.example} onUseExample={() => update({ lessons: fc.lessons.example })}>
+          <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder="What would you do differently?" rows={3} />
+        </FieldCoach>
+      ),
+    },
+    {
+      id: 'shoutouts',
+      title: 'Shout-outs',
+      isFilled: !!closeout.shoutouts.trim(),
+      summary: closeout.shoutouts,
+      node: (
+        <FieldCoach label={fc.shoutouts.label} why={fc.shoutouts.why} example={fc.shoutouts.example} onUseExample={() => update({ shoutouts: fc.shoutouts.example })}>
+          <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder="Name the people who went above and beyond." rows={2} />
+        </FieldCoach>
+      ),
+    },
+  ]
+
   return (
     <div>
-      <StageIntro icon={coaching.report.icon}>{coaching.report.intro}</StageIntro>
-
-      {/* Editable closeout inputs (feed the report below) */}
-      <FieldCoach label={fc.wins.label} why={fc.wins.why} example={fc.wins.example} onUseExample={() => update({ wins: fc.wins.example })}>
-        <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder="What worked? What would you repeat?" rows={3} />
-      </FieldCoach>
-      <FieldCoach label={fc.lessons.label} why={fc.lessons.why} example={fc.lessons.example} onUseExample={() => update({ lessons: fc.lessons.example })}>
-        <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder="What would you do differently?" rows={3} />
-      </FieldCoach>
-      <FieldCoach label={fc.shoutouts.label} why={fc.shoutouts.why} example={fc.shoutouts.example} onUseExample={() => update({ shoutouts: fc.shoutouts.example })}>
-        <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder="Name the people who went above and beyond." rows={2} />
-      </FieldCoach>
+      <StageFlow intro={<StageIntro icon={coaching.report.icon}>{coaching.report.intro}</StageIntro>} steps={steps} />
 
       <button
         type="button"

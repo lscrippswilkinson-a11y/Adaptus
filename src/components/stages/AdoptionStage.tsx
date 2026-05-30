@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { AdoptionMetric } from '@/types'
 import { AddButton, DelButton, FieldCoach, InsightCallout, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { METRIC_UNITS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -16,11 +17,13 @@ export function AdoptionStage() {
 
   const insight = coaching.adoption.insight(data.metrics)
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'adoption',
+    title: 'Track adoption',
+    isFilled: data.metrics.length > 0 || !!(data.notes && data.notes.trim()),
+    summary: data.metrics.length ? `${data.metrics.length} metric${data.metrics.length === 1 ? '' : 's'} tracked` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.adoption.icon}>{coaching.adoption.intro}</StageIntro>
-      <TipBox stageId="adoption" />
-
       {insight && <InsightCallout tone={insight.tone} style={{ marginBottom: '12px' }}>{insight.text}</InsightCallout>}
 
       {data.metrics.map((m) => {
@@ -59,5 +62,18 @@ export function AdoptionStage() {
         <TextArea value={data.notes} onCommit={(v) => update({ notes: v })} placeholder="What are you hearing from the field?" rows={4} />
       </FieldCoach>
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.adoption.icon}>{coaching.adoption.intro}</StageIntro>
+          <TipBox stageId="adoption" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

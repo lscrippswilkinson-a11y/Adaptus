@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Dependency, DependencyStatus, DependencyType } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { DEPENDENCY_TYPES, DEPENDENCY_STATUSES } from '@/data/constants'
@@ -24,11 +25,13 @@ export function DependenciesStage() {
 
   const hasAtRisk = data.items.some((d) => d.status === 'At risk')
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'dependencies',
+    title: 'List dependencies',
+    isFilled: data.items.length > 0,
+    summary: data.items.length ? `${data.items.length} dependenc${data.items.length === 1 ? 'y' : 'ies'}` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.dependencies.icon}>{coaching.dependencies.intro}</StageIntro>
-      <TipBox stageId="dependencies" />
-
       {hasAtRisk && (
         <InsightCallout tone={coaching.dependencies.atRisk.tone} style={{ marginBottom: '14px' }}>
           {coaching.dependencies.atRisk.text}
@@ -67,5 +70,18 @@ export function DependenciesStage() {
       ))}
       <AddButton label="+ Add Dependency" onClick={addItem} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.dependencies.icon}>{coaching.dependencies.intro}</StageIntro>
+          <TipBox stageId="dependencies" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

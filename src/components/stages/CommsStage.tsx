@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
 import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, Select, StageIntro, TextArea, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { CHANNELS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -158,20 +159,29 @@ export function CommsStage() {
   const delTouchpoint = (id: number) => setSchedule(schedule.filter((t) => t.id !== id))
   const loadExample = () => setSchedule([...schedule, ...coaching.comms.schedule.example.map((e) => ({ ...e, id: uid() }))])
 
-  return (
-    <>
-      <StageIntro icon={coaching.comms.icon}>{coaching.comms.intro}</StageIntro>
-      <TipBox stageId="comms" />
-
-      <FieldCoach
-        label={coaching.comms.fields.keyMessages.label}
-        why={coaching.comms.fields.keyMessages.why}
-        example={coaching.comms.fields.keyMessages.example}
-        onUseExample={() => update({ keyMessages: coaching.comms.fields.keyMessages.example })}
-      >
-        <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={3} />
-      </FieldCoach>
-
+  const steps: WizardStep[] = [
+    {
+      id: 'keyMessages',
+      title: 'Core message',
+      isFilled: !!data.keyMessages.trim(),
+      summary: data.keyMessages,
+      node: (
+        <FieldCoach
+          label={coaching.comms.fields.keyMessages.label}
+          why={coaching.comms.fields.keyMessages.why}
+          example={coaching.comms.fields.keyMessages.example}
+          onUseExample={() => update({ keyMessages: coaching.comms.fields.keyMessages.example })}
+        >
+          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={3} />
+        </FieldCoach>
+      ),
+    },
+    {
+      id: 'channels',
+      title: 'Channels',
+      isFilled: data.channels.length > 0,
+      summary: data.channels.length ? data.channels.join(', ') : undefined,
+      node: (
       <Card>
         <Label>Communication channels</Label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
@@ -197,8 +207,14 @@ export function CommsStage() {
           </InsightCallout>
         )}
       </Card>
-
-      {/* Structured, phased communication schedule */}
+      ),
+    },
+    {
+      id: 'schedule',
+      title: 'Schedule',
+      isFilled: schedule.length > 0,
+      summary: schedule.length ? `${schedule.length} touchpoint${schedule.length === 1 ? '' : 's'} planned` : undefined,
+      node: (
       <Card>
         <Label>{coaching.comms.schedule.label}</Label>
         <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 16px' }}>
@@ -244,6 +260,19 @@ export function CommsStage() {
           </button>
         )}
       </Card>
-    </>
+      ),
+    },
+  ]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.comms.icon}>{coaching.comms.intro}</StageIntro>
+          <TipBox stageId="comms" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

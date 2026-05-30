@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ImpactedGroup, Impact, Readiness } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -19,11 +20,15 @@ export function GroupsStage() {
   const delGroup = (id: number) => update({ groups: data.groups.filter((g) => g.id !== id) })
   const addGroup = () => update({ groups: [...data.groups, { id: uid(), name: '', size: '', impact: 'High', readiness: 'Low' }] })
 
-  return (
-    <div>
-      <StageIntro icon={coaching.groups.icon}>{coaching.groups.intro}</StageIntro>
-      <TipBox stageId="groups" />
+  const namedCount = data.groups.filter((g) => g.name.trim()).length
 
+  const steps: WizardStep[] = [{
+    id: 'groups',
+    title: 'Identify impacted groups',
+    isFilled: data.groups.some((g) => g.name.trim()),
+    summary: namedCount ? `${namedCount} group${namedCount === 1 ? '' : 's'} identified` : undefined,
+    node: (
+    <div>
       {data.groups.map((g) => {
         const insight = coaching.groups.insight(g)
         return (
@@ -55,5 +60,18 @@ export function GroupsStage() {
       })}
       <AddButton label="+ Add Impacted Group" onClick={addGroup} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.groups.icon}>{coaching.groups.intro}</StageIntro>
+          <TipBox stageId="groups" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

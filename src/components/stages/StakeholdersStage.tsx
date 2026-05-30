@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Influence, StakeholderRow, Support } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
@@ -21,12 +22,15 @@ export function StakeholdersStage() {
   const addRow = () => update({ rows: [...data.rows, { id: uid(), name: '', role: '', influence: 'High', support: 'Neutral', action: '' }] })
 
   const summary = coaching.stakeholders.summary(data.rows)
+  const namedCount = data.rows.filter((r) => r.name.trim()).length
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'coalition',
+    title: 'Map your coalition',
+    isFilled: namedCount > 0,
+    summary: namedCount ? `${namedCount} stakeholder${namedCount === 1 ? '' : 's'} mapped` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.stakeholders.icon}>{coaching.stakeholders.intro}</StageIntro>
-      <TipBox stageId="stakeholders" />
-
       {summary && <InsightCallout tone={summary.tone} style={{ marginBottom: '14px' }}>{summary.text}</InsightCallout>}
 
       {data.rows.map((r) => {
@@ -67,5 +71,18 @@ export function StakeholdersStage() {
       })}
       <AddButton label="+ Add Stakeholder" onClick={addRow} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.stakeholders.icon}>{coaching.stakeholders.intro}</StageIntro>
+          <TipBox stageId="stakeholders" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TestItem, TestStatus } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { TEST_TYPES, TEST_STATUSES } from '@/data/constants'
@@ -24,11 +25,13 @@ export function TestingStage() {
 
   const hasFailed = data.items.some((t) => t.status === 'Failed')
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'testing',
+    title: 'Plan validation',
+    isFilled: data.items.length > 0,
+    summary: data.items.length ? `${data.items.length} test${data.items.length === 1 ? '' : 's'} planned` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.testing.icon}>{coaching.testing.intro}</StageIntro>
-      <TipBox stageId="testing" />
-
       {hasFailed && (
         <InsightCallout tone={coaching.testing.failed.tone} style={{ marginBottom: '14px' }}>
           {coaching.testing.failed.text}
@@ -67,5 +70,18 @@ export function TestingStage() {
       ))}
       <AddButton label="+ Add Test" onClick={addItem} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.testing.icon}>{coaching.testing.intro}</StageIntro>
+          <TipBox stageId="testing" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }

@@ -1,6 +1,7 @@
 import { AppProvider, useApp } from '@/state/AppContext'
 import { AuthProvider, useAuth } from '@/state/AuthContext'
 import { ThemeProvider } from '@/state/ThemeContext'
+import { WizardModeProvider } from '@/state/WizardModeContext'
 import { hasSupabase } from '@/lib/supabase'
 import { SignIn } from '@/components/SignIn'
 import { Dashboard } from '@/components/Dashboard'
@@ -37,9 +38,11 @@ function Gate() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Gate />
-      </AuthProvider>
+      <WizardModeProvider>
+        <AuthProvider>
+          <Gate />
+        </AuthProvider>
+      </WizardModeProvider>
     </ThemeProvider>
   )
 }

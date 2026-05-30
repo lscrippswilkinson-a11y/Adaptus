@@ -1,6 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { RiskItem } from '@/types'
 import { AddButton, DelButton, InsightCallout, StageIntro, TextInput } from '@/components/ui'
+import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { TipBox } from '@/components/TipBox'
 import { coaching } from '@/data/coaching'
 import { RISK_CATS } from '@/data/constants'
@@ -33,11 +34,13 @@ export function RiskStage() {
 
   const scoreInsight = coaching.risk.scoreInsight(avg)
 
-  return (
+  const steps: WizardStep[] = [{
+    id: 'risks',
+    title: 'Map the risks',
+    isFilled: data.items.length > 0,
+    summary: data.items.length ? `${data.items.length} risk${data.items.length === 1 ? '' : 's'} mapped` : undefined,
+    node: (
     <div>
-      <StageIntro icon={coaching.risk.icon}>{coaching.risk.intro}</StageIntro>
-      <TipBox stageId="risk" />
-
       {avg !== null && (
         <div className="cq-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -80,5 +83,18 @@ export function RiskStage() {
       ))}
       <AddButton label="+ Add Risk Item" onClick={addItem} />
     </div>
+    ),
+  }]
+
+  return (
+    <StageFlow
+      intro={
+        <>
+          <StageIntro icon={coaching.risk.icon}>{coaching.risk.intro}</StageIntro>
+          <TipBox stageId="risk" />
+        </>
+      }
+      steps={steps}
+    />
   )
 }
