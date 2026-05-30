@@ -173,7 +173,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
         <div ref={topRef} style={{ textAlign: 'center', padding: '36px 0 24px' }}>
           <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '14px' }}>{icon}</div>
           <h1 style={{ margin: '0 0 18px', fontSize: '28px', fontWeight: 800, color: 'var(--text)' }}>{title}</h1>
-          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.6)', maxWidth: '560px', margin: '0 auto 30px' }}>
+          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.78)', maxWidth: '560px', margin: '0 auto 30px' }}>
             {blurb}
           </div>
           <button type="button" style={pillBtn} onClick={() => go(0)}>
@@ -274,7 +274,7 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{s.title}</div>
-              <div style={{ fontSize: '13px', color: s.isFilled ? 'rgba(var(--fg),0.6)' : 'rgba(var(--fg),0.35)', lineHeight: 1.5, fontStyle: s.isFilled ? 'normal' : 'italic' }}>
+              <div style={{ fontSize: '13px', color: s.isFilled ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: s.isFilled ? 'normal' : 'italic' }}>
                 {s.summary ?? (s.isFilled ? '' : 'Not added yet')}
               </div>
             </div>

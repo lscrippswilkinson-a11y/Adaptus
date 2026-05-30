@@ -233,8 +233,8 @@ export function FieldCoach({ label, why, example, onUseExample, children }: Fiel
         <Label>{label}</Label>
       )}
       <div style={hero
-        ? { fontSize: '15px', color: 'rgba(var(--fg),0.5)', lineHeight: 1.7, margin: '0 0 22px' }
-        : { fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
+        ? { fontSize: '15px', color: 'rgba(var(--fg),0.72)', lineHeight: 1.7, margin: '0 0 22px' }
+        : { fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
       {children}
       {example && (
         <div style={{ marginTop: '10px' }}>
