@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B86A3"/>
+      <stop offset="1" stop-color="#8FB3C7"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#g)"/>
+  <!-- conical flask outline -->
+  <path d="M13 8 H19 M14.2 8 V13.5 L9 23 a1.6 1.6 0 0 0 1.4 2.4 H21.6 a1.6 1.6 0 0 0 1.4 -2.4 L17.8 13.5 V8"
+        fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- liquid -->
+  <path d="M11.7 19.3 H20.3 L22.4 23 a1.6 1.6 0 0 1 -1.4 2.4 H10.4 a1.6 1.6 0 0 1 -1.4 -2.4 Z" fill="#fff" opacity="0.9"/>
+</svg>
