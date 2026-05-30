@@ -18,6 +18,25 @@ body,
   height: 100%;
 }
 
+/* Visible keyboard focus for all interactive elements (mouse clicks unaffected). */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /*
  * Theme tokens. Dark is the default (:root); light is opt-in via
  * <html data-theme="light">. Most of the UI paints with rgba(var(--fg), α)
@@ -46,24 +65,23 @@ body,
 }
 
 :root[data-theme='light'] {
-  --fg: 44, 38, 25; /* warm near-black (brown-leaning) */
-  --text: #2c2619;
+  --fg: 17, 24, 39; /* cool near-black (slate) */
+  --text: #111827;
   --on-accent: #ffffff;
-  --surface-card: #f9f1df; /* warm ivory card, lifts off the tan canvas */
+  --surface-card: #ffffff; /* crisp white cards */
   --accent: #5b86a3;
   --accent-2: #3e6580;
   --accent-light: #6f9bb3;
-  --accent-text: #3e6580; /* darker slate so it reads on the warm canvas */
+  --accent-text: #3e6580; /* darker slate so it reads on white */
   --accent-rgb: 91, 134, 163;
-  /* On the warm canvas, raised boxes are lighter (ivory) + carry a soft shadow. */
-  --surface-1: #fdf8ec;
-  --surface-1-border: rgba(44, 38, 25, 0.14);
-  --box-shadow: 0 1px 2px rgba(60, 45, 20, 0.06), 0 2px 7px rgba(60, 45, 20, 0.08);
-  --bg-base: #e9dabf;
+  /* Raised boxes are pure white with a cool border + soft shadow to lift off the grey canvas. */
+  --surface-1: #ffffff;
+  --surface-1-border: rgba(17, 24, 39, 0.1);
+  --box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --bg-base: #f8f9fa;
   --bg-image:
-    radial-gradient(1100px 760px at 25% -10%, rgba(250, 242, 224, 0.8), transparent 62%),
-    radial-gradient(900px 650px at 95% 5%, rgba(91, 134, 163, 0.08), transparent 55%),
-    linear-gradient(165deg, #f2e7d0 0%, #e9dabf 55%, #dccbab 100%);
+    radial-gradient(1100px 760px at 25% -10%, rgba(91, 134, 163, 0.05), transparent 60%),
+    linear-gradient(180deg, #fbfcfd 0%, #f8f9fa 45%, #f1f3f5 100%);
 }
 
 body {

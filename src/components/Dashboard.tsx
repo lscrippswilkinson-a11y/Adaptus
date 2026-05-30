@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Check,
@@ -8,7 +8,10 @@ import {
   Map,
   Pencil,
   Plus,
+  RotateCcw,
   Rocket,
+  Search,
+  Sparkles,
   TrendingUp,
   Trash2,
   Upload,
@@ -18,11 +21,15 @@ import { useApp } from '@/state/AppContext'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
 import { parseImportedProjects, projectsToJson } from '@/lib/storage'
-import { emptyProject } from '@/data/seed'
+import { createSeed, emptyProject } from '@/data/seed'
+import { uid } from '@/lib/id'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import type { Project } from '@/types'
+
+type SortKey = 'recent' | 'progress' | 'name'
 
 const ghostBtn: React.CSSProperties = {
   display: 'inline-flex',
@@ -58,6 +65,14 @@ export function Dashboard() {
   const { state, dispatch } = useApp()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
+  const [query, setQuery] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('recent')
+  // Soft delete: removed projects can be restored from the undo toast for a few seconds.
+  const [deleted, setDeleted] = useState<{ snapshot: Project[]; name: string } | null>(null)
+  const undoTimer = useRef<number | null>(null)
+  const narrow = useMediaQuery('(max-width: 720px)')
+
+  useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current) }, [])
 
   const completed = state.projects.filter(isComplete).length
   const total = state.projects.length
@@ -67,11 +82,34 @@ export function Dashboard() {
     dispatch({ type: 'ADD_PROJECT', project })
   }
 
+  // Add the pre-filled demo without navigating into it, so it lands in the list.
+  const loadExample = () => dispatch({ type: 'SET_PROJECTS', projects: [...state.projects, { ...createSeed(), id: uid() }] })
+
   const deleteProject = (proj: Project) => {
-    if (confirm(`Delete "${proj.name}"? This permanently removes the project and all its planning. This can't be undone.`)) {
-      dispatch({ type: 'DELETE_PROJECT', id: proj.id })
-    }
+    const snapshot = state.projects
+    dispatch({ type: 'DELETE_PROJECT', id: proj.id })
+    setDeleted({ snapshot, name: proj.name })
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+    undoTimer.current = window.setTimeout(() => setDeleted(null), 6000)
   }
+
+  const undoDelete = () => {
+    if (deleted) dispatch({ type: 'SET_PROJECTS', projects: deleted.snapshot })
+    setDeleted(null)
+    if (undoTimer.current) clearTimeout(undoTimer.current)
+  }
+
+  // Filtered + sorted view of the projects for the grid.
+  const visible = state.projects
+    .filter((p) => {
+      const q = query.trim().toLowerCase()
+      return !q || p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q)
+    })
+    .sort((a, b) => {
+      if (sortKey === 'name') return a.name.localeCompare(b.name)
+      if (sortKey === 'progress') return pct(b) - pct(a)
+      return b.createdAt.localeCompare(a.createdAt) // recent first
+    })
 
   // Backup (download) / restore (upload) all projects as a JSON file.
   const fileRef = useRef<HTMLInputElement>(null)
@@ -141,22 +179,26 @@ export function Dashboard() {
 
       <div style={{ padding: '28px 34px' }}>
         {/* Welcome hero */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'linear-gradient(135deg, rgba(91,134,163,0.18), rgba(62,101,128,0.06))', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '16px', padding: '28px 30px', marginBottom: '26px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '32px', background: 'radial-gradient(620px 340px at 85% -20%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '40px 26px' : '60px 48px', marginBottom: '26px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'var(--text)', lineHeight: 1.2 }}>Lead your change with confidence</h1>
-            <p style={{ margin: '10px 0 18px', fontSize: '14px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6, maxWidth: '580px' }}>
+            <h1 style={{ margin: 0, fontSize: narrow ? '27px' : '34px', fontWeight: 800, color: '#fff', lineHeight: 1.12, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
+            <p style={{ margin: '16px 0 26px', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.65, maxWidth: '600px' }}>
               Adaptus walks you through rolling out a change from start to finish — planning it, getting everyone ready,
               launching, and making it stick. No change-management experience required.
             </p>
-            <button type="button" onClick={() => setWizardOpen(true)} style={{ ...primaryBtn, padding: '11px 22px' }}>
+            <button
+              type="button"
+              onClick={() => setWizardOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', border: 'none', borderRadius: '10px', padding: '13px 24px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(18,179,161,0.4)' }}
+            >
               {total === 0 ? (
-                <>Start your first project <ArrowRight size={16} /></>
+                <>Start your first project <ArrowRight size={17} /></>
               ) : (
-                <><Plus size={16} /> Start a new project</>
+                <><Plus size={17} /> Start a new project</>
               )}
             </button>
           </div>
-          <FlaskConical size={76} color="#8FB3C7" strokeWidth={1.4} style={{ flexShrink: 0 }} />
+          {!narrow && <FlaskConical size={150} color="rgba(255,255,255,0.88)" strokeWidth={1.1} style={{ flexShrink: 0 }} />}
         </div>
 
         {/* How it works */}
@@ -171,27 +213,58 @@ export function Dashboard() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
-          {total > 0 && (
-            <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>
-              {total} project{total === 1 ? '' : 's'} · {completed} complete
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+            <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
+            {total > 0 && (
+              <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)' }}>
+                {total} project{total === 1 ? '' : 's'} · {completed} complete
+              </span>
+            )}
+          </div>
+          {total > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <Search size={14} style={{ position: 'absolute', left: '10px', color: 'rgba(var(--fg),0.4)', pointerEvents: 'none' }} />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search projects"
+                  aria-label="Search projects"
+                  style={{ background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '10px', padding: '8px 12px 8px 30px', color: 'var(--text)', fontSize: '13px', outline: 'none', fontFamily: 'inherit', width: '180px' }}
+                />
+              </div>
+              <select className="cq-select" value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} aria-label="Sort projects" style={{ width: 'auto', fontSize: '13px' }}>
+                <option value="recent">Recent</option>
+                <option value="progress">Progress</option>
+                <option value="name">Name (A–Z)</option>
+              </select>
+            </div>
           )}
         </div>
 
-        {state.projects.length === 0 ? (
+        {total === 0 ? (
           <div style={{ textAlign: 'center', padding: '64px 40px', background: 'rgba(var(--fg),0.02)', border: '1px dashed rgba(var(--fg),0.1)', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}><Map size={44} color="#8FB3C7" strokeWidth={1.4} /></div>
             <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>No projects yet</div>
-            <div style={{ color: 'rgba(var(--fg),0.4)', marginBottom: '22px', fontSize: '14px' }}>Start your first guided change management journey.</div>
-            <button type="button" onClick={() => setWizardOpen(true)} style={{ ...primaryBtn, padding: '12px 24px', margin: '0 auto' }}>
-              Create your first project <ArrowRight size={16} />
-            </button>
+            <div style={{ color: 'rgba(var(--fg),0.5)', marginBottom: '22px', fontSize: '14px' }}>Start your first guided change management journey — or explore a finished example first.</div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button type="button" onClick={() => setWizardOpen(true)} style={{ ...primaryBtn, padding: '12px 24px' }}>
+                Create your first project <ArrowRight size={16} />
+              </button>
+              <button type="button" onClick={loadExample} style={ghostBtn} title="Add a pre-filled sample project you can explore, then delete">
+                <Sparkles size={16} /> Load an example
+              </button>
+            </div>
+          </div>
+        ) : visible.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 40px', color: 'rgba(var(--fg),0.5)', fontSize: '14px', background: 'rgba(var(--fg),0.02)', border: '1px dashed rgba(var(--fg),0.1)', borderRadius: '16px' }}>
+            No projects match “{query}”.
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '12px' }}>
-            {state.projects.map((proj) => {
+            {visible.map((proj) => {
               const cs = STAGES[proj.currentStage]
               return (
                 <ProjectCard
@@ -244,6 +317,36 @@ export function Dashboard() {
             setEditing(null)
           }}
         />
+      )}
+
+      {deleted && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            background: 'var(--surface-card)',
+            border: '1px solid var(--surface-1-border)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            zIndex: 200,
+          }}
+        >
+          <span style={{ fontSize: '13px', color: 'var(--text)' }}>Deleted “{deleted.name}”</span>
+          <button
+            type="button"
+            onClick={undoDelete}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'var(--accent-text)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <RotateCcw size={14} /> Undo
+          </button>
+        </div>
       )}
     </div>
   )
@@ -305,18 +408,15 @@ function ProjectCard({ name, type, p2, stageIcon: StageIcon, stageTag, avg, core
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '3px' }}>{name}</div>
-          <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)' }}>{type}</div>
+          <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>{type}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {complete && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}><Check size={12} strokeWidth={3} /> Complete</div>
           )}
-          {hover && (
-            <>
-              <button type="button" style={cardIconBtn} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
-              <button type="button" style={{ ...cardIconBtn, color: '#fca5a5' }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
-            </>
-          )}
+          {/* Always rendered so they're reachable on touch; emphasised on hover. */}
+          <button type="button" style={{ ...cardIconBtn, opacity: hover ? 1 : 0.7 }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
+          <button type="button" style={{ ...cardIconBtn, color: '#fca5a5', opacity: hover ? 1 : 0.7 }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
         </div>
       </div>
       <div style={{ marginBottom: '12px' }}>
