@@ -125,8 +125,10 @@ export function StageFlow({ intro, steps }: { intro?: ReactNode; steps: WizardSt
 
   return (
     <div>
+      {/* Guided mode is deliberately bare: just the toggle, a step counter, the
+          one current question, and Back/Next. The stage overview + tips (intro)
+          are summary-mode only, so each question fills the screen on its own. */}
       {header}
-      {intro}
 
       {/* Progress indicator */}
       <div style={{ margin: '4px 0 18px' }}>
