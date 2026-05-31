@@ -8,16 +8,33 @@ export const CHANGE_TYPES = [
   'Other',
 ]
 
-export const CHANNELS = [
-  'All-Hands Meeting',
-  'Email Blast',
-  'Slack / Teams Channel',
-  'Manager Cascade',
-  'Town Hall',
-  'Intranet Post',
-  '1:1 Check-ins',
-  'Video Update',
-  'FAQ Document',
+export const ESCALATION_ISSUE_TYPES = [
+  'Technical blocker',
+  'People resistance',
+  'Budget decision',
+  'Timeline risk',
+  'Other',
+]
+
+export const ESCALATION_RESPONSE_TIMES = ['Same day', '24 hours', '48 hours', '1 week']
+
+/** A communication channel plus a one-line strength and a one-line limitation. */
+export interface ChannelInfo {
+  name: string
+  best: string
+  limit: string
+}
+
+export const CHANNELS: ChannelInfo[] = [
+  { name: 'All-Hands Meeting', best: 'Great for launching and creating shared momentum.', limit: 'Too broad for nuanced questions.' },
+  { name: 'Email Blast', best: 'Creates a paper trail and reaches everyone at once.', limit: 'Low retention — people skim or miss it.' },
+  { name: 'Slack / Teams Channel', best: 'Best for quick updates and in-the-moment questions.', limit: 'Easily buried as the feed scrolls past.' },
+  { name: 'Manager Cascade', best: 'Best for behavioral change; people trust their direct manager most.', limit: "Less effective if managers aren't briefed properly." },
+  { name: 'Town Hall', best: 'Good for casting the big-picture vision and taking questions openly.', limit: 'Can feel one-directional without real Q&A.' },
+  { name: 'Intranet Post', best: 'A durable reference people can return to anytime.', limit: 'Passive — few go looking unless pointed there.' },
+  { name: '1:1 Check-ins', best: 'Best for surfacing individual concerns and quiet resistance.', limit: 'Time-intensive and hard to scale.' },
+  { name: 'Video Update', best: "Adds a personal, human tone text can't carry.", limit: 'High effort to produce and you can’t skim it.' },
+  { name: 'FAQ Document', best: 'Answers common questions once and deflects repeats.', limit: 'Only helps those who think to look.' },
 ]
 
 export const RISK_CATS = [

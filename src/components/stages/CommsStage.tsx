@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
 import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
@@ -183,17 +184,62 @@ export function CommsStage() {
       node: (
       <Card>
         <Label>Communication channels</Label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-          {CHANNELS.map((ch) => (
-            <button
-              key={ch}
-              type="button"
-              className={'ch-btn' + (data.channels.includes(ch) ? ' sel' : '')}
-              onClick={() => toggleChannel(ch)}
-            >
-              {ch}
-            </button>
-          ))}
+        <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
+          Pick the channels you’ll use — each plays to a different strength. Most changes need a few working together.
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          {CHANNELS.map((ch) => {
+            const sel = data.channels.includes(ch.name)
+            return (
+              <button
+                key={ch.name}
+                type="button"
+                onClick={() => toggleChannel(ch.name)}
+                aria-pressed={sel}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  textAlign: 'left',
+                  width: '100%',
+                  background: sel ? 'rgba(91,134,163,0.12)' : 'rgba(var(--fg),0.02)',
+                  border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  paddingRight: '40px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    border: `2px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.22)'}`,
+                    background: sel ? '#5B86A3' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {sel && <Check size={12} strokeWidth={3} color="var(--on-accent)" />}
+                </span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{ch.name}</span>
+                <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.72)', lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>Best for:</span> {ch.best}
+                </span>
+                <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 600 }}>Watch out:</span> {ch.limit}
+                </span>
+              </button>
+            )
+          })}
         </div>
         {!data.channels.includes('Manager Cascade') && (
           <InsightCallout tone={coaching.comms.managerCascade.tone} style={{ marginTop: '12px' }}>

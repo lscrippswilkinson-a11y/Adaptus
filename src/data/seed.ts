@@ -16,7 +16,7 @@ export function emptyProject(): Project {
     stageData: {
       define: { statement: '', scope: '', successLooks: '', whyNow: '' },
       groups: { groups: [] },
-      sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationPath: '' },
+      sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationRules: [] },
       stakeholders: { rows: [] },
       risk: { items: [] },
       comms: { channels: [], keyMessages: '', schedule: [] },
@@ -60,7 +60,11 @@ export function createSeed(): Project {
       'Remove identified blockers',
     ],
     commitments: 'Personal video to all staff, co-present at all-hands, monthly check-in with project lead.',
-    escalationPath: 'Go-live blockers escalate to Elena same-day. Budget decisions go to Elena + CFO.',
+    escalationRules: [
+      { id: 1, issueType: 'Technical blocker', owner: 'Elena Torres', responseTime: 'Same day' },
+      { id: 2, issueType: 'Budget decision', owner: 'Elena + CFO', responseTime: '48 hours' },
+      { id: 3, issueType: 'People resistance', owner: 'Practice-group lead → Elena', responseTime: '1 week' },
+    ],
   }
   p.stageData.stakeholders = {
     rows: [

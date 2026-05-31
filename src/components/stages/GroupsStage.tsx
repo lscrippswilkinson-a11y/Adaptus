@@ -65,10 +65,10 @@ function GroupsHub({
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
                         {g.name.trim() || `Group ${i + 1}`}
-                        {g.size ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}> · ~{g.size}</span> : null}
+                        {g.size.trim() ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}> — {g.size.trim()} people</span> : null}
                       </span>
                       <span style={{ display: 'block', fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '3px' }}>
-                        {impactLabelOf(g.impact)} · {readyLabelOf(g.readiness)}
+                        Impact: {g.impact} <span style={{ color: 'rgba(var(--fg),0.3)' }}>|</span> Readiness: {g.readiness}
                       </span>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>

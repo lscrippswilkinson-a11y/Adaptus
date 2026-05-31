@@ -1,9 +1,11 @@
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
-import { FieldCoach, InsightCallout, Card, Label, TextArea, TextInput } from '@/components/ui'
+import type { EscalationRule } from '@/types'
+import { AddButton, DelButton, FieldCoach, InsightCallout, Card, Label, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { SPONSOR_ACTIONS } from '@/data/constants'
+import { ESCALATION_ISSUE_TYPES, ESCALATION_RESPONSE_TIMES, SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
+import { uid } from '@/lib/id'
 
 export function SponsorStage() {
   const { data, update } = useStageEditor('sponsor')
@@ -22,6 +24,13 @@ export function SponsorStage() {
     else cur.add(action)
     update({ sponsorActions: [...cur] })
   }
+
+  const rules = data.escalationRules ?? []
+  const addRule = () =>
+    update({ escalationRules: [...rules, { id: uid(), issueType: ESCALATION_ISSUE_TYPES[0], owner: '', responseTime: ESCALATION_RESPONSE_TIMES[1] }] })
+  const setRule = (id: number, patch: Partial<EscalationRule>) =>
+    update({ escalationRules: rules.map((r) => (r.id === id ? { ...r, ...patch } : r)) })
+  const delRule = (id: number) => update({ escalationRules: rules.filter((r) => r.id !== id) })
 
   const actionsInsight = coaching.sponsor.actionsInsight(data.sponsorActions.length)
   const f = coaching.sponsor.fields
@@ -156,19 +165,44 @@ export function SponsorStage() {
       ),
     },
     {
-      id: 'escalationPath',
+      id: 'escalation',
       title: 'Escalation path',
-      isFilled: !!data.escalationPath.trim(),
-      summary: data.escalationPath,
+      isFilled: rules.length > 0,
+      summary: rules.length ? `${rules.length} escalation rule${rules.length === 1 ? '' : 's'}` : undefined,
       node: (
-        <FieldCoach
-          label={f.escalationPath.label}
-          why={f.escalationPath.why}
-          example={f.escalationPath.example}
-          onUseExample={() => update({ escalationPath: f.escalationPath.example })}
-        >
-          <TextArea value={data.escalationPath} onCommit={(v) => update({ escalationPath: v })} placeholder="e.g., Go-live blockers escalate same-day. Budget decisions go to sponsor + CFO..." rows={3} />
-        </FieldCoach>
+        <Card>
+          <Label>{f.escalation.label}</Label>
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '4px 0 16px' }}>
+            {f.escalation.why}
+          </div>
+
+          {rules.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', gap: '8px', padding: '0 4px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.4)' }}>
+                <span style={{ flex: '1 1 0', minWidth: 0 }}>Issue type</span>
+                <span style={{ flex: '1 1 0', minWidth: 0 }}>Owner</span>
+                <span style={{ width: '130px', flexShrink: 0 }}>Response time</span>
+                <span style={{ width: '32px', flexShrink: 0 }} />
+              </div>
+              {rules.map((r) => (
+                <div key={r.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                    <Select value={r.issueType} options={ESCALATION_ISSUE_TYPES} onChange={(v) => setRule(r.id, { issueType: v })} />
+                  </div>
+                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                    <TextInput value={r.owner} onCommit={(v) => setRule(r.id, { owner: v })} placeholder="Who handles it?" />
+                  </div>
+                  <div style={{ width: '130px', flexShrink: 0 }}>
+                    <Select value={r.responseTime} options={ESCALATION_RESPONSE_TIMES} onChange={(v) => setRule(r.id, { responseTime: v })} />
+                  </div>
+                  <DelButton onClick={() => delRule(r.id)} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <AddButton label="Add another escalation rule" onClick={addRule} />
+        </Card>
       ),
     },
   ]

@@ -138,12 +138,10 @@ export const coaching = {
         example:
           'Record a 2-minute video for all staff explaining why we’re moving to Clio, co-present at the launch all-hands, and personally enter her own time in Clio from day one so everyone sees she’s doing it too.',
       } satisfies FieldCopy,
-      escalationPath: {
+      escalation: {
         label: 'When something gets stuck, who fixes it — and how fast?',
-        why: 'Changes hit blockers: a system isn’t ready, or someone flatly refuses to come along. Decide in advance how those reach your sponsor and how quickly they’ll act. A clear path means problems get unstuck in days, not quietly fester for weeks.',
-        example:
-          'Anything that blocks go-live gets raised to Elena the same day. If a timekeeper digs in and refuses to use Clio, their practice-group lead flags it to Elena, who has a direct conversation rather than letting it slide.',
-      } satisfies FieldCopy,
+        why: 'Changes hit blockers: a system isn’t ready, or someone flatly refuses to come along. Decide in advance who owns each kind of issue and how quickly they’ll act. A clear path means problems get unstuck in days, not quietly fester for weeks.',
+      },
     },
     /** Reacts to how many sponsor actions are committed. */
     actionsInsight(count: number): Insight | null {

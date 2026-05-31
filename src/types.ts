@@ -70,12 +70,19 @@ export interface GroupsData {
   groups: ImpactedGroup[]
 }
 
+export interface EscalationRule {
+  id: number
+  issueType: string
+  owner: string
+  responseTime: string
+}
+
 export interface SponsorData {
   name: string
   role: string
   sponsorActions: string[]
   commitments: string
-  escalationPath: string
+  escalationRules: EscalationRule[]
 }
 
 export interface StakeholderRow {
