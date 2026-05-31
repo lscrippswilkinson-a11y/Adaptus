@@ -6,7 +6,11 @@ import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
 import { StageGateProvider } from '@/components/StageFlow'
+import { ProjectOnboarding } from '@/components/ProjectOnboarding'
 import { ThemeToggle } from '@/components/ThemeToggle'
+
+/** Per-project flag: has the user already clicked through the welcome deck? */
+const onboardedKey = (projectId: string) => `adaptus.onboarded.${projectId}`
 
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
@@ -34,6 +38,22 @@ export function Workspace({ project }: { project: Project }) {
     // Reset the gate on stage change; the new stage's wizard (if any) re-sets it.
     setShowComplete(true)
   }, [state.stageIdx, project.id])
+
+  // Show the welcome deck once per project, before the workspace itself.
+  const [onboarding, setOnboarding] = useState(false)
+  useEffect(() => {
+    setOnboarding(!localStorage.getItem(onboardedKey(project.id)))
+  }, [project.id])
+  const finishOnboarding = () => {
+    try {
+      localStorage.setItem(onboardedKey(project.id), '1')
+    } catch {
+      /* storage unavailable (private mode) — deck just shows again next time */
+    }
+    setOnboarding(false)
+  }
+
+  if (onboarding) return <ProjectOnboarding onDone={finishOnboarding} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'transparent' }}>
