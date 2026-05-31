@@ -41,7 +41,14 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
   return (
     <div className="brief-wrap">
-      <div className="brief-hdr">
+      <div
+        className="brief-hdr"
+        style={{ background: 'radial-gradient(130% 150% at 88% -25%, rgba(255,255,255,0.20), rgba(255,255,255,0) 55%), linear-gradient(135deg,#6B97B4 0%,#3E6580 58%,#2C4A5F 100%)' }}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', marginBottom: '14px' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', fontSize: '12px' }}>✦</span>
+          Adaptus
+        </div>
         <div className="brief-badge" style={{ borderColor: 'rgba(255,255,255,0.35)' }}>
           {statusWord(prep.pct)} · {prep.pct}% ready
         </div>
@@ -56,7 +63,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           <div className="bsg">
             <div className="bsc"><div className="v" style={{ color: prepColor(prep.pct) }}>{prep.pct}%</div><div className="l">Launch ready</div></div>
             <div className="bsc"><div className="v">{goLive}</div><div className="l">Go-live</div></div>
-            <div className="bsc"><div className="v">{prep.total ? `${prep.done}/${prep.total}` : '—'}</div><div className="l">Tasks done</div></div>
+            <div className="bsc"><div className="v">{prep.total ? `${prep.done}/${prep.total}` : '—'}</div><div className="l">Steps complete</div></div>
           </div>
         </div>
 
@@ -91,7 +98,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           {named.length > 0 && (
             <div style={{ marginTop: '8px' }}>
               <span className="btag g">{advocates} advocate{advocates === 1 ? '' : 's'}</span>
-              {resistant > 0 && <span className="btag r">{resistant} resistant</span>}
+              {resistant > 0 && <span className="btag a">{resistant} need engagement</span>}
               <span className="btag b">{named.length} mapped</span>
             </div>
           )}
@@ -120,17 +127,23 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
             {metrics.map((m) => {
               const c = parseFloat(m.current)
               const t = parseFloat(m.target)
-              const p2 = isFinite(c) && isFinite(t) && t !== 0 ? Math.min(100, Math.round((c / t) * 100)) : 0
+              const has = isFinite(c) && isFinite(t) && t !== 0
+              const p2 = has ? Math.min(100, Math.round((c / t) * 100)) : 0
+              const status = p2 >= 80 ? { t: 'On track', c: '#86efac' } : p2 >= 50 ? { t: 'Behind target', c: '#fcd34d' } : { t: 'Well behind', c: '#fca5a5' }
+              const bar = p2 >= 80 ? '#22c55e' : p2 >= 50 ? '#f59e0b' : '#ef4444'
               return (
                 <div key={m.id} style={{ marginBottom: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
                     <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)' }}>{m.name}</span>
                     <span style={{ fontSize: '13px', color: '#B8D0DE', fontWeight: 700 }}>{m.current ? `${m.current}${m.unit} / ${m.target}${m.unit}` : ''}</span>
                   </div>
-                  {m.current && m.target && (
-                    <div style={{ height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${p2}%`, background: p2 >= 80 ? '#22c55e' : p2 >= 50 ? '#f59e0b' : '#5B86A3', borderRadius: '4px' }} />
-                    </div>
+                  {has && (
+                    <>
+                      <div style={{ height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${p2}%`, background: bar, borderRadius: '4px' }} />
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: 600, color: status.c, marginTop: '4px' }}>{status.t}</div>
+                    </>
                   )}
                 </div>
               )
@@ -147,8 +160,8 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
       </div>
 
       <div className="brief-ft">
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
-          Made with <span style={{ color: '#B8D0DE' }}>Adaptus</span>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+          Generated from your <span style={{ color: '#B8D0DE' }}>Adaptus</span> change plan
         </div>
         {publicView ? (
           <a
