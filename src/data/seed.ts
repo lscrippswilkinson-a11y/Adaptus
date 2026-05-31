@@ -26,7 +26,7 @@ export function emptyProject(): Project {
       milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {} },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
-      executive: { generated: false },
+      executive: { generated: false, ask: '' },
       sustainment: { reinforcementOwner: '', checkpointDates: '', metrics: '', risks: '', recognitionPlan: '' },
       closeout: { wins: '', lessons: '', shoutouts: '' },
     },
@@ -136,6 +136,10 @@ export function createSeed(): Project {
       { id: 2, type: 'Extra workload', group: 'Customer Success', severity: 'High', intervention: 'Dedicated CS onboarding sprint with hands-on support for 2 weeks post-launch' },
     ],
     generalPlan: 'Weekly pulse survey for 8 weeks. Any score below 3/5 triggers manager check-in within 48 hours.',
+  }
+  p.stageData.executive = {
+    generated: false,
+    ask: 'Email all staff before go-live reinforcing the “why,” and join the launch all-hands. We also need CS coaching capacity confirmed for weeks 3–4.',
   }
   p.completedStages = ['define', 'groups', 'sponsor', 'stakeholders', 'risk', 'resistance', 'comms', 'training', 'testing', 'dependencies']
   p.currentStage = 10 // Launch Preparation Dashboard

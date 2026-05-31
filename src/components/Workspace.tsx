@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, Check, Share2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { PHASES, STAGES } from '@/data/stages'
@@ -7,6 +7,7 @@ import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
 import { StageGateProvider } from '@/components/StageFlow'
 import { ProjectOnboarding } from '@/components/ProjectOnboarding'
+import { ShareModal } from '@/components/ShareModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** Per-project flag: has the user already clicked through the welcome deck? */
@@ -62,6 +63,8 @@ export function Workspace({ project }: { project: Project }) {
     setOnboarding(false)
   }
 
+  const [sharing, setSharing] = useState(false)
+
   if (onboarding) return <ProjectOnboarding onDone={finishOnboarding} />
 
   return (
@@ -85,6 +88,13 @@ export function Workspace({ project }: { project: Project }) {
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setSharing(true)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '999px', padding: '7px 14px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+        >
+          <Share2 size={14} /> Share
+        </button>
         <ThemeToggle />
       </div>
 
@@ -219,6 +229,14 @@ export function Workspace({ project }: { project: Project }) {
           )}
         </div>
       </div>
+
+      {sharing && (
+        <ShareModal
+          project={project}
+          onUpdate={(p) => dispatch({ type: 'UPDATE_PROJECT', project: p })}
+          onClose={() => setSharing(false)}
+        />
+      )}
     </div>
   )
 }

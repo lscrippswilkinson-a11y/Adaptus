@@ -6,6 +6,7 @@ import { hasSupabase } from '@/lib/supabase'
 import { SignIn } from '@/components/SignIn'
 import { Dashboard } from '@/components/Dashboard'
 import { Workspace } from '@/components/Workspace'
+import { SharedBriefPage } from '@/components/SharedBriefPage'
 
 function Splash() {
   return (
@@ -36,6 +37,17 @@ function Gate() {
 }
 
 export default function App() {
+  // Public, no-login route: a shared status brief (/?share=<token>). Rendered
+  // ahead of the auth gate so recipients never hit a sign-in wall.
+  const shareToken = new URLSearchParams(window.location.search).get('share')
+  if (shareToken) {
+    return (
+      <ThemeProvider>
+        <SharedBriefPage token={shareToken} />
+      </ThemeProvider>
+    )
+  }
+
   return (
     <ThemeProvider>
       <WizardModeProvider>

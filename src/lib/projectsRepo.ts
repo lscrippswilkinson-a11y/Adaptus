@@ -14,22 +14,27 @@ interface ProjectRow {
   completed_stages: string[]
   stage_data: unknown
   created_at: string
+  share_token?: string | null
 }
 
-function rowToProject(r: ProjectRow): Project {
+/** The public-safe subset returned by the get_shared_project RPC (no owner). */
+type SharedRow = Omit<ProjectRow, 'owner_id' | 'description' | 'share_token'>
+
+function rowToProject(r: ProjectRow | SharedRow): Project {
   // Run through migrateProject so any stageData fields added since the row was
   // written are backfilled to the current shape.
   return migrateProject({
     id: r.id,
     name: r.name,
     type: r.type,
-    description: r.description,
+    description: 'description' in r ? r.description : '',
     targetDate: r.target_date ?? '',
     createdAt: r.created_at,
     totalXp: 0,
     completedStages: (r.completed_stages ?? []) as StageId[],
     currentStage: r.current_stage ?? 0,
     stageData: r.stage_data as StageData,
+    shareToken: 'share_token' in r ? r.share_token : null,
   })
 }
 
@@ -43,6 +48,7 @@ function editableColumns(p: Project) {
     current_stage: p.currentStage,
     completed_stages: p.completedStages,
     stage_data: p.stageData,
+    share_token: p.shareToken ?? null,
   }
 }
 
@@ -69,4 +75,16 @@ export async function updateProject(p: Project): Promise<void> {
 export async function deleteProjectRemote(id: string): Promise<void> {
   const { error } = await supabase.from('projects').delete().eq('id', id)
   if (error) throw error
+}
+
+/**
+ * Fetch a project by its public share token — works WITHOUT auth via the
+ * `get_shared_project` SECURITY DEFINER RPC, which returns only the public-safe
+ * columns of the one matching row (and nothing if the token is wrong/revoked).
+ */
+export async function fetchSharedProject(token: string): Promise<Project | null> {
+  const { data, error } = await supabase.rpc('get_shared_project', { p_token: token })
+  if (error) throw error
+  if (!data) return null
+  return rowToProject(data as SharedRow)
 }

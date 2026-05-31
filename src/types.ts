@@ -231,6 +231,8 @@ export interface ResistanceData {
 
 export interface ExecutiveData {
   generated: boolean
+  /** The "what I need from you" ask shown on the shareable status brief. */
+  ask: string
 }
 
 export interface SustainmentData {
@@ -283,6 +285,8 @@ export interface Project {
   /** furthest stage index unlocked (0-based). */
   currentStage: number
   stageData: StageData
+  /** When set, the project's status brief is viewable (read-only) at /?share=<token>. */
+  shareToken?: string | null
 }
 
 /* ---- Top-level app/view state ---- */
