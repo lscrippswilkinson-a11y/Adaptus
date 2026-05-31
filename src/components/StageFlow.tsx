@@ -17,6 +17,16 @@ export interface WizardStep {
   summary?: ReactNode
   /** Whether the user has entered something (drives the review tick). */
   isFilled?: boolean
+  /**
+   * Hub mode only: marks the first screen of an item, so "Back" returns to the
+   * hub instead of stepping into the previous item.
+   */
+  itemFirst?: boolean
+  /**
+   * Hub mode only: marks the last screen of an item, so the primary button
+   * ("Done") returns to the hub instead of stepping into the next item.
+   */
+  itemLast?: boolean
 }
 
 export interface StageFlowProps {
@@ -29,6 +39,14 @@ export interface StageFlowProps {
   /** Extra summary-only chrome (e.g. a stage-level InsightCallout). */
   extra?: ReactNode
   steps: WizardStep[]
+  /**
+   * Hub mode (list stages): when provided, the guided flow becomes
+   * hub-and-spoke. The "review" screen renders this hub — a summary of all
+   * items with add/continue affordances — and editing one item (its
+   * `itemFirst`…`itemLast` run of screens) returns here when finished.
+   * `editItem` jumps to a given step index (an item's first screen).
+   */
+  hub?: (ctx: { editItem: (stepIndex: number) => void }) => ReactNode
 }
 
 /**
@@ -118,7 +136,7 @@ function ModeToggle() {
  * full-page layout). The step index is local state, so it resets to the intro
  * screen whenever the stage/project remounts.
  */
-export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps) {
+export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlowProps) {
   const { mode } = useWizardMode()
   const setShowComplete = useContext(StageGateCtx)
   // -1 = intro screen, 0..steps.length-1 = questions, steps.length = review.
@@ -130,11 +148,14 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
   const onReview = step >= total
   const title = STAGES.find((s) => s.id === stageId)?.label ?? ''
 
-  // The complete button belongs on the review screen / summary view only.
+  // Hub stages ignore the summary toggle — the hub IS their overview.
+  const summaryMode = mode === 'summary' && !hub
+
+  // The complete button belongs on the review/hub screen, or the summary view.
   useEffect(() => {
-    setShowComplete(mode === 'summary' || onReview)
+    setShowComplete(summaryMode || onReview)
     return () => setShowComplete(true)
-  }, [mode, onReview, setShowComplete])
+  }, [summaryMode, onReview, setShowComplete])
 
   // Scroll each new screen to the top (skip the first render).
   useEffect(() => {
@@ -152,12 +173,12 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
   }
 
   const header = (
-    <div ref={topRef} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '14px' }}>
-      <ModeToggle />
+    <div ref={topRef} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: hub ? 0 : '14px' }}>
+      {!hub && <ModeToggle />}
     </div>
   )
 
-  if (mode === 'summary') {
+  if (summaryMode) {
     return (
       <div>
         {header}
@@ -173,7 +194,28 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
 
   // ---- Guided mode ----
   const current = Math.min(Math.max(step, 0), total - 1)
-  const progressPct = onReview ? 100 : Math.round(((current + 1) / total) * 100)
+
+  // In hub mode, navigation is scoped to the item the current screen belongs to:
+  // "Back" off the first screen and "Done" off the last screen return to the hub,
+  // and the progress indicator counts within the item rather than across them.
+  let itemStart = 0
+  let itemEnd = total - 1
+  if (hub && !onReview && total > 0) {
+    let s = current
+    while (s > 0 && !steps[s].itemFirst) s--
+    let e = current
+    while (e < total - 1 && !steps[e].itemLast) e++
+    itemStart = s
+    itemEnd = e
+  }
+  const itemLen = itemEnd - itemStart + 1
+  const itemPos = current - itemStart + 1
+  const nextIsHub = !!hub && !!steps[current]?.itemLast
+  const backIsHub = !!hub && !!steps[current]?.itemFirst
+  const goNext = () => (nextIsHub ? go(total) : go(current + 1))
+  const goPrev = () => (backIsHub ? go(total) : go(current - 1))
+
+  const progressPct = onReview ? 100 : hub ? Math.round((itemPos / itemLen) * 100) : Math.round(((current + 1) / total) * 100)
 
   // Intro screen — context and motivation only, no inputs.
   if (step < 0) {
@@ -186,7 +228,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
           <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.78)', maxWidth: '560px', margin: '0 auto 30px' }}>
             {blurb}
           </div>
-          <button type="button" style={pillBtn} onClick={() => go(0)}>
+          <button type="button" style={pillBtn} onClick={() => go(hub ? total : 0)}>
             Let’s go <ChevronRight size={18} />
           </button>
         </div>
@@ -198,41 +240,47 @@ export function StageFlow({ stageId, icon, blurb, extra, steps }: StageFlowProps
     <div style={{ maxWidth: `${CONTENT_MAX}px`, margin: '0 auto' }}>
       {header}
 
-      {/* Progress indicator */}
-      <div style={{ margin: '4px 0 8px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '7px' }}>
-          <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--accent-text)', textTransform: 'uppercase' }}>
-            {onReview ? 'Review' : `Step ${current + 1} of ${total}`}
-          </span>
-          {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{steps[current].title}</span>}
-        </div>
-        <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${progressPct}%`, borderRadius: '3px', transition: 'width 0.4s' }} />
-        </div>
-      </div>
-
-      {onReview ? (
-        <div style={{ padding: '24px 0 0' }}>
-          <ReviewScreen steps={steps} onEdit={(i) => go(i)} />
-          <div style={{ marginTop: '22px' }}>
-            <button type="button" style={ghostBtn} onClick={() => go(total - 1)}>
-              <ChevronLeft size={16} /> Back to questions
-            </button>
+      {/* Progress indicator (hidden on the hub) */}
+      {!(hub && onReview) && (
+        <div style={{ margin: '4px 0 8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '7px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--accent-text)', textTransform: 'uppercase' }}>
+              {onReview ? 'Review' : hub ? `Step ${itemPos} of ${itemLen}` : `Step ${current + 1} of ${total}`}
+            </span>
+            {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{steps[current].title}</span>}
+          </div>
+          <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${progressPct}%`, borderRadius: '3px', transition: 'width 0.4s' }} />
           </div>
         </div>
+      )}
+
+      {onReview ? (
+        hub ? (
+          <div style={{ padding: '8px 0 0' }}>{hub({ editItem: (i) => go(i) })}</div>
+        ) : (
+          <div style={{ padding: '24px 0 0' }}>
+            <ReviewScreen steps={steps} onEdit={(i) => go(i)} />
+            <div style={{ marginTop: '22px' }}>
+              <button type="button" style={ghostBtn} onClick={() => go(total - 1)}>
+                <ChevronLeft size={16} /> Back to questions
+              </button>
+            </div>
+          </div>
+        )
       ) : (
         <>
           <div style={{ padding: '28px 0 32px' }}>
-            <StageNavCtx.Provider value={{ next: () => go(current + 1), prev: () => go(current - 1) }}>
+            <StageNavCtx.Provider value={{ next: goNext, prev: goPrev }}>
               <FieldCoachVariant variant="hero">{steps[current].node}</FieldCoachVariant>
             </StageNavCtx.Provider>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button type="button" style={ghostBtn} onClick={() => go(current - 1)}>
-              <ChevronLeft size={16} /> Back
+            <button type="button" style={ghostBtn} onClick={goPrev}>
+              <ChevronLeft size={16} /> {backIsHub ? 'Back to list' : 'Back'}
             </button>
-            <button type="button" style={pillBtn} onClick={() => go(current + 1)}>
-              {current === total - 1 ? 'Review' : 'Next'} <ChevronRight size={18} />
+            <button type="button" style={pillBtn} onClick={goNext}>
+              {nextIsHub ? 'Done' : current === total - 1 ? 'Review' : 'Next'} <ChevronRight size={18} />
             </button>
           </div>
         </>
