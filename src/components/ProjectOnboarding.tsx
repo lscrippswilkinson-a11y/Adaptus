@@ -60,14 +60,6 @@ function BottomLine({ children }: { children: ReactNode }) {
   )
 }
 
-const ADKAR: { letter: string; word: string; line: string }[] = [
-  { letter: 'A', word: 'Awareness', line: 'People need to know WHY the change is happening before anything else.' },
-  { letter: 'D', word: 'Desire', line: 'They need to actually want to come along — not just be told to.' },
-  { letter: 'K', word: 'Knowledge', line: 'They need to know HOW to change — training, guides, support.' },
-  { letter: 'A', word: 'Ability', line: 'They need to be able to do it in practice — not just understand it in theory.' },
-  { letter: 'R', word: 'Reinforcement', line: "The change needs to be sustained so people don't drift back to old habits." },
-]
-
 const PHASES: { n: number; label: string; line: string }[] = [
   { n: 1, label: 'Planning', line: "Define the change, identify who's affected, line up your sponsor and stakeholders." },
   { n: 2, label: 'Launch Preparation', line: 'Build your comms plan, training roadmap, and go-live checklist.' },
@@ -84,48 +76,9 @@ function SlideWelcome() {
         people weren’t brought along. This process fixes that.
       </p>
       <BottomLine>
-        This is built around <strong style={{ color: 'var(--accent-text)' }}>ADKAR</strong> — the world’s most widely
-        used change framework. Next up: what that means for you.
-      </BottomLine>
-    </div>
-  )
-}
-
-function SlideAdkar() {
-  return (
-    <div>
-      <h1 style={headlineStyle}>The framework behind this process</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {ADKAR.map((a, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-            <div
-              style={{
-                width: '34px',
-                height: '34px',
-                flexShrink: 0,
-                borderRadius: '9px',
-                background: 'rgba(91,134,163,0.15)',
-                border: '1px solid rgba(91,134,163,0.35)',
-                color: 'var(--accent-text)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 800,
-                fontSize: '17px',
-              }}
-            >
-              {a.letter}
-            </div>
-            <div style={{ paddingTop: '2px' }}>
-              <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '15px' }}>{a.word}: </span>
-              <span style={{ fontSize: '15px', lineHeight: 1.6, color: 'rgba(var(--fg),0.72)' }}>{a.line}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <BottomLine>
-        Every stage in Adaptus maps to one of these. You won’t need to think about ADKAR directly — it’s built into the
-        process.
+        It’s built on <strong style={{ color: 'var(--accent-text)' }}>ADKAR</strong>, the most widely used change
+        framework — so you’re following an approach that’s proven, not improvised. You won’t have to learn it; it’s baked
+        into every step.
       </BottomLine>
     </div>
   )
@@ -161,8 +114,8 @@ function SlidePhases() {
   )
 }
 
-const SLIDES = [SlideWelcome, SlideAdkar, SlidePhases]
-const NEXT_LABELS = ['Next', 'Next', 'Start Planning']
+const SLIDES = [SlideWelcome, SlidePhases]
+const NEXT_LABELS = ['Next', 'Start Planning']
 
 export function ProjectOnboarding({ onDone }: { onDone: () => void }) {
   const [slide, setSlide] = useState(0)
