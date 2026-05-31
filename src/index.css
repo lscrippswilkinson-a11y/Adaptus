@@ -44,6 +44,7 @@ body,
  * hierarchy at once. Solid surfaces/accents get their own tokens.
  */
 :root {
+  color-scheme: dark; /* native controls (date picker, scrollbars) match dark UI */
   --fg: 255, 255, 255; /* foreground channel for rgba() text/borders/overlays */
   --text: #ffffff; /* solid primary text */
   --on-accent: #ffffff; /* text/icons sitting on an accent-coloured fill */
@@ -65,6 +66,7 @@ body,
 }
 
 :root[data-theme='light'] {
+  color-scheme: light;
   --fg: 17, 24, 39; /* cool near-black (slate) */
   --text: #111827;
   --on-accent: #ffffff;

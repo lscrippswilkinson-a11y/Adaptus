@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { ChevronDown, ChevronRight, type LucideIcon } from 'lucide-react'
 import { useApp, useStageEditor } from '@/state/AppContext'
 import type { MilestoneOwner, StageId } from '@/types'
 import { AddButton, DelButton, StageIntro, TextInput } from '@/components/ui'
@@ -8,7 +8,9 @@ import { STAGES } from '@/data/stages'
 import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
 import { uid } from '@/lib/id'
 
-const prepColor = (p: number) => (p >= 80 ? '#22c55e' : p >= 50 ? '#f59e0b' : '#ef4444')
+// Green once meaningfully on track (>70%), amber mid, red low — green reads as
+// good progress rather than a warning.
+const prepColor = (p: number) => (p >= 70 ? '#22c55e' : p >= 40 ? '#f59e0b' : '#ef4444')
 const GROUP_ORDER = [
   'Launch readiness',
   'Sponsor commitments',
@@ -22,6 +24,13 @@ const GROUP_ORDER = [
   'Impacted groups',
   'Your tasks',
 ]
+
+/** Display labels for task groups (keys above stay stable for the data layer). */
+const GROUP_LABELS: Record<string, string> = {
+  'Launch readiness': 'Go-live checklist', // avoid clashing with the "Launch Preparedness" score label
+  'Your tasks': 'Additional tasks',
+}
+const labelFor = (g: string) => GROUP_LABELS[g] ?? g
 
 /** Live ticking countdown to the go-live date (handles today / past gracefully). */
 function GoLiveCountdown({ date }: { date: string }) {
@@ -76,6 +85,9 @@ export function DashboardStage() {
   const { update: updateDeps } = useStageEditor('dependencies')
   const { update: updateTraining } = useStageEditor('training')
   const [draft, setDraft] = useState('')
+  // Explicit expand/collapse overrides per group; absent => default (completed
+  // sections collapse, others stay open).
+  const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({})
   if (!project) return null
 
   const prep = preparedness(project)
@@ -181,36 +193,68 @@ export function DashboardStage() {
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
         <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section — your score updates either way.</div>
 
-        {GROUP_ORDER.map((group) => {
+        {GROUP_ORDER.map((group, gi) => {
           const items = tasks.filter((t) => t.group === group)
-          if (items.length === 0 && group !== 'Your tasks') return null
+          const isCustom = group === 'Your tasks'
+          if (items.length === 0 && !isCustom) return null
+
+          const total = items.length
+          const doneCount = items.filter((t) => t.done).length
+          const allDone = total > 0 && doneCount === total
+          // Completed sections collapse by default to cut scroll; "Additional
+          // tasks" stays open so its add field is always reachable.
+          const open = groupOpen[group] ?? (isCustom ? true : !allDone)
+          // checkoff items are manual confirmations, not auto-derived — flag that.
+          const isCheckoff = total > 0 && items.every((t) => t.source === 'checkoff')
+
           return (
-            <div key={group} style={{ marginBottom: '16px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{group}</div>
-              {items.map((t) => (
-                <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
-                  <button
-                    type="button"
-                    onClick={() => toggle(t)}
-                    style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
-                  >
-                    {t.done ? '✓' : ''}
-                  </button>
-                  <span style={{ flex: 1, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
-                  {t.source === 'custom' && <DelButton onClick={() => delCustom(t.refId!)} />}
-                </div>
-              ))}
-              {group === 'Your tasks' && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                  <input
-                    type="text"
-                    className="cq-input"
-                    value={draft}
-                    placeholder="Add your own launch task…"
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addCustom()}
-                  />
-                  <AddButton label="Add" onClick={addCustom} style={{ width: 'auto', flexShrink: 0, padding: '9px 18px' }} />
+            <div key={group} style={{ borderTop: gi === 0 ? 'none' : '1px solid rgba(var(--fg),0.07)', paddingTop: gi === 0 ? 0 : '18px', marginBottom: '18px' }}>
+              <button
+                type="button"
+                onClick={() => setGroupOpen((p) => ({ ...p, [group]: !open }))}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                {open ? <ChevronDown size={14} color="var(--accent-text)" /> : <ChevronRight size={14} color="var(--accent-text)" />}
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px' }}>{labelFor(group)}</span>
+                {total > 0 && (
+                  <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 600, color: allDone ? '#86efac' : 'rgba(var(--fg),0.45)' }}>
+                    {allDone ? `✓ ${doneCount}/${total} complete` : `${doneCount}/${total}`}
+                  </span>
+                )}
+              </button>
+
+              {open && isCheckoff && (
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', fontStyle: 'italic', margin: '8px 0 0 22px' }}>Confirm when ready</div>
+              )}
+
+              {open && (
+                <div style={{ marginTop: '12px', marginLeft: '22px' }}>
+                  {items.map((t) => (
+                    <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => toggle(t)}
+                        style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
+                      >
+                        {t.done ? '✓' : ''}
+                      </button>
+                      <span style={{ flex: 1, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                      {t.source === 'custom' && <DelButton onClick={() => delCustom(t.refId!)} />}
+                    </div>
+                  ))}
+                  {isCustom && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <input
+                        type="text"
+                        className="cq-input"
+                        value={draft}
+                        placeholder="Add your own launch task…"
+                        onChange={(e) => setDraft(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addCustom()}
+                      />
+                      <AddButton label="Add" onClick={addCustom} style={{ width: 'auto', flexShrink: 0, padding: '9px 18px' }} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -222,7 +266,7 @@ export function DashboardStage() {
       <div className="cq-card">
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>From your plan</div>
         <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>A snapshot of what you decided earlier. Tap any card to jump back and edit it.</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
           {summary.map((s) => {
             const filled = !!s.value
             return (
