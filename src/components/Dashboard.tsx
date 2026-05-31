@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Check,
-  Download,
   FlaskConical,
   Lightbulb,
   LogOut,
@@ -11,16 +10,13 @@ import {
   Plus,
   RotateCcw,
   Search,
-  Settings,
   Sparkles,
   Trash2,
-  Upload,
   type LucideIcon,
 } from 'lucide-react'
 import { useApp } from '@/state/AppContext'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
-import { parseImportedProjects, projectsToJson } from '@/lib/storage'
 import { createSeed, emptyProject } from '@/data/seed'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { hasSupabase } from '@/lib/supabase'
@@ -45,23 +41,6 @@ const ghostBtn: React.CSSProperties = {
   fontSize: '13px',
   cursor: 'pointer',
   fontFamily: 'inherit',
-}
-
-const menuItem: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '9px',
-  width: '100%',
-  background: 'none',
-  border: 'none',
-  borderRadius: '8px',
-  padding: '9px 12px',
-  color: 'rgba(var(--fg),0.75)',
-  fontWeight: 600,
-  fontSize: '13px',
-  cursor: 'pointer',
-  fontFamily: 'inherit',
-  textAlign: 'left',
 }
 
 const primaryBtn: React.CSSProperties = {
@@ -90,21 +69,8 @@ export function Dashboard() {
   const [deleted, setDeleted] = useState<{ snapshot: Project[]; name: string } | null>(null)
   const undoTimer = useRef<number | null>(null)
   const narrow = useMediaQuery('(max-width: 720px)')
-  // Settings overflow menu (backup / restore / sign out) — keeps the nav to one
-  // primary action (New Project) instead of four competing buttons.
-  const [menuOpen, setMenuOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current) }, [])
-
-  useEffect(() => {
-    if (!menuOpen) return
-    const onDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [menuOpen])
 
   const completed = state.projects.filter(isComplete).length
   const total = state.projects.length
@@ -143,34 +109,6 @@ export function Dashboard() {
       return b.createdAt.localeCompare(a.createdAt) // recent first
     })
 
-  // Backup (download) / restore (upload) all projects as a JSON file.
-  const fileRef = useRef<HTMLInputElement>(null)
-  const backup = () => {
-    const blob = new Blob([projectsToJson(state.projects)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `adaptus-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-  const restore = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    e.target.value = '' // allow re-selecting the same file later
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const projects = parseImportedProjects(String(reader.result))
-      if (!projects) {
-        alert('That doesn’t look like a valid Adaptus backup file.')
-        return
-      }
-      if (confirm(`Restore ${projects.length} project${projects.length === 1 ? '' : 's'} from this backup? This replaces your current projects.`)) {
-        dispatch({ type: 'SET_PROJECTS', projects })
-      }
-    }
-    reader.readAsText(file)
-  }
 
   const active = state.projects.find((p) => !isComplete(p))
   const nextStage = active ? STAGES[active.currentStage] : null
@@ -188,55 +126,23 @@ export function Dashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
+          {hasSupabase && session && (
+            <button type="button" onClick={signOut} style={ghostBtn} title={session.user.email ? `Sign out (${session.user.email})` : 'Sign out'}>
+              <LogOut size={15} /> Sign out
+            </button>
+          )}
           <button type="button" onClick={() => setWizardOpen(true)} style={primaryBtn}>
             <Plus size={16} /> New Project
           </button>
-          <div ref={menuRef} style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setMenuOpen((o) => !o)}
-              style={{ ...ghostBtn, padding: '10px', borderRadius: '10px' }}
-              aria-label="Settings"
-              aria-haspopup="true"
-              aria-expanded={menuOpen}
-              title="Backup, restore & account"
-            >
-              <Settings size={16} />
-            </button>
-            {menuOpen && (
-              <div
-                role="menu"
-                style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '190px', background: 'var(--surface-card)', border: '1px solid var(--surface-1-border)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', padding: '6px', zIndex: 50 }}
-              >
-                {state.projects.length > 0 && (
-                  <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); backup() }}>
-                    <Download size={15} /> Back up projects
-                  </button>
-                )}
-                <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); fileRef.current?.click() }}>
-                  <Upload size={15} /> Restore from backup
-                </button>
-                {hasSupabase && session && (
-                  <>
-                    <div style={{ height: '1px', background: 'rgba(var(--fg),0.08)', margin: '6px 4px' }} />
-                    <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); signOut() }} title={session.user.email ?? undefined}>
-                      <LogOut size={15} /> Sign out
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={restore} />
         </div>
       </div>
 
       <div style={{ padding: '28px 34px' }}>
         {/* Welcome hero */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 300px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '28px 24px' : '34px 44px', marginBottom: '24px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 280px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '20px 24px' : '24px 44px', marginBottom: '20px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: narrow ? '25px' : '30px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
-            <p style={{ margin: '12px 0 20px', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, maxWidth: '580px' }}>
+            <h1 style={{ margin: 0, fontSize: narrow ? '24px' : '29px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
+            <p style={{ margin: '10px 0 18px', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, maxWidth: '580px' }}>
               Adaptus walks you through rolling out a change from start to finish — no change-management experience required.
             </p>
             <button
@@ -251,18 +157,8 @@ export function Dashboard() {
               )}
             </button>
           </div>
-          {!narrow && <FlaskConical size={92} color="rgba(255,255,255,0.4)" strokeWidth={1} style={{ flexShrink: 0, transform: 'rotate(-6deg)' }} />}
+          {!narrow && <FlaskConical size={56} color="rgba(255,255,255,0.22)" strokeWidth={1} style={{ flexShrink: 0 }} />}
         </div>
-
-        {/* Quick-start tip — replaces the marketing "how it works" for signed-in users */}
-        {total > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '12px', padding: '12px 16px', marginBottom: '24px' }}>
-            <Sparkles size={18} color="#8FB3C7" style={{ flexShrink: 0 }} />
-            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.65)', lineHeight: 1.5 }}>
-              <strong style={{ color: 'var(--text)', fontWeight: 700 }}>Quick tip:</strong> You don’t need every stage — the essential steps alone make a solid plan. Add the advanced steps only when a change is big or risky.
-            </div>
-          </div>
-        )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
