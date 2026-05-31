@@ -1,16 +1,23 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ResistanceItem, Severity } from '@/types'
-import { AddButton, DelButton, FieldCoach, InsightCallout, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, InsightCallout, Label, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { useWizardMode } from '@/state/WizardModeContext'
+import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { RESISTANCE_TYPES } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
-const SEV_BG: Record<Severity, string> = { High: 'rgba(239,68,68,0.15)', Medium: 'rgba(245,158,11,0.15)', Low: 'rgba(34,197,94,0.15)' }
-const SEV_OPTS = ['High', 'Medium', 'Low'] as const
+const SEVERITY_LEVELS: LevelOption<Severity>[] = [
+  { value: 'High', label: 'High', desc: 'Could stall or sink the rollout if ignored — needs a real, specific response.' },
+  { value: 'Medium', label: 'Medium', desc: 'A genuine drag on momentum, but manageable with attention.' },
+  { value: 'Low', label: 'Low', desc: 'Minor grumbling — worth noting, but not a threat on its own.' },
+]
 
 export function ResistanceStage() {
   const { data, update } = useStageEditor('resistance')
+  const { mode } = useWizardMode()
+  const w = coaching.resistance.wizard
 
   const setItem = (id: number, patch: Partial<ResistanceItem>) =>
     update({ items: data.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) })
@@ -18,49 +25,93 @@ export function ResistanceStage() {
   const addItem = () => update({ items: [...data.items, { id: uid(), type: 'Fear of job loss', group: '', severity: 'Medium', intervention: '' }] })
 
   const hasHighSeverity = data.items.some((it) => it.severity === 'High')
+  const highSeverityNote = hasHighSeverity ? coaching.resistance.highSeverity : null
 
-  const steps: WizardStep[] = [{
-    id: 'resistance',
-    title: 'Plan for resistance',
-    isFilled: data.items.length > 0 || !!(data.generalPlan && data.generalPlan.trim()),
-    summary: data.items.length ? `${data.items.length} source${data.items.length === 1 ? '' : 's'} of resistance` : undefined,
-    node: (
-    <div>
-      {data.items.map((item) => (
-        <div className="cq-card" key={item.id}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-            <select className="cq-select" value={item.type} style={{ flex: 1, color: 'var(--text)' }} onChange={(e) => setItem(item.id, { type: e.target.value })}>
-              {RESISTANCE_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-            <DelButton onClick={() => delItem(item.id)} />
-          </div>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <div style={{ flex: 1 }}>
-              <div className="cq-lbl">Affected Group</div>
-              <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder="e.g., Sales Team, Middle Managers" />
-            </div>
-            <div style={{ width: '140px', flexShrink: 0 }}>
-              <div className="cq-lbl">Severity</div>
-              <select className="cq-select" value={item.severity} style={{ background: SEV_BG[item.severity] }} onChange={(e) => setItem(item.id, { severity: e.target.value as Severity })}>
-                {SEV_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-          </div>
-          <div>
-            <div className="cq-lbl">Intervention — how will you address this?</div>
-            <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginBottom: '6px' }}>Be specific: who does what, by when?</div>
-            <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, dedicated coaching sprint..." />
-          </div>
+  const steps: WizardStep[] = []
+
+  if (data.items.length === 0) {
+    steps.push({
+      id: 'start',
+      title: 'Add your first source',
+      isFilled: false,
+      node: (
+        <div>
+          <h2 style={headline}>{w.source.label}</h2>
+          <div style={whyStyle}>{w.source.why}</div>
+          <AddItemButton label="Add your first source of resistance" onClick={addItem} />
         </div>
-      ))}
-      <AddButton label="+ Add Resistance Item" onClick={addItem} />
+      ),
+    })
+  }
 
-      {hasHighSeverity && (
-        <InsightCallout tone={coaching.resistance.highSeverity.tone} style={{ marginBottom: '16px' }}>
-          {coaching.resistance.highSeverity.text}
-        </InsightCallout>
-      )}
+  data.items.forEach((item, i) => {
+    const who = item.group.trim() || item.type
+    const isLast = i === data.items.length - 1
 
+    // Screen 1 — type + affected group
+    steps.push({
+      id: `${item.id}-source`,
+      title: `${who}: source`,
+      isFilled: !!item.group.trim(),
+      summary: `${item.type}${item.group ? ` — ${item.group}` : ''}`,
+      node: (
+        <div>
+          <h2 style={headline}>{w.source.label}</h2>
+          <div style={whyStyle}>{w.source.why}</div>
+          <GuidedLabel>What’s the likely reason?</GuidedLabel>
+          <ChipPicker value={item.type} options={RESISTANCE_TYPES} onChange={(v) => setItem(item.id, { type: v })} />
+          <div style={{ marginTop: '18px' }}>
+            <Label>Which group is this coming from?</Label>
+            <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder="e.g., Sales Team, Middle Managers" />
+          </div>
+          {data.items.length > 1 && <RemoveItemButton label="Remove this item" onClick={() => delItem(item.id)} />}
+        </div>
+      ),
+    })
+
+    // Screen 2 — severity
+    steps.push({
+      id: `${item.id}-severity`,
+      title: `${who}: severity`,
+      isFilled: !!item.group.trim(),
+      summary: `${item.severity} severity`,
+      node: (
+        <div>
+          <h2 style={headline}>How serious is this resistance?</h2>
+          <div style={whyStyle}>{w.severity.why}</div>
+          <LevelPicker value={item.severity} options={SEVERITY_LEVELS} onChange={(v) => setItem(item.id, { severity: v })} />
+        </div>
+      ),
+    })
+
+    // Screen 3 — intervention (+ high-severity note on the last)
+    steps.push({
+      id: `${item.id}-intervention`,
+      title: `${who}: intervention`,
+      isFilled: !!item.intervention.trim(),
+      summary: item.intervention || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>How will you address it?</h2>
+          <div style={whyStyle}>{w.intervention.why}</div>
+          <Label>Intervention — who does what, by when?</Label>
+          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, dedicated coaching sprint..." />
+          {mode === 'guided' && isLast && highSeverityNote && (
+            <InsightCallout tone={highSeverityNote.tone} style={{ marginTop: '16px' }}>{highSeverityNote.text}</InsightCallout>
+          )}
+          {isLast && <AddAnotherButton label="Add another source of resistance" onAdd={addItem} />}
+        </div>
+      ),
+    })
+  })
+
+  // Final step — the general (ongoing) resistance plan, independent of the items.
+  steps.push({
+    id: 'generalPlan',
+    title: 'Ongoing plan',
+    isFilled: !!data.generalPlan.trim(),
+    summary: data.generalPlan || undefined,
+    node: (
       <FieldCoach
         label={coaching.resistance.fields.generalPlan.label}
         why={coaching.resistance.fields.generalPlan.why}
@@ -69,9 +120,16 @@ export function ResistanceStage() {
       >
         <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder="e.g., Weekly pulse survey for 8 weeks, any score below 3/5 triggers manager check-in within 48 hours..." rows={4} />
       </FieldCoach>
-    </div>
     ),
-  }]
+  })
 
-  return <StageFlow stageId="resistance" icon={coaching.resistance.icon} blurb={coaching.resistance.intro} steps={steps} />
+  return (
+    <StageFlow
+      stageId="resistance"
+      icon={coaching.resistance.icon}
+      blurb={coaching.resistance.intro}
+      extra={highSeverityNote ? <InsightCallout tone={highSeverityNote.tone} style={{ marginBottom: '14px' }}>{highSeverityNote.text}</InsightCallout> : undefined}
+      steps={steps}
+    />
+  )
 }

@@ -1,20 +1,24 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Dependency, DependencyStatus, DependencyType } from '@/types'
-import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
+import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { useWizardMode } from '@/state/WizardModeContext'
+import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { coaching } from '@/data/coaching'
-import { DEPENDENCY_TYPES, DEPENDENCY_STATUSES } from '@/data/constants'
+import { DEPENDENCY_TYPES } from '@/data/constants'
 import { uid } from '@/lib/id'
 
-const STATUS_BG: Record<DependencyStatus, string> = {
-  'Not started': 'rgba(var(--fg),0.05)',
-  'In progress': 'rgba(245,158,11,0.15)',
-  Ready: 'rgba(34,197,94,0.15)',
-  'At risk': 'rgba(239,68,68,0.15)',
-}
+const STATUS_LEVELS: LevelOption<DependencyStatus>[] = [
+  { value: 'Not started', label: 'Not started', desc: 'Hasn’t been kicked off yet.' },
+  { value: 'In progress', label: 'In progress', desc: 'Underway, but not finished.' },
+  { value: 'Ready', label: 'Ready', desc: 'Done and confirmed — you can count on it.' },
+  { value: 'At risk', label: 'At risk', desc: 'In doubt — might not land in time. Chase this one now.' },
+]
 
 export function DependenciesStage() {
   const { data, update } = useStageEditor('dependencies')
+  const { mode } = useWizardMode()
+  const w = coaching.dependencies.wizard
 
   const setItem = (id: number, patch: Partial<Dependency>) =>
     update({ items: data.items.map((d) => (d.id === id ? { ...d, ...patch } : d)) })
@@ -23,54 +27,97 @@ export function DependenciesStage() {
     update({ items: [...data.items, { id: uid(), name: '', type: 'Team', owner: '', neededBy: '', status: 'Not started' }] })
 
   const hasAtRisk = data.items.some((d) => d.status === 'At risk')
+  const atRiskNote = hasAtRisk ? coaching.dependencies.atRisk : null
 
-  const steps: WizardStep[] = [{
-    id: 'dependencies',
-    title: 'List dependencies',
-    isFilled: data.items.length > 0,
-    summary: data.items.length ? `${data.items.length} dependenc${data.items.length === 1 ? 'y' : 'ies'}` : undefined,
-    node: (
-    <div>
-      {hasAtRisk && (
-        <InsightCallout tone={coaching.dependencies.atRisk.tone} style={{ marginBottom: '14px' }}>
-          {coaching.dependencies.atRisk.text}
-        </InsightCallout>
-      )}
+  const steps: WizardStep[] = []
 
-      {data.items.map((d) => (
-        <div className="cq-card" key={d.id}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-            <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="What you depend on (e.g., IT account provisioning)" style={{ flex: 1, minWidth: 0 }} />
-            <DelButton onClick={() => delItem(d.id)} />
+  if (data.items.length === 0) {
+    steps.push({
+      id: 'start',
+      title: 'Add your first dependency',
+      isFilled: false,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <AddItemButton label="Add your first dependency" onClick={addItem} />
+        </div>
+      ),
+    })
+  }
+
+  data.items.forEach((d, i) => {
+    const what = d.name.trim() || `Dependency ${i + 1}`
+    const isLast = i === data.items.length - 1
+
+    // Screen 1 — name + type
+    steps.push({
+      id: `${d.id}-name`,
+      title: `${what}: what & type`,
+      isFilled: !!d.name.trim(),
+      summary: d.name ? `${d.name} (${d.type})` : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <Label>What you depend on</Label>
+          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="e.g., IT account provisioning" />
+          <div style={{ marginTop: '18px' }}>
+            <GuidedLabel>What kind of dependency is it?</GuidedLabel>
+            <ChipPicker value={d.type} options={DEPENDENCY_TYPES} onChange={(v) => setItem(d.id, { type: v as DependencyType })} />
           </div>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <div style={{ width: '130px', flexShrink: 0 }}>
-              <div className="cq-lbl">Type</div>
-              <select className="cq-select" value={d.type} onChange={(e) => setItem(d.id, { type: e.target.value as DependencyType })}>
-                {DEPENDENCY_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="cq-lbl">Owner</div>
-              <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="Who's responsible?" />
-            </div>
-            <div style={{ width: '150px', flexShrink: 0 }}>
-              <div className="cq-lbl">Needed by</div>
-              <input type="date" className="cq-input" value={d.neededBy} onChange={(e) => setItem(d.id, { neededBy: e.target.value })} />
-            </div>
-          </div>
-          <div>
-            <div className="cq-lbl">Status</div>
-            <select className="cq-select" value={d.status} style={{ background: STATUS_BG[d.status], maxWidth: '220px' }} onChange={(e) => setItem(d.id, { status: e.target.value as DependencyStatus })}>
-              {DEPENDENCY_STATUSES.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
+          {data.items.length > 1 && <RemoveItemButton label="Remove this dependency" onClick={() => delItem(d.id)} />}
+        </div>
+      ),
+    })
+
+    // Screen 2 — owner + needed by
+    steps.push({
+      id: `${d.id}-detail`,
+      title: `${what}: owner & date`,
+      isFilled: !!d.name.trim(),
+      summary: [d.owner, d.neededBy && `by ${d.neededBy}`].filter(Boolean).join(' · ') || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>Who owns it, and when do you need it?</h2>
+          <div style={whyStyle}>{w.detail.why}</div>
+          <Label>Owner — who’s responsible?</Label>
+          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="e.g., IT — Priya" />
+          <div style={{ marginTop: '14px' }}>
+            <Label>Needed by</Label>
+            <input type="date" className="cq-input" value={d.neededBy} onChange={(e) => setItem(d.id, { neededBy: e.target.value })} />
           </div>
         </div>
-      ))}
-      <AddButton label="+ Add Dependency" onClick={addItem} />
-    </div>
-    ),
-  }]
+      ),
+    })
 
-  return <StageFlow stageId="dependencies" icon={coaching.dependencies.icon} blurb={coaching.dependencies.intro} steps={steps} />
+    // Screen 3 — status (+ at-risk note on the last)
+    steps.push({
+      id: `${d.id}-status`,
+      title: `${what}: status`,
+      isFilled: !!d.name.trim(),
+      summary: d.status,
+      node: (
+        <div>
+          <h2 style={headline}>Where does it stand right now?</h2>
+          <div style={whyStyle}>{w.status.why}</div>
+          <LevelPicker value={d.status} options={STATUS_LEVELS} onChange={(v) => setItem(d.id, { status: v })} />
+          {mode === 'guided' && isLast && atRiskNote && (
+            <InsightCallout tone={atRiskNote.tone} style={{ marginTop: '16px' }}>{atRiskNote.text}</InsightCallout>
+          )}
+          {isLast && <AddAnotherButton label="Add another dependency" onAdd={addItem} />}
+        </div>
+      ),
+    })
+  })
+
+  return (
+    <StageFlow
+      stageId="dependencies"
+      icon={coaching.dependencies.icon}
+      blurb={coaching.dependencies.intro}
+      extra={atRiskNote ? <InsightCallout tone={atRiskNote.tone} style={{ marginBottom: '14px' }}>{atRiskNote.text}</InsightCallout> : undefined}
+      steps={steps}
+    />
+  )
 }

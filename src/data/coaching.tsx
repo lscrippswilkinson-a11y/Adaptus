@@ -179,6 +179,25 @@ export const coaching = {
         return { tone: 'info', text: `Lower priority for now — keep ${r.name} informed, but focus your energy on the high-influence people first.` }
       return { tone: 'info', text: `${r.name} has some sway with peers. Worth a check-in so their take on the change stays positive.` }
     },
+    /** Point-of-entry copy for the guided, one-stakeholder-at-a-time flow. */
+    wizard: {
+      name: {
+        label: 'Who is one person who matters to this change?',
+        why: 'Name a specific individual — a leader, a respected peer, someone whose opinion others follow. Mapping people one at a time is how you spot exactly who to win over first. You can add more after this one.',
+      },
+      influence: {
+        label: 'How much sway does this person have?',
+        why: 'Influence is how far their opinion travels — can they approve, block, or change how others feel? The high-influence people are where your time pays off most, whichever way they’re currently leaning.',
+      },
+      support: {
+        label: 'Where do they stand on the change today?',
+        why: 'Be honest about their current stance — championing it, waiting to see, or pushing back. Knowing where someone starts tells you how far you need to move them, and how hard.',
+      },
+      action: {
+        label: 'What will you do to move them toward Advocate?',
+        why: 'For the people who matter, vague intentions don’t cut it — name the specific thing you’ll do: a 1:1 before the all-hands, an early demo, a role in the rollout. The goal is always to nudge them one step toward Advocate.',
+      },
+    },
     /** Coalition-level summary across everyone mapped so far. */
     summary(rows: StakeholderRow[]): Insight | null {
       const named = rows.filter((r) => r.name.trim())
@@ -212,6 +231,21 @@ export const coaching = {
       if (avg > 3)
         return { tone: 'priority', text: 'Moderate risk — manageable, but stay on top of it. Focus first on anything you marked “Very Likely” or “Almost Certain,” since those are most likely to actually bite.' }
       return { tone: 'success', text: 'Low overall risk — a good sign. Still glance over the list now and then, because risks can creep up as the rollout gets closer.' }
+    },
+    /** Point-of-entry copy for the guided, one-risk-at-a-time flow. */
+    wizard: {
+      describe: {
+        label: 'What’s one thing that could go wrong?',
+        why: 'Name a specific risk in plain terms — “people keep using the old system,” “data doesn’t transfer cleanly,” “launch clashes with year-end.” Naming it now, while it’s cheap to plan for, is how you stop it derailing you later.',
+      },
+      rate: {
+        label: 'How likely is it — and how bad would it be?',
+        why: 'Rate the chance it actually happens and the damage if it does. Multiplying the two gives a score, so the risks worth losing sleep over rise to the top and the unlikely-and-minor ones don’t eat your attention.',
+      },
+      mitigation: {
+        label: 'What’s your plan if this happens?',
+        why: 'Write the fix now, not in the heat of the moment — what you’ll do to prevent it, or to recover if it lands. A risk with a plan beside it is a risk you’ve largely defused.',
+      },
     },
   },
 
@@ -316,6 +350,21 @@ export const coaching = {
         learning a brand-new tool takes hands-on practice. List each activity below.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-activity-at-a-time flow. */
+    wizard: {
+      title: {
+        label: 'What’s one piece of training people will need?',
+        why: 'Telling people about a change isn’t the same as teaching them to do it. Name one activity — a hands-on workshop, a short video, a quick job aid — that builds the skill or confidence a group actually needs.',
+      },
+      audience: {
+        label: 'Who is it for, and in what format?',
+        why: 'Match the format to the need: a short video is fine for “here’s what’s coming,” but learning a brand-new tool takes hands-on practice. And name the audience — different groups need different depth.',
+      },
+      logistics: {
+        label: 'How long is it, and who runs it?',
+        why: 'Give it a rough duration and an owner. A training with no one accountable for delivering it tends not to happen — naming the owner is what turns a good intention into a session that’s actually booked.',
+      },
+    },
     managersFirst: {
       tone: 'info',
       text: 'Train your managers first, before their teams. A manager who’s unsure of the new way will quietly undermine it — often without meaning to — when their people come asking questions. Get them confident, and they’ll carry the rest.',
@@ -334,6 +383,21 @@ export const coaching = {
         surprise on launch day.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-test-at-a-time flow. */
+    wizard: {
+      name: {
+        label: 'What’s one thing you’ll test before go-live?',
+        why: 'Don’t take it on faith that the new way works — name something concrete to prove out: real users doing real tasks, your data carried over, a connection to another system. A check now beats a surprise on launch day.',
+      },
+      owner: {
+        label: 'Who runs it, and where does it stand?',
+        why: 'Give each test an owner so it actually gets done, and track its status honestly. A test still sitting at “Not started” a week before launch is a warning worth seeing early.',
+      },
+      notes: {
+        label: 'What did you find?',
+        why: 'Jot down what happened — what passed, what broke, who signed off. These notes are your evidence that you’re ready, and your paper trail if something still needs fixing.',
+      },
+    },
     /** Shown when any test is marked Failed. */
     failed: {
       tone: 'warn',
@@ -351,6 +415,21 @@ export const coaching = {
         it, and when you need it. Naming them turns invisible risks into things you can actually chase.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-dependency-at-a-time flow. */
+    wizard: {
+      name: {
+        label: 'What does your launch rely on someone else delivering?',
+        why: 'Name one thing outside your direct control that has to be in place — accounts provisioned, a vendor switch flipped, data exported. Naming it turns an invisible risk into something you can actually chase.',
+      },
+      detail: {
+        label: 'Who owns it, and when do you need it?',
+        why: 'A dependency with no owner and no date is one that quietly slips. Pin down the specific person responsible and the date you need it by, so you can follow up before it’s late — not after.',
+      },
+      status: {
+        label: 'Where does it stand right now?',
+        why: 'Be honest about where each one is. Anything “At risk” is a classic launch-staller — flagging it now means you can chase it down while there’s still time to recover.',
+      },
+    },
     /** Shown when any dependency is flagged At risk. */
     atRisk: {
       tone: 'warn',
@@ -430,6 +509,17 @@ export const coaching = {
         how you know it’s landing.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-metric-at-a-time flow. */
+    wizard: {
+      name: {
+        label: 'What’s one sign that people are really using the change?',
+        why: 'Pick something that shows real use, not just attendance — logins, the share of people doing it the new way, how often the old way still gets touched. Name the metric and the unit you’ll measure it in.',
+      },
+      targets: {
+        label: 'What’s the target — and where are you now?',
+        why: 'Set the number that means “this is working,” and record where you stand today. The gap between the two is your adoption story — watching it close (or not) tells you whether the change is actually landing.',
+      },
+    },
     fields: {
       notes: {
         label: 'What are you hearing from the field?',
@@ -469,6 +559,21 @@ export const coaching = {
         pessimism — it’s the surest way to keep your rollout on the rails.
       </>
     ),
+    /** Point-of-entry copy for the guided, one-source-at-a-time flow. */
+    wizard: {
+      source: {
+        label: 'Where do you expect pushback to come from?',
+        why: 'Pick the most likely reason, and who it’s coming from. Resistance is rarely people being difficult — it’s usually fear, extra work, lost status, or not feeling heard. Naming the real cause lets you fix that, instead of fighting the symptoms.',
+      },
+      severity: {
+        label: 'How serious is this resistance?',
+        why: 'Judge how much this could slow or stall the rollout. High-severity pushback from a heavily affected group is the kind that quietly sinks a change if you don’t plan a real response for it.',
+      },
+      intervention: {
+        label: 'How will you address it?',
+        why: 'Be specific: who does what, by when? “Communicate more” isn’t a plan. A named action — a town hall, a coaching sprint, a one-on-one with the right person — is what actually moves someone off the back foot.',
+      },
+    },
     fields: {
       generalPlan: {
         label: 'General Resistance Management Plan',

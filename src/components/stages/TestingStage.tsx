@@ -1,20 +1,24 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TestItem, TestStatus } from '@/types'
-import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
+import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { useWizardMode } from '@/state/WizardModeContext'
+import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { coaching } from '@/data/coaching'
-import { TEST_TYPES, TEST_STATUSES } from '@/data/constants'
+import { TEST_TYPES } from '@/data/constants'
 import { uid } from '@/lib/id'
 
-const STATUS_BG: Record<TestStatus, string> = {
-  'Not started': 'rgba(var(--fg),0.05)',
-  'In progress': 'rgba(245,158,11,0.15)',
-  Passed: 'rgba(34,197,94,0.15)',
-  Failed: 'rgba(239,68,68,0.15)',
-}
+const STATUS_LEVELS: LevelOption<TestStatus>[] = [
+  { value: 'Not started', label: 'Not started', desc: 'Haven’t run it yet.' },
+  { value: 'In progress', label: 'In progress', desc: 'Currently being tested.' },
+  { value: 'Passed', label: 'Passed', desc: 'Ran it and it works — signed off.' },
+  { value: 'Failed', label: 'Failed', desc: 'Ran it and found a problem. Fix the cause and re-test.' },
+]
 
 export function TestingStage() {
   const { data, update } = useStageEditor('testing')
+  const { mode } = useWizardMode()
+  const w = coaching.testing.wizard
 
   const setItem = (id: number, patch: Partial<TestItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
@@ -23,54 +27,98 @@ export function TestingStage() {
     update({ items: [...data.items, { id: uid(), name: '', type: TEST_TYPES[0], owner: '', status: 'Not started', notes: '' }] })
 
   const hasFailed = data.items.some((t) => t.status === 'Failed')
+  const failedNote = hasFailed ? coaching.testing.failed : null
 
-  const steps: WizardStep[] = [{
-    id: 'testing',
-    title: 'Plan validation',
-    isFilled: data.items.length > 0,
-    summary: data.items.length ? `${data.items.length} test${data.items.length === 1 ? '' : 's'} planned` : undefined,
-    node: (
-    <div>
-      {hasFailed && (
-        <InsightCallout tone={coaching.testing.failed.tone} style={{ marginBottom: '14px' }}>
-          {coaching.testing.failed.text}
-        </InsightCallout>
-      )}
+  const steps: WizardStep[] = []
 
-      {data.items.map((t) => (
-        <div className="cq-card" key={t.id}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-            <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="What are you testing? (e.g., UAT with 5 pilot users)" style={{ flex: 1, minWidth: 0 }} />
-            <DelButton onClick={() => delItem(t.id)} />
+  if (data.items.length === 0) {
+    steps.push({
+      id: 'start',
+      title: 'Add your first test',
+      isFilled: false,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <AddItemButton label="Add your first test" onClick={addItem} />
+        </div>
+      ),
+    })
+  }
+
+  data.items.forEach((t, i) => {
+    const what = t.name.trim() || `Test ${i + 1}`
+    const isLast = i === data.items.length - 1
+
+    // Screen 1 — name + type
+    steps.push({
+      id: `${t.id}-name`,
+      title: `${what}: what & type`,
+      isFilled: !!t.name.trim(),
+      summary: t.name ? `${t.name} (${t.type})` : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <Label>What are you testing?</Label>
+          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="e.g., UAT with 5 pilot users" />
+          <div style={{ marginTop: '18px' }}>
+            <GuidedLabel>What kind of test is it?</GuidedLabel>
+            <ChipPicker value={t.type} options={TEST_TYPES} onChange={(v) => setItem(t.id, { type: v })} />
           </div>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <div style={{ flex: 1 }}>
-              <div className="cq-lbl">Type</div>
-              <select className="cq-select" value={t.type} onChange={(e) => setItem(t.id, { type: e.target.value })}>
-                {TEST_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div className="cq-lbl">Owner</div>
-              <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who runs it?" />
-            </div>
-            <div style={{ width: '150px', flexShrink: 0 }}>
-              <div className="cq-lbl">Status</div>
-              <select className="cq-select" value={t.status} style={{ background: STATUS_BG[t.status] }} onChange={(e) => setItem(t.id, { status: e.target.value as TestStatus })}>
-                {TEST_STATUSES.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-          </div>
-          <div>
-            <div className="cq-lbl">Notes</div>
-            <TextInput value={t.notes} onCommit={(v) => setItem(t.id, { notes: v })} placeholder="What did you find? Any sign-off?" />
+          {data.items.length > 1 && <RemoveItemButton label="Remove this test" onClick={() => delItem(t.id)} />}
+        </div>
+      ),
+    })
+
+    // Screen 2 — owner + status
+    steps.push({
+      id: `${t.id}-owner`,
+      title: `${what}: owner & status`,
+      isFilled: !!t.name.trim(),
+      summary: [t.owner, t.status].filter(Boolean).join(' · ') || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>Who runs it, and where does it stand?</h2>
+          <div style={whyStyle}>{w.owner.why}</div>
+          <Label>Owner — who runs it?</Label>
+          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="e.g., IT — Sam" />
+          <div style={{ marginTop: '18px' }}>
+            <GuidedLabel>Status</GuidedLabel>
+            <LevelPicker value={t.status} options={STATUS_LEVELS} onChange={(v) => setItem(t.id, { status: v })} />
           </div>
         </div>
-      ))}
-      <AddButton label="+ Add Test" onClick={addItem} />
-    </div>
-    ),
-  }]
+      ),
+    })
 
-  return <StageFlow stageId="testing" icon={coaching.testing.icon} blurb={coaching.testing.intro} steps={steps} />
+    // Screen 3 — notes (+ failed note on the last)
+    steps.push({
+      id: `${t.id}-notes`,
+      title: `${what}: notes`,
+      isFilled: !!t.notes.trim(),
+      summary: t.notes || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>What did you find?</h2>
+          <div style={whyStyle}>{w.notes.why}</div>
+          <Label>Notes</Label>
+          <TextInput value={t.notes} onCommit={(v) => setItem(t.id, { notes: v })} placeholder="What did you find? Any sign-off?" />
+          {mode === 'guided' && isLast && failedNote && (
+            <InsightCallout tone={failedNote.tone} style={{ marginTop: '16px' }}>{failedNote.text}</InsightCallout>
+          )}
+          {isLast && <AddAnotherButton label="Add another test" onAdd={addItem} />}
+        </div>
+      ),
+    })
+  })
+
+  return (
+    <StageFlow
+      stageId="testing"
+      icon={coaching.testing.icon}
+      blurb={coaching.testing.intro}
+      extra={failedNote ? <InsightCallout tone={failedNote.tone} style={{ marginBottom: '14px' }}>{failedNote.text}</InsightCallout> : undefined}
+      steps={steps}
+    />
+  )
 }

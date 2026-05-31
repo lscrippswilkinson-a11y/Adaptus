@@ -1,71 +1,118 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { TrainingItem } from '@/types'
-import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
+import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { useWizardMode } from '@/state/WizardModeContext'
+import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
 import { TRAINING_FORMATS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
 export function TrainingStage() {
   const { data, update } = useStageEditor('training')
+  const { mode } = useWizardMode()
+  const w = coaching.training.wizard
+  const note = coaching.training.managersFirst
 
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
   const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: 'Workshop', duration: '', owner: '', done: false }] })
 
-  const steps: WizardStep[] = [{
-    id: 'training',
-    title: 'Plan the training',
-    isFilled: data.items.length > 0,
-    summary: data.items.length ? `${data.items.length} training activit${data.items.length === 1 ? 'y' : 'ies'}` : undefined,
-    node: (
-    <div>
-      <InsightCallout tone={coaching.training.managersFirst.tone} style={{ marginBottom: '16px' }}>
-        {coaching.training.managersFirst.text}
-      </InsightCallout>
-      {data.items.map((t) => (
-        <div className="cq-card" key={t.id} style={{ borderLeft: t.done ? '2px solid #22c55e' : '2px solid transparent' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-            <button
-              type="button"
-              onClick={() => setItem(t.id, { done: !t.done })}
-              style={{
-                width: '22px',
-                height: '22px',
-                borderRadius: '6px',
-                border: '1.5px solid',
-                flexShrink: 0,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: t.done ? '#22c55e' : 'transparent',
-                borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)',
-                color: 'var(--text)',
-                fontSize: '12px',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t.done ? '✓' : ''}
-            </button>
-            <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder="Training title" style={{ flex: 1 }} />
-            <DelButton onClick={() => delItem(t.id)} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 90px 1fr', gap: '8px', paddingLeft: '32px' }}>
-            <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder="Audience" />
-            <select className="cq-select" value={t.format} onChange={(e) => setItem(t.id, { format: e.target.value })}>
-              {TRAINING_FORMATS.map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-            <TextInput value={t.duration} onCommit={(v) => setItem(t.id, { duration: v })} placeholder="Duration" />
-            <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Owner" />
+  const steps: WizardStep[] = []
+
+  if (data.items.length === 0) {
+    steps.push({
+      id: 'start',
+      title: 'Add your first activity',
+      isFilled: false,
+      node: (
+        <div>
+          <h2 style={headline}>{w.title.label}</h2>
+          <div style={whyStyle}>{w.title.why}</div>
+          {mode === 'guided' && <InsightCallout tone={note.tone} style={{ marginBottom: '18px' }}>{note.text}</InsightCallout>}
+          <AddItemButton label="Add your first training activity" onClick={addItem} />
+        </div>
+      ),
+    })
+  }
+
+  data.items.forEach((t, i) => {
+    const what = t.title.trim() || `Activity ${i + 1}`
+    const isFirst = i === 0
+    const isLast = i === data.items.length - 1
+
+    // Screen 1 — title (+ managers-first note on the first)
+    steps.push({
+      id: `${t.id}-title`,
+      title: `${what}: what`,
+      isFilled: !!t.title.trim(),
+      summary: t.title || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>{w.title.label}</h2>
+          <div style={whyStyle}>{w.title.why}</div>
+          {mode === 'guided' && isFirst && <InsightCallout tone={note.tone} style={{ marginBottom: '18px' }}>{note.text}</InsightCallout>}
+          <Label>Training title</Label>
+          <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder="e.g., Hands-on Clio time-entry workshop" />
+          {data.items.length > 1 && <RemoveItemButton label="Remove this activity" onClick={() => delItem(t.id)} />}
+        </div>
+      ),
+    })
+
+    // Screen 2 — audience + format
+    steps.push({
+      id: `${t.id}-audience`,
+      title: `${what}: audience & format`,
+      isFilled: !!t.title.trim(),
+      summary: [t.audience, t.format].filter(Boolean).join(' · ') || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>Who is it for, and in what format?</h2>
+          <div style={whyStyle}>{w.audience.why}</div>
+          <Label>Audience</Label>
+          <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder="e.g., All timekeepers" />
+          <div style={{ marginTop: '18px' }}>
+            <GuidedLabel>Format</GuidedLabel>
+            <ChipPicker value={t.format} options={TRAINING_FORMATS} onChange={(v) => setItem(t.id, { format: v })} />
           </div>
         </div>
-      ))}
-      <AddButton label="+ Add Training Activity" onClick={addItem} />
-    </div>
-    ),
-  }]
+      ),
+    })
 
-  return <StageFlow stageId="training" icon={coaching.training.icon} blurb={coaching.training.intro} steps={steps} />
+    // Screen 3 — duration + owner
+    steps.push({
+      id: `${t.id}-logistics`,
+      title: `${what}: duration & owner`,
+      isFilled: !!t.title.trim(),
+      summary: [t.duration, t.owner && `led by ${t.owner}`].filter(Boolean).join(' · ') || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>How long is it, and who runs it?</h2>
+          <div style={whyStyle}>{w.logistics.why}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div>
+              <Label>Duration</Label>
+              <TextInput value={t.duration} onCommit={(v) => setItem(t.id, { duration: v })} placeholder="e.g., 45 min" />
+            </div>
+            <div>
+              <Label>Owner</Label>
+              <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
+            </div>
+          </div>
+          {isLast && <AddAnotherButton label="Add another training activity" onAdd={addItem} />}
+        </div>
+      ),
+    })
+  })
+
+  return (
+    <StageFlow
+      stageId="training"
+      icon={coaching.training.icon}
+      blurb={coaching.training.intro}
+      extra={<InsightCallout tone={note.tone} style={{ marginBottom: '14px' }}>{note.text}</InsightCallout>}
+      steps={steps}
+    />
+  )
 }

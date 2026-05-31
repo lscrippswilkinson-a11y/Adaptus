@@ -1,77 +1,131 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { Influence, StakeholderRow, Support } from '@/types'
-import { AddButton, DelButton, InsightCallout, TextInput } from '@/components/ui'
+import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
+import { useWizardMode } from '@/state/WizardModeContext'
+import { AddAnotherButton, AddItemButton, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
-const supportColor = (s: Support): string =>
-  s === 'Advocate' ? '#22c55e' : s === 'Resistant' ? '#ef4444' : s === 'Neutral' ? '#f59e0b' : '#5B86A3'
-const SUPPORT_HELP: Record<Support, string> = { Advocate: 'Actively championing', Neutral: 'Waiting to see', Resistant: 'Pushing back', Unknown: 'Not yet assessed' }
-const INFLUENCE_HELP: Record<Influence, string> = { High: 'Can approve, block, or mobilize', Medium: 'Influences peers', Low: 'Limited reach' }
-const INFLUENCE_OPTS = ['High', 'Medium', 'Low'] as const
-const SUPPORT_OPTS = ['Advocate', 'Neutral', 'Resistant', 'Unknown'] as const
+const INFLUENCE_LEVELS: LevelOption<Influence>[] = [
+  { value: 'High', label: 'High influence', desc: 'Can approve, block, or mobilize others — when they speak, people listen.' },
+  { value: 'Medium', label: 'Medium influence', desc: 'Sways their own peers and team, but not the whole organization.' },
+  { value: 'Low', label: 'Low influence', desc: 'Limited reach — mainly speaks for themselves.' },
+]
+
+const SUPPORT_LEVELS: LevelOption<Support>[] = [
+  { value: 'Advocate', label: 'Advocate', desc: 'Actively championing the change — already on board and vocal about it.' },
+  { value: 'Neutral', label: 'Neutral', desc: 'Waiting to see — not opposed, but not yet convinced either.' },
+  { value: 'Resistant', label: 'Resistant', desc: 'Pushing back — has real doubts, or is actively against it.' },
+  { value: 'Unknown', label: 'Not sure yet', desc: 'You genuinely don’t know where they stand. Worth finding out.' },
+]
 
 export function StakeholdersStage() {
   const { data, update } = useStageEditor('stakeholders')
+  const { mode } = useWizardMode()
+  const w = coaching.stakeholders.wizard
 
   const setRow = (id: number, patch: Partial<StakeholderRow>) =>
     update({ rows: data.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)) })
   const delRow = (id: number) => update({ rows: data.rows.filter((r) => r.id !== id) })
   const addRow = () => update({ rows: [...data.rows, { id: uid(), name: '', role: '', influence: 'High', support: 'Neutral', action: '' }] })
 
-  const summary = coaching.stakeholders.summary(data.rows)
-  const namedCount = data.rows.filter((r) => r.name.trim()).length
+  const coalition = coaching.stakeholders.summary(data.rows)
 
-  const steps: WizardStep[] = [{
-    id: 'coalition',
-    title: 'Map your coalition',
-    isFilled: namedCount > 0,
-    summary: namedCount ? `${namedCount} stakeholder${namedCount === 1 ? '' : 's'} mapped` : undefined,
-    node: (
-    <div>
-      {summary && <InsightCallout tone={summary.tone} style={{ marginBottom: '14px' }}>{summary.text}</InsightCallout>}
+  const steps: WizardStep[] = []
 
-      {data.rows.map((r) => {
-        const insight = coaching.stakeholders.rowInsight(r)
-        return (
-          <div className="cq-card" key={r.id}>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-              <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder="Full name" style={{ flex: 1, minWidth: 0 }} />
-              <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder="Title / Role" style={{ flex: 1, minWidth: 0 }} />
-              <DelButton onClick={() => delRow(r.id)} />
-            </div>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-              <div style={{ flex: 1 }}>
-                <div className="cq-lbl">Influence</div>
-                <select className="cq-select" value={r.influence} onChange={(e) => setRow(r.id, { influence: e.target.value as Influence })}>
-                  {INFLUENCE_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{INFLUENCE_HELP[r.influence]}</div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div className="cq-lbl">Support Status</div>
-                <select className="cq-select" value={r.support} style={{ color: supportColor(r.support) }} onChange={(e) => setRow(r.id, { support: e.target.value as Support })}>
-                  {SUPPORT_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.35)', marginTop: '4px', lineHeight: 1.4 }}>{SUPPORT_HELP[r.support]}</div>
-              </div>
-            </div>
-            <div>
-              <div className="cq-lbl">Engagement action</div>
-              <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', marginBottom: '6px' }}>
-                What will you do to move this person toward Advocate?
-              </div>
-              <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., 1:1 briefing before all-hands..." />
-            </div>
-            {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '12px' }}>{insight.text}</InsightCallout>}
+  if (data.rows.length === 0) {
+    steps.push({
+      id: 'start',
+      title: 'Add your first stakeholder',
+      isFilled: false,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <AddItemButton label="Add your first stakeholder" onClick={addRow} />
+        </div>
+      ),
+    })
+  }
+
+  data.rows.forEach((r, i) => {
+    const who = r.name.trim() || `Person ${i + 1}`
+    const isLast = i === data.rows.length - 1
+    const influenceLabel = INFLUENCE_LEVELS.find((o) => o.value === r.influence)?.label ?? r.influence
+    const supportLabel = SUPPORT_LEVELS.find((o) => o.value === r.support)?.label ?? r.support
+    const insight = coaching.stakeholders.rowInsight(r)
+
+    // Screen 1 — name & role
+    steps.push({
+      id: `${r.id}-name`,
+      title: `${who}: name & role`,
+      isFilled: !!r.name.trim(),
+      summary: r.name ? (r.role ? `${r.name} — ${r.role}` : r.name) : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>{w.name.label}</h2>
+          <div style={whyStyle}>{w.name.why}</div>
+          <Label>Full name</Label>
+          <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder="e.g., Elena Torres" />
+          <div style={{ marginTop: '14px' }}>
+            <Label>Title / role (optional)</Label>
+            <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder="e.g., Managing Partner" />
           </div>
-        )
-      })}
-      <AddButton label="+ Add Stakeholder" onClick={addRow} />
-    </div>
-    ),
-  }]
+          {data.rows.length > 1 && <RemoveItemButton label="Remove this person" onClick={() => delRow(r.id)} />}
+        </div>
+      ),
+    })
 
-  return <StageFlow stageId="stakeholders" icon={coaching.stakeholders.icon} blurb={coaching.stakeholders.intro} steps={steps} />
+    // Screen 2 — influence
+    steps.push({
+      id: `${r.id}-influence`,
+      title: `${who}: influence`,
+      isFilled: !!r.name.trim(),
+      summary: influenceLabel,
+      node: (
+        <div>
+          <h2 style={headline}>How much sway does {r.name.trim() || 'this person'} have?</h2>
+          <div style={whyStyle}>{w.influence.why}</div>
+          <LevelPicker value={r.influence} options={INFLUENCE_LEVELS} onChange={(v) => setRow(r.id, { influence: v })} />
+        </div>
+      ),
+    })
+
+    // Screen 3 — current support
+    steps.push({
+      id: `${r.id}-support`,
+      title: `${who}: support`,
+      isFilled: !!r.name.trim(),
+      summary: supportLabel,
+      node: (
+        <div>
+          <h2 style={headline}>Where does {r.name.trim() || 'this person'} stand on the change today?</h2>
+          <div style={whyStyle}>{w.support.why}</div>
+          <LevelPicker value={r.support} options={SUPPORT_LEVELS} onChange={(v) => setRow(r.id, { support: v })} />
+        </div>
+      ),
+    })
+
+    // Screen 4 — engagement action (+ live insight, coalition tally on the last)
+    steps.push({
+      id: `${r.id}-action`,
+      title: `${who}: engagement action`,
+      isFilled: !!r.action.trim(),
+      summary: r.action || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>What will you do to move {r.name.trim() || 'them'} toward Advocate?</h2>
+          <div style={whyStyle}>{w.action.why}</div>
+          <Label>Engagement action</Label>
+          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., 1:1 briefing before the all-hands..." />
+          {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}
+          {mode === 'guided' && isLast && coalition && <InsightCallout tone={coalition.tone} style={{ marginTop: '12px' }}>{coalition.text}</InsightCallout>}
+          {isLast && <AddAnotherButton label="Add another stakeholder" onAdd={addRow} />}
+        </div>
+      ),
+    })
+  })
+
+  return <StageFlow stageId="stakeholders" icon={coaching.stakeholders.icon} blurb={coaching.stakeholders.intro} extra={coalition ? <InsightCallout tone={coalition.tone} style={{ marginBottom: '14px' }}>{coalition.text}</InsightCallout> : undefined} steps={steps} />
 }
