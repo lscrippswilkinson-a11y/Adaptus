@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Check, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import type { StageId } from '@/types'
 import { STAGES } from '@/data/stages'
@@ -15,6 +15,8 @@ export interface WizardStep {
   node: ReactNode
   /** Compact read-back of the entered value for the review screen. */
   summary?: ReactNode
+  /** Placeholder shown on the review screen when nothing's entered. */
+  emptyLabel?: string
   /** Whether the user has entered something (drives the review tick). */
   isFilled?: boolean
   /**
@@ -151,8 +153,11 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
   // Hub stages ignore the summary toggle — the hub IS their overview.
   const summaryMode = mode === 'summary' && !hub
 
-  // The complete button belongs on the review/hub screen, or the summary view.
-  useEffect(() => {
+  // The complete button belongs on the review/hub screen, or the summary view —
+  // never on the intro card or a question screen. A layout effect (not a plain
+  // effect) so it settles before paint and beats the Workspace stage-change
+  // reset, avoiding a one-frame flash of the button on the intro.
+  useLayoutEffect(() => {
     setShowComplete(summaryMode || onReview)
     return () => setShowComplete(true)
   }, [summaryMode, onReview, setShowComplete])
@@ -225,7 +230,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
         <div ref={topRef} style={{ textAlign: 'center', padding: '36px 0 24px' }}>
           <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '14px' }}>{icon}</div>
           <h1 style={{ margin: '0 0 18px', fontSize: '28px', fontWeight: 800, color: 'var(--text)' }}>{title}</h1>
-          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.78)', maxWidth: '560px', margin: '0 auto 30px' }}>
+          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.78)', maxWidth: '540px', margin: '0 auto 30px', textAlign: 'left' }}>
             {blurb}
           </div>
           <button type="button" style={pillBtn} onClick={() => go(hub ? total : 0)}>
@@ -297,7 +302,11 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
         Here’s everything you entered. Click any item to change it — then mark the step complete below.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {steps.map((s, i) => (
+        {steps.map((s, i) => {
+          // An empty/whitespace string summary counts as unanswered (so the
+          // placeholder shows instead of a blank line).
+          const answered = s.isFilled && !(typeof s.summary === 'string' && s.summary.trim() === '') && s.summary != null
+          return (
           <button
             key={s.id}
             type="button"
@@ -334,15 +343,16 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{s.title}</div>
-              <div style={{ fontSize: '13px', color: s.isFilled ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: s.isFilled ? 'normal' : 'italic' }}>
-                {s.summary ?? (s.isFilled ? '' : 'Not added yet')}
+              <div style={{ fontSize: '13px', color: answered ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: answered ? 'normal' : 'italic' }}>
+                {answered ? s.summary : s.emptyLabel ?? 'Not added yet'}
               </div>
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
               <Pencil size={12} /> Edit
             </span>
           </button>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

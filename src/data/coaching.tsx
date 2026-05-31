@@ -30,10 +30,9 @@ export const coaching = {
     icon: '🧭',
     intro: (
       <>
-        {strong('First, get crystal clear on what’s changing.')} Before you can get anyone on board, you need to be able
-        to explain the change in plain English — what’s different, who it touches, and why it’s worth the disruption.
-        Don’t overthink it: answer the four questions below the way you’d explain it to a new hire over coffee.
-        (Everything else you build later leans on these answers.)
+        {strong('First, get crystal clear on what’s changing.')} Before you can bring anyone on board, you need to
+        explain — in plain English — what’s different, who it touches, and why it’s worth the disruption. Everything you
+        build later leans on these answers.
       </>
     ),
     fields: {
@@ -74,10 +73,9 @@ export const coaching = {
     icon: '👥',
     intro: (
       <>
-        {strong('Not everyone feels a change the same way.')} The billing team that lives in the system all day is
-        affected very differently from a partner who checks it once a week. List the groups of people this touches, then
-        rate two things for each: how much their work <em>changes</em> (Impact) and how <em>ready</em> they are for it.
-        That tells you exactly where to spend your time.
+        {strong('Not everyone feels a change the same way.')} List the groups this touches and rate two things for each
+        — how much their work <em>changes</em> (Impact) and how <em>ready</em> they are (Readiness) — and you’ll see
+        exactly where to spend your time.
       </>
     ),
     /** Point-of-entry copy for the guided, one-question-per-group flow. */
@@ -115,10 +113,9 @@ export const coaching = {
     icon: '🏅',
     intro: (
       <>
-        {strong('Who’s the senior person visibly backing this?')} Your “sponsor” is the owner, partner, or department
-        head everyone looks to — the person whose word carries weight. Their active, visible support is the single
-        biggest predictor of whether a change actually sticks, more than budget or the tools you pick. People watch what
-        leaders <em>do</em>, not what they announce. Name yours below, and pin down what they’ll actually do.
+        {strong('Who’s the senior person visibly backing this?')} A sponsor’s active, visible support is the single
+        biggest predictor of whether a change sticks — more than budget or the tools you pick, because people watch what
+        leaders <em>do</em>. Name yours below, and pin down what they’ll actually do.
       </>
     ),
     fields: {
@@ -158,10 +155,9 @@ export const coaching = {
     icon: '🤝',
     intro: (
       <>
-        {strong('Change spreads through people, not memos.')} A few influential people saying “this is good” will do
-        more than any announcement you send. Map the people who matter — how much <em>sway</em> they have (Influence)
-        and where they stand today (Support) — so you know who to win over first. The goal is to move people toward{' '}
-        <strong style={{ color: '#86efac' }}>Advocate</strong>.
+        {strong('Change spreads through people, not memos.')} A few influential voices saying “this is good” beat any
+        announcement you send. Map the people who matter by how much <em>sway</em> they have (Influence) and where they
+        stand today (Support), so you know who to win over first.
       </>
     ),
     /** Live coaching for one stakeholder from influence + current stance. */
@@ -215,10 +211,9 @@ export const coaching = {
     icon: '⚡',
     intro: (
       <>
-        {strong('“What could go wrong?” — answered on purpose, not in a crisis.')} List the things that could trip up
-        your rollout (people won’t use it, data doesn’t transfer, timing clashes with your busy season…). For each,
-        you’ll rate how <em>likely</em> it is and how <em>bad</em> it’d be. Multiply the two and you get a risk score, so
-        you know what to worry about first — and you write the fix <em>now</em>, while it’s cheap.
+        {strong('“What could go wrong?” — answered on purpose, not in a crisis.')} List what could trip up your rollout,
+        then rate each one’s <em>likelihood</em> and <em>impact</em> to get a score that tells you what to worry about
+        first. Write the fix <em>now</em>, while it’s cheap.
       </>
     ),
     /** Interprets the overall risk score for a non-expert. */
@@ -252,10 +247,9 @@ export const coaching = {
     icon: '📣',
     intro: (
       <>
-        {strong('Say it more often than feels necessary.')} People need to hear about a change five to seven times, in
-        different ways, before it really sinks in — what feels repetitive to you is the first time it lands for many of
-        them. And get ahead of the rumor mill: when leaders stay quiet, people fill the silence with worry. Decide what
-        you’re saying, where, and how often.
+        {strong('Say it more often than feels necessary.')} People need to hear about a change five to seven times
+        before it sinks in — and when leaders stay quiet, the rumor mill fills the silence. Decide what you’re saying,
+        where, and how often.
       </>
     ),
     fields: {
@@ -342,10 +336,9 @@ export const coaching = {
     icon: '🎓',
     intro: (
       <>
-        {strong('Telling people isn’t the same as teaching them.')} It’s not enough to say the billing system is
-        changing — your timekeepers need to know <em>how</em> to enter their own time in Clio, and feel confident doing
-        it without panicking. Match the training to the need: a short video is fine for “here’s what’s coming,” but
-        learning a brand-new tool takes hands-on practice. List each activity below.
+        {strong('Telling people isn’t the same as teaching them.')} Match the training to the need — a short video is
+        fine for “here’s what’s coming,” but learning a brand-new tool takes hands-on practice. List each activity
+        below.
       </>
     ),
     /** Point-of-entry copy for the guided, one-activity-at-a-time flow. */
@@ -376,9 +369,8 @@ export const coaching = {
     intro: (
       <>
         {strong('Don’t take it on faith that it works — check.')} Before you ask everyone to switch, prove the new way
-        actually holds up: real people doing real tasks, your data carried over correctly, and the connections to other
-        systems working. List what you’ll test, who owns it, and where each one stands. A passed test now beats a nasty
-        surprise on launch day.
+        holds up: real people doing real tasks, your data carried over, the connections to other systems working. A
+        passed test now beats a nasty surprise on launch day.
       </>
     ),
     /** Point-of-entry copy for the guided, one-test-at-a-time flow. */
@@ -408,9 +400,9 @@ export const coaching = {
     icon: '🔗',
     intro: (
       <>
-        {strong('What does your launch quietly rely on?')} Most rollouts depend on other people delivering something
-        first — IT provisioning accounts, a vendor flipping a switch, finance exporting data. List each one, who owns
-        it, and when you need it. Naming them turns invisible risks into things you can actually chase.
+        {strong('What does your launch quietly rely on?')} Most rollouts depend on other people delivering first — IT
+        provisioning accounts, a vendor flipping a switch, finance exporting data. Naming each one, with an owner and a
+        date, turns invisible risks into things you can actually chase.
       </>
     ),
     /** Point-of-entry copy for the guided, one-dependency-at-a-time flow. */
@@ -453,9 +445,8 @@ export const coaching = {
     icon: '📊',
     intro: (
       <>
-        {strong('Tell the story of how the launch went.')} This pulls your plan and your real adoption numbers into a
-        one-page summary you can print or save as a PDF for leadership. Fill in the wins, lessons, and shoutouts below —
-        capturing them is how your organisation gets better at change, one launch at a time.
+        {strong('Tell the story of how the launch went.')} This pulls your plan and real adoption numbers into a
+        one-page summary you can save as a PDF for leadership. Fill in the wins, lessons, and shoutouts below.
       </>
     ),
   },
@@ -502,9 +493,8 @@ export const coaching = {
     intro: (
       <>
         {strong('Adoption means people actually using the change in their daily work')} — not just showing up to
-        training. Someone can sit through every session and still go right back to the old way. So measure the real
-        thing: logins, the share of timekeepers entering their own time, how often the old system gets touched. That’s
-        how you know it’s landing.
+        training. So measure the real thing: logins, the share of people doing it the new way, how often the old system
+        still gets touched. That’s how you know it’s landing.
       </>
     ),
     /** Point-of-entry copy for the guided, one-metric-at-a-time flow. */
@@ -551,10 +541,9 @@ export const coaching = {
     icon: '🛡️',
     intro: (
       <>
-        {strong('Resistance is normal — and it’s almost never about people being difficult.')} When someone pushes back,
-        it’s usually fear, extra work landing on their plate, a sense they’re losing status, or simply not feeling heard.
-        Naming the real reason here lets you fix the actual cause instead of fighting the symptoms. Listing it isn’t
-        pessimism — it’s the surest way to keep your rollout on the rails.
+        {strong('Resistance is normal — and it’s almost never about people being difficult.')} It’s usually fear, extra
+        work landing on their plate, a sense they’re losing status, or simply not feeling heard. Name the real reason and
+        you can fix the cause instead of fighting the symptoms.
       </>
     ),
     /** Point-of-entry copy for the guided, one-source-at-a-time flow. */
@@ -616,9 +605,8 @@ export const coaching = {
     intro: (
       <>
         {strong('This is the plan that makes the change actually stick.')} Most changes don’t fail at launch — they fail
-        quietly a few months later, when people drift back to the old way under pressure. Someone has to keep the new
-        way alive until it’s just “how we do things.” (This is the part the ADKAR model calls{' '}
-        <strong style={{ color: 'var(--accent-text)' }}>Reinforcement</strong> — simply, keeping it going so it lasts.)
+        quietly months later, when people drift back to the old way under pressure. Someone has to keep the new way alive
+        until it’s just “how we do things.”
       </>
     ),
     topNote: {

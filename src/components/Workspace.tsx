@@ -35,9 +35,18 @@ export function Workspace({ project }: { project: Project }) {
   const mainRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 })
-    // Reset the gate on stage change; the new stage's wizard (if any) re-sets it.
-    setShowComplete(true)
   }, [state.stageIdx, project.id])
+
+  // Reset the complete-button gate when the stage changes, in the render phase
+  // (not an effect) so a wizard stage's own gate — set via its layout effect —
+  // wins instead of being clobbered. Default visible; StageFlow hides it on its
+  // intro/question screens, and non-wizard stages keep it shown.
+  const stageKey = `${project.id}-${stage.id}`
+  const prevStageKey = useRef(stageKey)
+  if (prevStageKey.current !== stageKey) {
+    prevStageKey.current = stageKey
+    setShowComplete(true)
+  }
 
   // Show the welcome deck once per project, before the workspace itself.
   const [onboarding, setOnboarding] = useState(false)

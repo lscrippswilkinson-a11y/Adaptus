@@ -13,6 +13,7 @@ export function DefineStage() {
       title: 'What’s changing',
       isFilled: !!data.statement.trim(),
       summary: data.statement,
+      emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach
           label={f.statement.label}
@@ -29,6 +30,7 @@ export function DefineStage() {
       title: 'Who it affects',
       isFilled: !!data.scope.trim(),
       summary: data.scope,
+      emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach
           label={f.scope.label}
@@ -45,6 +47,7 @@ export function DefineStage() {
       title: 'What success looks like',
       isFilled: !!data.successLooks.trim(),
       summary: data.successLooks,
+      emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach
           label={f.successLooks.label}
@@ -61,6 +64,7 @@ export function DefineStage() {
       title: 'Why now',
       isFilled: !!data.whyNow.trim(),
       summary: data.whyNow,
+      emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach
           label={f.whyNow.label}
