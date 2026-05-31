@@ -32,8 +32,8 @@ export const STAGES: Stage[] = [
   { id: 'resistance', label: 'Resistance Management', icon: Shield, tag: 'Resistance', xp: 130, phase: 'planning', tier: 'advanced' },
   { id: 'comms', label: 'Communication Plan', icon: Megaphone, tag: 'Messaging', xp: 120, phase: 'planning', tier: 'essential' },
   { id: 'training', label: 'Training Roadmap', icon: GraduationCap, tag: 'Enablement', xp: 100, phase: 'planning', tier: 'essential' },
-  { id: 'testing', label: 'Testing & Validation', icon: FlaskConical, tag: 'Validation', xp: 110, phase: 'planning', tier: 'advanced' },
-  { id: 'dependencies', label: 'Cross-functional Dependencies', icon: Link2, tag: 'Dependencies', xp: 110, phase: 'planning', tier: 'advanced' },
+  { id: 'testing', label: 'Test Before Launch', icon: FlaskConical, tag: 'Testing', xp: 110, phase: 'planning', tier: 'advanced' },
+  { id: 'dependencies', label: 'Line Up Dependencies', icon: Link2, tag: 'Dependencies', xp: 110, phase: 'planning', tier: 'advanced' },
 
   // Phase 2 — Launch Preparation
   { id: 'milestones', label: 'Launch Preparation Dashboard', icon: Rocket, tag: 'Launch Readiness', xp: 150, phase: 'launch', tier: 'essential' },

@@ -10,10 +10,9 @@ import {
   Pencil,
   Plus,
   RotateCcw,
-  Rocket,
   Search,
+  Settings,
   Sparkles,
-  TrendingUp,
   Trash2,
   Upload,
   type LucideIcon,
@@ -48,6 +47,23 @@ const ghostBtn: React.CSSProperties = {
   fontFamily: 'inherit',
 }
 
+const menuItem: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '9px',
+  width: '100%',
+  background: 'none',
+  border: 'none',
+  borderRadius: '8px',
+  padding: '9px 12px',
+  color: 'rgba(var(--fg),0.75)',
+  fontWeight: 600,
+  fontSize: '13px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  textAlign: 'left',
+}
+
 const primaryBtn: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -74,8 +90,21 @@ export function Dashboard() {
   const [deleted, setDeleted] = useState<{ snapshot: Project[]; name: string } | null>(null)
   const undoTimer = useRef<number | null>(null)
   const narrow = useMediaQuery('(max-width: 720px)')
+  // Settings overflow menu (backup / restore / sign out) — keeps the nav to one
+  // primary action (New Project) instead of four competing buttons.
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current) }, [])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [menuOpen])
 
   const completed = state.projects.filter(isComplete).length
   const total = state.projects.length
@@ -143,12 +172,6 @@ export function Dashboard() {
     reader.readAsText(file)
   }
 
-  const howItWorks: { icon: LucideIcon; title: string; desc: string }[] = [
-    { icon: Map, title: '1. Plan', desc: 'Define the change, line up your sponsor, and get the right people on board.' },
-    { icon: Rocket, title: '2. Prepare to launch', desc: 'Turn the plan into a checklist and track your readiness to go live.' },
-    { icon: TrendingUp, title: '3. Post-launch', desc: 'Measure how it’s landing and print a report on how the launch went.' },
-  ]
-
   const active = state.projects.find((p) => !isComplete(p))
   const nextStage = active ? STAGES[active.currentStage] : null
 
@@ -165,39 +188,61 @@ export function Dashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <ThemeToggle />
-          {hasSupabase && session && (
-            <button type="button" onClick={signOut} style={ghostBtn} title={`Sign out${session.user.email ? ` (${session.user.email})` : ''}`}>
-              <LogOut size={15} /> Sign out
-            </button>
-          )}
-          {state.projects.length > 0 && (
-            <button type="button" onClick={backup} style={ghostBtn} title="Download a backup file of all your projects">
-              <Download size={15} /> Back up
-            </button>
-          )}
-          <button type="button" onClick={() => fileRef.current?.click()} style={ghostBtn} title="Restore projects from a backup file">
-            <Upload size={15} /> Restore
-          </button>
-          <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={restore} />
           <button type="button" onClick={() => setWizardOpen(true)} style={primaryBtn}>
             <Plus size={16} /> New Project
           </button>
+          <div ref={menuRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              style={{ ...ghostBtn, padding: '10px', borderRadius: '10px' }}
+              aria-label="Settings"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+              title="Backup, restore & account"
+            >
+              <Settings size={16} />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, minWidth: '190px', background: 'var(--surface-card)', border: '1px solid var(--surface-1-border)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', padding: '6px', zIndex: 50 }}
+              >
+                {state.projects.length > 0 && (
+                  <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); backup() }}>
+                    <Download size={15} /> Back up projects
+                  </button>
+                )}
+                <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); fileRef.current?.click() }}>
+                  <Upload size={15} /> Restore from backup
+                </button>
+                {hasSupabase && session && (
+                  <>
+                    <div style={{ height: '1px', background: 'rgba(var(--fg),0.08)', margin: '6px 4px' }} />
+                    <button type="button" role="menuitem" style={menuItem} onClick={() => { setMenuOpen(false); signOut() }} title={session.user.email ?? undefined}>
+                      <LogOut size={15} /> Sign out
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={restore} />
         </div>
       </div>
 
       <div style={{ padding: '28px 34px' }}>
         {/* Welcome hero */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '32px', background: 'radial-gradient(620px 340px at 85% -20%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '40px 26px' : '60px 48px', marginBottom: '26px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 300px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '28px 24px' : '34px 44px', marginBottom: '24px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: narrow ? '27px' : '34px', fontWeight: 800, color: '#fff', lineHeight: 1.12, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
-            <p style={{ margin: '16px 0 26px', fontSize: '15px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.65, maxWidth: '600px' }}>
-              Adaptus walks you through rolling out a change from start to finish — planning it, getting everyone ready,
-              launching, and making it stick. No change-management experience required.
+            <h1 style={{ margin: 0, fontSize: narrow ? '25px' : '30px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
+            <p style={{ margin: '12px 0 20px', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.6, maxWidth: '580px' }}>
+              Adaptus walks you through rolling out a change from start to finish — no change-management experience required.
             </p>
             <button
               type="button"
               onClick={() => setWizardOpen(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', border: 'none', borderRadius: '10px', padding: '13px 24px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(18,179,161,0.4)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', border: 'none', borderRadius: '10px', padding: '12px 22px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(18,179,161,0.4)' }}
             >
               {total === 0 ? (
                 <>Start your first project <ArrowRight size={17} /></>
@@ -206,20 +251,18 @@ export function Dashboard() {
               )}
             </button>
           </div>
-          {!narrow && <FlaskConical size={150} color="rgba(255,255,255,0.88)" strokeWidth={1.1} style={{ flexShrink: 0 }} />}
+          {!narrow && <FlaskConical size={92} color="rgba(255,255,255,0.4)" strokeWidth={1} style={{ flexShrink: 0, transform: 'rotate(-6deg)' }} />}
         </div>
 
-        {/* How it works */}
-        <div style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(var(--fg),0.45)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '12px' }}>How it works</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: '12px', marginBottom: '30px' }}>
-          {howItWorks.map((h) => (
-            <div key={h.title} style={{ background: 'var(--surface-1)', border: '1px solid var(--surface-1-border)', borderRadius: '12px', padding: '18px 20px', boxShadow: 'var(--box-shadow)' }}>
-              <div style={{ marginBottom: '10px' }}><h.icon size={24} color="#8FB3C7" /></div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '5px' }}>{h.title}</div>
-              <div style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.5)', lineHeight: 1.55 }}>{h.desc}</div>
+        {/* Quick-start tip — replaces the marketing "how it works" for signed-in users */}
+        {total > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '12px', padding: '12px 16px', marginBottom: '24px' }}>
+            <Sparkles size={18} color="#8FB3C7" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.65)', lineHeight: 1.5 }}>
+              <strong style={{ color: 'var(--text)', fontWeight: 700 }}>Quick tip:</strong> You don’t need every stage — the essential steps alone make a solid plan. Add the advanced steps only when a change is big or risky.
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
@@ -302,7 +345,7 @@ export function Dashboard() {
               <div style={{ color: 'rgba(var(--fg),0.6)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 {active && nextStage ? (
                   <>
-                    <span>Continue “{active.name}” →</span>
+                    <span>Continue “{active.name || 'Untitled project'}” →</span>
                     <nextStage.icon size={14} color="var(--accent-text)" />
                     <span>{nextStage.label}</span>
                   </>
@@ -346,7 +389,7 @@ export function Dashboard() {
             zIndex: 200,
           }}
         >
-          <span style={{ fontSize: '13px', color: 'var(--text)' }}>Deleted “{deleted.name}”</span>
+          <span style={{ fontSize: '13px', color: 'var(--text)' }}>Deleted “{deleted.name || 'Untitled project'}”</span>
           <button
             type="button"
             onClick={undoDelete}
@@ -391,6 +434,10 @@ const cardIconBtn: React.CSSProperties = {
 
 function ProjectCard({ name, type, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
   const [hover, setHover] = useState(false)
+  // Mouse users: reveal the edit/delete icons on hover only (less clutter).
+  // Touch users (no hover): keep them visible since there's nothing to hover.
+  const canHover = useMediaQuery('(hover: hover)')
+  const actionsShown = !canHover || hover
   // Buttons sit inside the clickable card, so stop the click from opening it.
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -415,16 +462,16 @@ function ProjectCard({ name, type, p2, stageIcon: StageIcon, stageTag, avg, core
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '3px' }}>{name}</div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', marginBottom: '3px' }}>{name || 'Untitled project'}</div>
           <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>{type}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {complete && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}><Check size={12} strokeWidth={3} /> Complete</div>
           )}
-          {/* Always rendered so they're reachable on touch; emphasised on hover. */}
-          <button type="button" style={{ ...cardIconBtn, opacity: hover ? 1 : 0.7 }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
-          <button type="button" style={{ ...cardIconBtn, color: '#fca5a5', opacity: hover ? 1 : 0.7 }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
+          {/* Revealed on hover for mouse users; always shown on touch (no hover). */}
+          <button type="button" style={{ ...cardIconBtn, opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
+          <button type="button" style={{ ...cardIconBtn, color: '#fca5a5', opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
         </div>
       </div>
       <div style={{ marginBottom: '12px' }}>
