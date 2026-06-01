@@ -272,6 +272,26 @@ export type StageId = keyof StageData
 
 /* ---- Project ---- */
 
+/* ---- Collaboration ---- */
+
+export type Role = 'owner' | 'editor' | 'viewer'
+
+/** A person with access to a project (joined with their profile). */
+export interface Member {
+  userId: string
+  email: string
+  name: string
+  avatarUrl: string
+  role: Role
+}
+
+/** A pending email invite that hasn't been claimed yet. */
+export interface Invite {
+  id: string
+  email: string
+  role: Exclude<Role, 'owner'>
+}
+
 export interface Project {
   id: string
   name: string
@@ -287,6 +307,8 @@ export interface Project {
   stageData: StageData
   /** When set, the project's status brief is viewable (read-only) at /?share=<token>. */
   shareToken?: string | null
+  /** The signed-in user's role on this project (client-only; not persisted). */
+  role?: Role
 }
 
 /* ---- Top-level app/view state ---- */

@@ -24,7 +24,7 @@ import { useAuth } from '@/state/AuthContext'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
 import { EditProjectModal } from '@/components/EditProjectModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import type { Project } from '@/types'
+import type { Project, Role } from '@/types'
 
 type SortKey = 'recent' | 'progress' | 'name'
 
@@ -218,6 +218,7 @@ export function Dashboard() {
                   key={proj.id}
                   name={proj.name}
                   type={proj.type}
+                  role={proj.role}
                   p2={pct(proj)}
                   stageIcon={cs.icon}
                   stageTag={cs.tag}
@@ -302,6 +303,7 @@ export function Dashboard() {
 interface ProjectCardProps {
   name: string
   type: string
+  role?: Role
   p2: number
   stageIcon: LucideIcon
   stageTag: string
@@ -328,12 +330,15 @@ const cardIconBtn: React.CSSProperties = {
   lineHeight: 1,
 }
 
-function ProjectCard({ name, type, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
+function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
   const [hover, setHover] = useState(false)
   // Mouse users: reveal the edit/delete icons on hover only (less clutter).
   // Touch users (no hover): keep them visible since there's nothing to hover.
   const canHover = useMediaQuery('(hover: hover)')
   const actionsShown = !canHover || hover
+  const shared = !!role && role !== 'owner'
+  const canEdit = role !== 'viewer' // owner/editor/undefined
+  const canDelete = !role || role === 'owner'
   // Buttons sit inside the clickable card, so stop the click from opening it.
   const stop = (fn: () => void) => (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -359,15 +364,22 @@ function ProjectCard({ name, type, p2, stageIcon: StageIcon, stageTag, avg, core
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', marginBottom: '3px' }}>{name || 'Untitled project'}</div>
-          <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>{type}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>
+            {type}
+            {shared && <span style={{ textTransform: 'capitalize', color: 'var(--accent-text)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '1px 6px', fontWeight: 600 }}>Shared · {role}</span>}
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {complete && (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}><Check size={12} strokeWidth={3} /> Complete</div>
           )}
           {/* Revealed on hover for mouse users; always shown on touch (no hover). */}
-          <button type="button" style={{ ...cardIconBtn, opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
-          <button type="button" style={{ ...cardIconBtn, color: '#fca5a5', opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
+          {canEdit && (
+            <button type="button" style={{ ...cardIconBtn, opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
+          )}
+          {canDelete && (
+            <button type="button" style={{ ...cardIconBtn, color: '#fca5a5', opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Delete project" aria-label="Delete project" onClick={stop(onDelete)}><Trash2 size={13} /></button>
+          )}
         </div>
       </div>
       <div style={{ marginBottom: '12px' }}>

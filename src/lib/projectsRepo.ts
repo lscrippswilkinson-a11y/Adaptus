@@ -1,4 +1,4 @@
-import type { Project, StageData, StageId } from '@/types'
+import type { Invite, Member, Project, Role, StageData, StageId } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { migrateProject } from '@/lib/storage'
 
@@ -87,4 +87,89 @@ export async function fetchSharedProject(token: string): Promise<Project | null>
   if (error) throw error
   if (!data) return null
   return rowToProject(data as SharedRow)
+}
+
+/* ----------------------------------------------------------- collaboration */
+
+/** Claim any invites addressed to the signed-in user's email (best-effort). */
+export async function acceptPendingInvites(): Promise<void> {
+  const { error } = await supabase.rpc('accept_pending_invites')
+  if (error) throw error
+}
+
+/** The signed-in user's role on each project they're a member of. */
+export async function fetchMyRoles(userId: string): Promise<Record<string, Role>> {
+  const { data, error } = await supabase.from('project_members').select('project_id, role').eq('user_id', userId)
+  if (error) throw error
+  const map: Record<string, Role> = {}
+  for (const r of (data ?? []) as { project_id: string; role: Role }[]) map[r.project_id] = r.role
+  return map
+}
+
+interface ProfileRow {
+  id: string
+  email: string | null
+  full_name: string | null
+  avatar_url: string | null
+}
+
+/** Everyone with access to a project, plus the not-yet-claimed email invites. */
+export async function fetchCollaborators(projectId: string): Promise<{ members: Member[]; invites: Invite[] }> {
+  // No FK between project_members and profiles (both point at auth.users), so
+  // PostgREST can't embed — fetch members, then their profiles, and join here.
+  const [m, i] = await Promise.all([
+    supabase.from('project_members').select('user_id, role').eq('project_id', projectId),
+    supabase.from('project_invites').select('id, email, role').eq('project_id', projectId),
+  ])
+  if (m.error) throw m.error
+  if (i.error) throw i.error
+
+  const memberRows = (m.data ?? []) as { user_id: string; role: Role }[]
+  const ids = memberRows.map((r) => r.user_id)
+  const profiles: Record<string, ProfileRow> = {}
+  if (ids.length) {
+    const p = await supabase.from('profiles').select('id, email, full_name, avatar_url').in('id', ids)
+    if (p.error) throw p.error
+    for (const row of (p.data ?? []) as ProfileRow[]) profiles[row.id] = row
+  }
+
+  const order: Record<Role, number> = { owner: 0, editor: 1, viewer: 2 }
+  const members: Member[] = memberRows
+    .map((r) => {
+      const pr = profiles[r.user_id]
+      return {
+        userId: r.user_id,
+        role: r.role,
+        email: pr?.email ?? '',
+        name: pr?.full_name ?? pr?.email ?? 'Member',
+        avatarUrl: pr?.avatar_url ?? '',
+      }
+    })
+    .sort((a, b) => order[a.role] - order[b.role])
+  const invites = (i.data ?? []) as Invite[]
+  return { members, invites }
+}
+
+/** Invite someone by email at a given role (owner-only, enforced by RLS). */
+export async function inviteCollaborator(projectId: string, email: string, role: Exclude<Role, 'owner'>): Promise<void> {
+  const { error } = await supabase.from('project_invites').upsert(
+    { project_id: projectId, email: email.trim().toLowerCase(), role },
+    { onConflict: 'project_id,email' },
+  )
+  if (error) throw error
+}
+
+export async function updateMemberRole(projectId: string, userId: string, role: Role): Promise<void> {
+  const { error } = await supabase.from('project_members').update({ role }).eq('project_id', projectId).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function removeMember(projectId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('project_members').delete().eq('project_id', projectId).eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function revokeInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase.from('project_invites').delete().eq('id', inviteId)
+  if (error) throw error
 }

@@ -59,6 +59,13 @@ export interface StageFlowProps {
  */
 const StageGateCtx = createContext<(showComplete: boolean) => void>(() => {})
 
+/**
+ * Read-only mode (e.g. a viewer-role collaborator). When set, every stage
+ * renders as the all-at-once summary — no intro gate or step navigation to get
+ * trapped behind — and the Workspace disables the inputs around it.
+ */
+export const ReadOnlyCtx = createContext(false)
+
 export function StageGateProvider({ onChange, children }: { onChange: (showComplete: boolean) => void; children: ReactNode }) {
   return <StageGateCtx.Provider value={onChange}>{children}</StageGateCtx.Provider>
 }
@@ -150,8 +157,10 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
   const onReview = step >= total
   const title = STAGES.find((s) => s.id === stageId)?.label ?? ''
 
-  // Hub stages ignore the summary toggle — the hub IS their overview.
-  const summaryMode = mode === 'summary' && !hub
+  // Hub stages ignore the summary toggle — the hub IS their overview. But a
+  // read-only viewer always gets the flat summary (all fields, no navigation).
+  const readOnly = useContext(ReadOnlyCtx)
+  const summaryMode = readOnly || (mode === 'summary' && !hub)
 
   // The complete button belongs on the review/hub screen, or the summary view —
   // never on the intro card or a question screen. A layout effect (not a plain

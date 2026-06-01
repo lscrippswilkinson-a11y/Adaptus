@@ -16,7 +16,7 @@ import { createSeed } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase, supabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
-import { deleteProjectRemote, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
+import { acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
 
 interface AppContextValue {
   state: AppState
@@ -53,6 +53,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!cloud || !user) return
     let cancelled = false
     ;(async () => {
+      // Claim any pending email invites before loading, so shared projects show up.
+      try {
+        await acceptPendingInvites()
+      } catch (err) {
+        console.error('[adaptus] failed to accept pending invites (continuing)', err)
+      }
+
       let projects: Project[] = []
       try {
         projects = await fetchProjects()
@@ -93,6 +100,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         } catch (err) {
           console.error('[adaptus] failed to seed demo project (continuing)', err)
         }
+      }
+
+      // Tag each project with the signed-in user's role (owner default for any
+      // not yet reflected in the membership table — e.g. just-created ones).
+      try {
+        const roles = await fetchMyRoles(user.id)
+        projects = projects.map((p) => ({ ...p, role: roles[p.id] ?? 'owner' }))
+      } catch (err) {
+        console.error('[adaptus] failed to load roles (continuing)', err)
       }
 
       if (cancelled) return

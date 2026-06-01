@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, Check, Share2 } from 'lucide-react'
+import { ArrowLeft, Check, Eye, Share2, Users } from 'lucide-react'
 import type { Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
-import { StageGateProvider } from '@/components/StageFlow'
+import { StageGateProvider, ReadOnlyCtx } from '@/components/StageFlow'
 import { ProjectOnboarding } from '@/components/ProjectOnboarding'
 import { ShareModal } from '@/components/ShareModal'
+import { CollaboratorsModal } from '@/components/CollaboratorsModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** Per-project flag: has the user already clicked through the welcome deck? */
@@ -64,6 +65,9 @@ export function Workspace({ project }: { project: Project }) {
   }
 
   const [sharing, setSharing] = useState(false)
+  const [collab, setCollab] = useState(false)
+  const isOwner = (project.role ?? 'owner') === 'owner'
+  const isViewer = project.role === 'viewer'
 
   if (onboarding) return <ProjectOnboarding onDone={finishOnboarding} />
 
@@ -88,6 +92,13 @@ export function Workspace({ project }: { project: Project }) {
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setCollab(true)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '999px', padding: '7px 14px', color: 'rgba(var(--fg),0.7)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+        >
+          <Users size={14} /> {isOwner ? 'Collaborators' : 'People'}
+        </button>
         <button
           type="button"
           onClick={() => setSharing(true)}
@@ -203,12 +214,24 @@ export function Workspace({ project }: { project: Project }) {
             )}
           </div>
 
-          {/* Remount on stage/project change so input-local state resets cleanly */}
-          <StageGateProvider onChange={setShowComplete}>
-            {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
-          </StageGateProvider>
+          {isViewer && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '10px', padding: '10px 14px', marginBottom: '18px', fontSize: '13px', color: 'var(--accent-text)' }}>
+              <Eye size={15} /> You have view-only access to this project.
+            </div>
+          )}
 
-          {!done && showComplete && (
+          {/* Remount on stage/project change so input-local state resets cleanly.
+              For viewers, ReadOnlyCtx forces the flat summary view and the
+              disabled fieldset makes every input read-only. */}
+          <ReadOnlyCtx.Provider value={isViewer}>
+            <fieldset disabled={isViewer} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+              <StageGateProvider onChange={setShowComplete}>
+                {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
+              </StageGateProvider>
+            </fieldset>
+          </ReadOnlyCtx.Provider>
+
+          {!done && showComplete && !isViewer && (
             <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(var(--fg),0.06)' }}>
               <button
                 type="button"
@@ -237,6 +260,7 @@ export function Workspace({ project }: { project: Project }) {
           onClose={() => setSharing(false)}
         />
       )}
+      {collab && <CollaboratorsModal project={project} onClose={() => setCollab(false)} />}
     </div>
   )
 }
