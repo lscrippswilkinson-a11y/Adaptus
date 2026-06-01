@@ -23,6 +23,7 @@ import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
 import { EditProjectModal } from '@/components/EditProjectModal'
+import { OrgHeatMap } from '@/components/OrgHeatMap'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import type { Project, Role } from '@/types'
 
@@ -253,6 +254,8 @@ export function Dashboard() {
             </div>
           </div>
         )}
+
+        <OrgHeatMap projects={state.projects} />
       </div>
 
       {wizardOpen && <Wizard onClose={() => setWizardOpen(false)} onCreate={createProject} />}
