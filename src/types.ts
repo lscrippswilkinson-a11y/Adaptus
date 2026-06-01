@@ -292,6 +292,17 @@ export interface Invite {
   role: Exclude<Role, 'owner'>
 }
 
+/** A review comment left on one section (stage) of a project. */
+export interface FeedbackItem {
+  id: string
+  stageId: StageId
+  authorId: string
+  authorName: string
+  body: string
+  resolved: boolean
+  createdAt: string
+}
+
 export interface Project {
   id: string
   name: string

@@ -1,4 +1,4 @@
-import type { Invite, Member, Project, Role, StageData, StageId } from '@/types'
+import type { FeedbackItem, Invite, Member, Project, Role, StageData, StageId } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { migrateProject } from '@/lib/storage'
 
@@ -171,5 +171,62 @@ export async function removeMember(projectId: string, userId: string): Promise<v
 
 export async function revokeInvite(inviteId: string): Promise<void> {
   const { error } = await supabase.from('project_invites').delete().eq('id', inviteId)
+  if (error) throw error
+}
+
+/* -------------------------------------------------------------- feedback */
+
+interface FeedbackRow {
+  id: string
+  stage_id: string
+  author_id: string
+  body: string
+  resolved: boolean
+  created_at: string
+}
+
+/** All review comments on a project, oldest first, with author display names. */
+export async function fetchFeedback(projectId: string): Promise<FeedbackItem[]> {
+  const { data, error } = await supabase
+    .from('project_feedback')
+    .select('id, stage_id, author_id, body, resolved, created_at')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  const rows = (data ?? []) as FeedbackRow[]
+
+  const ids = [...new Set(rows.map((r) => r.author_id))]
+  const names: Record<string, string> = {}
+  if (ids.length) {
+    const p = await supabase.from('profiles').select('id, full_name, email').in('id', ids)
+    if (p.error) throw p.error
+    for (const row of (p.data ?? []) as { id: string; full_name: string | null; email: string | null }[]) {
+      names[row.id] = row.full_name ?? row.email ?? 'Member'
+    }
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    stageId: r.stage_id as StageId,
+    authorId: r.author_id,
+    authorName: names[r.author_id] ?? 'Member',
+    body: r.body,
+    resolved: r.resolved,
+    createdAt: r.created_at,
+  }))
+}
+
+export async function addFeedback(projectId: string, stageId: StageId, body: string): Promise<void> {
+  const { error } = await supabase.from('project_feedback').insert({ project_id: projectId, stage_id: stageId, body: body.trim() })
+  if (error) throw error
+}
+
+export async function setFeedbackResolved(id: string, resolved: boolean): Promise<void> {
+  const { error } = await supabase.from('project_feedback').update({ resolved }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteFeedback(id: string): Promise<void> {
+  const { error } = await supabase.from('project_feedback').delete().eq('id', id)
   if (error) throw error
 }

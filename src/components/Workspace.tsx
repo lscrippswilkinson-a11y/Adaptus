@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Check, Eye, Share2, Users } from 'lucide-react'
-import type { Project } from '@/types'
+import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
+import { useAuth } from '@/state/AuthContext'
+import { hasSupabase } from '@/lib/supabase'
+import { fetchFeedback } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
@@ -9,6 +12,7 @@ import { StageGateProvider, ReadOnlyCtx } from '@/components/StageFlow'
 import { ProjectOnboarding } from '@/components/ProjectOnboarding'
 import { ShareModal } from '@/components/ShareModal'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
+import { FeedbackPanel } from '@/components/FeedbackPanel'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 /** Per-project flag: has the user already clicked through the welcome deck? */
@@ -68,6 +72,28 @@ export function Workspace({ project }: { project: Project }) {
   const [collab, setCollab] = useState(false)
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'
+
+  // Per-section review feedback (cloud only).
+  const { session } = useAuth()
+  const currentUserId = session?.user.id ?? ''
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([])
+  const loadFeedback = () => {
+    if (!hasSupabase) return
+    fetchFeedback(project.id)
+      .then(setFeedback)
+      .catch((err) => console.error('[adaptus] failed to load feedback', err))
+  }
+  useEffect(() => {
+    setFeedback([])
+    loadFeedback()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id])
+  const openByStage = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const f of feedback) if (!f.resolved) m[f.stageId] = (m[f.stageId] ?? 0) + 1
+    return m
+  }, [feedback])
+  const stageFeedback = feedback.filter((f) => f.stageId === stage.id)
 
   if (onboarding) return <ProjectOnboarding onDone={finishOnboarding} />
 
@@ -154,7 +180,10 @@ export function Workspace({ project }: { project: Project }) {
                         <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {s.label}
                         </span>
-                        {s.tier === 'advanced' && (
+                        {openByStage[s.id] > 0 && (
+                          <span title={`${openByStage[s.id]} open feedback`} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', minWidth: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>{openByStage[s.id]}</span>
+                        )}
+                        {s.tier === 'advanced' && !openByStage[s.id] && (
                           <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.3)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
                         )}
                       </button>
@@ -249,6 +278,18 @@ export function Workspace({ project }: { project: Project }) {
                 )}
               </button>
             </div>
+          )}
+
+          {hasSupabase && currentUserId && (
+            <FeedbackPanel
+              projectId={project.id}
+              stageId={stage.id}
+              stageLabel={stage.label}
+              items={stageFeedback}
+              currentUserId={currentUserId}
+              isOwner={isOwner}
+              onChanged={loadFeedback}
+            />
           )}
         </div>
       </div>
