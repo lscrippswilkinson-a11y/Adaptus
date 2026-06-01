@@ -20,6 +20,41 @@ const READY_COLOR = ['#ef4444', '#f59e0b', '#22c55e']
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
 const loose = (s: string) => norm(s).replace(/[^a-z0-9]/g, '').replace(/(teams?|departments?|depts?|groups?|divisions?|orgs?)$/, '')
 const heatColor = (ratio: number) => (ratio >= 0.66 ? '#ef4444' : ratio >= 0.33 ? '#f59e0b' : '#22c55e')
+const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
+const loadBand = (r: number) => (r >= 0.66 ? 'Heavy' : r >= 0.33 ? 'Moderate' : 'Light')
+
+/** A 180° SVG arc gauge with the value in the bowl. */
+function Gauge({ value, color, label, caption }: { value: number; color: string; label: string; caption: string }) {
+  const r = 58
+  const cx = 72
+  const cy = 72
+  const len = Math.PI * r
+  const off = len * (1 - clamp(value, 0, 100) / 100)
+  const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
+  return (
+    <div style={{ textAlign: 'center', width: '144px', flexShrink: 0 }}>
+      <svg width="144" height="80" viewBox="0 0 144 80">
+        <path d={arc} fill="none" stroke="rgba(var(--fg),0.1)" strokeWidth={12} strokeLinecap="round" />
+        <path d={arc} fill="none" stroke={color} strokeWidth={12} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset 0.5s' }} />
+        <text x={cx} y={66} textAnchor="middle" style={{ fontSize: '28px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
+      </svg>
+      <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginTop: '-4px' }}>{label}</div>
+      <div style={{ fontSize: '11px', fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{caption}</div>
+    </div>
+  )
+}
+
+/** A compact KPI tile for the heat-map header. */
+function Stat({ value, label, color }: { value: string | number; label: string; color?: string }) {
+  return (
+    <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '12px', padding: '14px 16px' }}>
+      <div style={{ fontSize: '24px', fontWeight: 800, color: color ?? 'var(--text)', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '6px' }}>{label}</div>
+    </div>
+  )
+}
+
+const READY_VAL: Record<Readiness, number> = { Low: 15, Medium: 55, High: 95 }
 
 interface GroupAgg {
   key: string
@@ -93,6 +128,35 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
 
   const maxLoad = Math.max(1, ...groups.map((g) => g.load))
 
+  // Org-level metrics for the gauges + KPI tiles.
+  const metrics = useMemo(() => {
+    const initiatives = new Set<string>()
+    let people = 0
+    let loadSum = 0
+    let rSum = 0
+    let rN = 0
+    let atRisk = 0
+    for (const g of groups) {
+      g.initiatives.forEach((i) => initiatives.add(i))
+      people += g.people
+      loadSum += g.load
+      for (const row of g.rows) {
+        rSum += READY_VAL[row.readiness]
+        rN += 1
+      }
+      if (g.readyWorst === 0 && g.load / maxLoad >= 0.5) atRisk += 1
+    }
+    const loadIndex = clamp(Math.round((loadSum / groups.length / 9) * 100), 4, 100)
+    const readinessIndex = rN ? Math.round(rSum / rN) : 0
+    return { teams: groups.length, initiatives: initiatives.size, people, atRisk, loadIndex, readinessIndex }
+  }, [groups, maxLoad])
+
+  const loadColor = metrics.loadIndex >= 67 ? '#ef4444' : metrics.loadIndex >= 34 ? '#f59e0b' : '#22c55e'
+  const loadCaption = metrics.loadIndex >= 67 ? 'Heavy' : metrics.loadIndex >= 34 ? 'Moderate' : 'Light'
+  const readyColor = metrics.readinessIndex >= 67 ? '#22c55e' : metrics.readinessIndex >= 34 ? '#f59e0b' : '#ef4444'
+  const readyCaption = metrics.readinessIndex >= 67 ? 'Strong' : metrics.readinessIndex >= 34 ? 'Mixed' : 'Low'
+  const fmtPeople = metrics.people >= 1000 ? `${(metrics.people / 1000).toFixed(1)}k` : String(metrics.people)
+
   // Suggested combines: distinct groups that collapse to the same loose key.
   const suggestions = useMemo(() => {
     const byLoose = new Map<string, GroupAgg[]>()
@@ -137,8 +201,22 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         <Flame size={17} color="#f59e0b" />
         <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Organization change heat map</span>
       </div>
-      <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', marginBottom: '16px', lineHeight: 1.5 }}>
+      <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', marginBottom: '18px', lineHeight: 1.5 }}>
         Which teams are absorbing the most change across all your initiatives. Higher load = more concurrent change — watch for fatigue.
+      </div>
+
+      {/* Gauges + KPI tiles */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', marginBottom: '22px', paddingBottom: '20px', borderBottom: '1px solid rgba(var(--fg),0.07)' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <Gauge value={metrics.loadIndex} color={loadColor} label="Change load" caption={loadCaption} />
+          <Gauge value={metrics.readinessIndex} color={readyColor} label="Avg readiness" caption={readyCaption} />
+        </div>
+        <div style={{ flex: 1, minWidth: '260px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          <Stat value={metrics.teams} label="Teams impacted" />
+          <Stat value={metrics.initiatives} label="Active initiatives" />
+          <Stat value={`~${fmtPeople}`} label="People affected" />
+          <Stat value={metrics.atRisk} label="Teams at risk" color={metrics.atRisk > 0 ? '#ef4444' : undefined} />
+        </div>
       </div>
 
       {/* Suggested combines */}
@@ -181,11 +259,12 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
                   </span>
                 </button>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: READY_COLOR[g.readyWorst], flexShrink: 0 }}>{READY_LABEL[g.readyWorst]} readiness</span>
-                {/* Heat bar */}
+                {/* Heat meter */}
                 <div style={{ width: '110px', flexShrink: 0 }}>
                   <div style={{ height: '8px', background: 'rgba(var(--fg),0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.round(ratio * 100)}%`, background: heatColor(ratio), borderRadius: '4px' }} />
+                    <div style={{ height: '100%', width: `${Math.round(ratio * 100)}%`, background: heatColor(ratio), borderRadius: '4px', transition: 'width 0.4s' }} />
                   </div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: heatColor(ratio), textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '3px', textAlign: 'right' }}>{loadBand(ratio)} load</div>
                 </div>
               </div>
               {isOpen && (
