@@ -1,4 +1,4 @@
-import type { FeedbackItem, Invite, Member, Project, Role, StageData, StageId } from '@/types'
+import type { FeedbackItem, Invite, InviteLink, Member, Project, Role, StageData, StageId } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { migrateProject } from '@/lib/storage'
 
@@ -172,6 +172,37 @@ export async function removeMember(projectId: string, userId: string): Promise<v
 export async function revokeInvite(inviteId: string): Promise<void> {
   const { error } = await supabase.from('project_invites').delete().eq('id', inviteId)
   if (error) throw error
+}
+
+/* ---- shareable invite links ---- */
+
+export async function fetchInviteLinks(projectId: string): Promise<InviteLink[]> {
+  const { data, error } = await supabase
+    .from('project_invite_links')
+    .select('id, token, role')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as InviteLink[]
+}
+
+/** Create a join link for a role; returns its token. */
+export async function createInviteLink(projectId: string, role: Exclude<Role, 'owner'>): Promise<string> {
+  const { data, error } = await supabase.from('project_invite_links').insert({ project_id: projectId, role }).select('token').single()
+  if (error) throw error
+  return (data as { token: string }).token
+}
+
+export async function revokeInviteLink(id: string): Promise<void> {
+  const { error } = await supabase.from('project_invite_links').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Join the project a link token belongs to. Returns the project id, or null. */
+export async function acceptInviteLink(token: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc('accept_invite_link', { p_token: token })
+  if (error) throw error
+  return (data as string | null) ?? null
 }
 
 /* -------------------------------------------------------------- feedback */

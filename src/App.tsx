@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AppProvider, useApp } from '@/state/AppContext'
 import { AuthProvider, useAuth } from '@/state/AuthContext'
 import { ThemeProvider } from '@/state/ThemeContext'
@@ -37,6 +38,22 @@ function Gate() {
 }
 
 export default function App() {
+  // Capture an invite-link token (/?join=<token>) and stash it before sign-in,
+  // so it survives the Google OAuth redirect; AppContext claims it after auth.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const join = params.get('join')
+    if (!join) return
+    try {
+      localStorage.setItem('adaptus.pendingJoin', join)
+    } catch {
+      /* ignore storage failures */
+    }
+    params.delete('join')
+    const qs = params.toString()
+    window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''))
+  }, [])
+
   // Public, no-login route: a shared status brief (/?share=<token>). Rendered
   // ahead of the auth gate so recipients never hit a sign-in wall.
   const shareToken = new URLSearchParams(window.location.search).get('share')

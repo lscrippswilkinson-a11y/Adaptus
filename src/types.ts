@@ -292,6 +292,13 @@ export interface Invite {
   role: Exclude<Role, 'owner'>
 }
 
+/** A shareable join link: anyone who opens it joins at the given role. */
+export interface InviteLink {
+  id: string
+  token: string
+  role: Exclude<Role, 'owner'>
+}
+
 /** A review comment left on one section (stage) of a project. */
 export interface FeedbackItem {
   id: string

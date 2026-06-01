@@ -16,7 +16,7 @@ import { createSeed } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase, supabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
-import { acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
+import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
 
 interface AppContextValue {
   state: AppState
@@ -58,6 +58,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await acceptPendingInvites()
       } catch (err) {
         console.error('[adaptus] failed to accept pending invites (continuing)', err)
+      }
+
+      // Claim a pending invite-link (stashed pre-auth), then open that project.
+      let joinedId: string | null = null
+      try {
+        const token = localStorage.getItem('adaptus.pendingJoin')
+        if (token) {
+          joinedId = await acceptInviteLink(token)
+          localStorage.removeItem('adaptus.pendingJoin')
+        }
+      } catch (err) {
+        console.error('[adaptus] failed to accept invite link (continuing)', err)
       }
 
       let projects: Project[] = []
@@ -115,6 +127,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lastSynced.current = projects
       dispatch({ type: 'SET_PROJECTS', projects })
       setReady(true)
+      // If they just joined via a link, drop them straight into that project.
+      if (joinedId && projects.some((p) => p.id === joinedId)) {
+        dispatch({ type: 'OPEN_PROJECT', id: joinedId, stageIdx: 0 })
+      }
     })()
     return () => {
       cancelled = true
