@@ -11,8 +11,14 @@ import { buildHeatMap, looseKey, readinessBand, type HeatTeam, type LoadBand, ty
  */
 
 const ALIAS_KEY = 'adaptus.groupAliases'
-const LOAD_COLOR: Record<LoadBand, string> = { Light: '#22c55e', Moderate: '#f59e0b', Heavy: '#ef4444' }
-const READY_COLOR: Record<ReadinessBand, string> = { Low: '#ef4444', Mixed: '#f59e0b', Strong: '#22c55e' }
+// Semantic colour tokens — one meaning each.
+//  • Load heat ramp: good green → caution amber → hot ORANGE (never the alarm
+//    red, so red can't mean two things).
+//  • Readiness: its own scale; "Low" is rose, distinct from load-orange.
+//  • Alarm: pure red, reserved for genuine at-risk states only.
+const LOAD_COLOR: Record<LoadBand, string> = { Light: '#22c55e', Moderate: '#f59e0b', Heavy: '#f97316' }
+const READY_COLOR: Record<ReadinessBand, string> = { Strong: '#22c55e', Mixed: '#f59e0b', Low: '#fb7185' }
+const IMPACT_COLOR = { High: '#fb923c', Medium: '#fcd34d', Low: 'rgba(var(--fg),0.5)' } as const
 const ALARM = '#ef4444'
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
 
@@ -195,7 +201,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: 'rgba(var(--fg),0.65)' }}>
                       <Users size={12} style={{ flexShrink: 0, opacity: 0.6 }} />
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.project}</span>
-                      <span style={{ flexShrink: 0, color: r.impact === 'High' ? '#fca5a5' : r.impact === 'Medium' ? '#fcd34d' : 'rgba(var(--fg),0.5)' }}>{r.impact} impact</span>
+                      <span style={{ flexShrink: 0, color: IMPACT_COLOR[r.impact] }}>{r.impact} impact</span>
                       <span style={{ flexShrink: 0, color: 'rgba(var(--fg),0.5)' }}>{r.readiness} ready</span>
                     </div>
                   ))}
