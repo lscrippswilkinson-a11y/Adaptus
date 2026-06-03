@@ -157,7 +157,9 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
   const setShowComplete = useContext(StageGateCtx)
   const setOnIntro = useContext(StageScreenCtx)
   // -1 = intro screen, 0..steps.length-1 = questions, steps.length = review.
-  const [step, setStep] = useState(-1)
+  // Show the intro only on a fresh stage; once it has any data, open straight
+  // into the work (hub stages land on their hub) so it doesn't gate repeat visits.
+  const [step, setStep] = useState<number>(() => (steps.some((s) => s.isFilled) ? (hub ? steps.length : 0) : -1))
   const topRef = useRef<HTMLDivElement>(null)
   const mounted = useRef(false)
 
