@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Check, Eye, Share2, Users } from 'lucide-react'
+import { ArrowLeft, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
@@ -199,9 +199,25 @@ export function Workspace({ project }: { project: Project }) {
             <button
               type="button"
               onClick={() => setShowAdvanced((v) => !v)}
-              style={{ width: '100%', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '8px', padding: '8px 12px', color: 'rgba(var(--fg),0.55)', fontSize: '11px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '7px',
+                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'rgba(91,134,163,0.16)',
+                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.45)'}`,
+                borderRadius: '9px',
+                padding: '11px 12px',
+                color: showAdvanced ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
+                fontSize: '12.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
             >
-              {showAdvanced ? '− Hide advanced steps' : `+ Show advanced steps (${advancedCount}) ⓘ`}
+              <Sparkles size={15} />
+              {showAdvanced ? 'Hide advanced steps' : `Show advanced steps (${advancedCount})`}
             </button>
             <div
               className="adv-help"
