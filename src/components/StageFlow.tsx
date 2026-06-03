@@ -248,10 +248,10 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
     return (
       <div style={{ maxWidth: `${CONTENT_MAX}px`, margin: '0 auto' }}>
         {header}
-        <div ref={topRef} style={{ textAlign: 'center', padding: '36px 0 24px' }}>
-          <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '14px' }}>{icon}</div>
-          <h1 style={{ margin: '0 0 18px', fontSize: '28px', fontWeight: 800, color: 'var(--text)' }}>{title}</h1>
-          <div style={{ fontSize: '16px', lineHeight: 1.75, color: 'rgba(var(--fg),0.78)', maxWidth: '540px', margin: '0 auto 30px', textAlign: 'left' }}>
+        <div ref={topRef} style={{ textAlign: 'center', padding: '8px 0 20px' }}>
+          <div style={{ fontSize: '46px', lineHeight: 1, marginBottom: '10px' }}>{icon}</div>
+          <h1 style={{ margin: '0 0 14px', fontSize: '27px', fontWeight: 800, color: 'var(--text)' }}>{title}</h1>
+          <div style={{ fontSize: '15.5px', lineHeight: 1.7, color: 'rgba(var(--fg),0.78)', maxWidth: '540px', margin: '0 auto 24px', textAlign: 'left' }}>
             {blurb}
           </div>
           <button type="button" style={pillBtn} onClick={() => go(hub ? total : 0)}>
