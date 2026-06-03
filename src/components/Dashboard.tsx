@@ -139,27 +139,42 @@ export function Dashboard() {
       </div>
 
       <div style={{ padding: '28px 34px' }}>
-        {/* Welcome hero */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 280px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '20px 24px' : '24px 44px', marginBottom: '20px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
-          <div style={{ flex: 1 }}>
-            <h1 style={{ margin: 0, fontSize: narrow ? '24px' : '29px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
-            <p style={{ margin: '10px 0 18px', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, maxWidth: '580px' }}>
-              Adaptus walks you through rolling out a change from start to finish — no change-management experience required.
-            </p>
-            <button
-              type="button"
-              onClick={() => setWizardOpen(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', border: 'none', borderRadius: '10px', padding: '12px 22px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(18,179,161,0.4)' }}
-            >
-              {total === 0 ? (
-                <>Start your first project <ArrowRight size={17} /></>
-              ) : (
-                <><Plus size={17} /> Start a new project</>
-              )}
-            </button>
+        {/* Welcome hero — first-run only. Returning users go straight to work;
+            the single "new project" CTA lives in the nav. */}
+        {total === 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 280px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '20px 24px' : '24px 44px', marginBottom: '20px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
+            <div style={{ flex: 1 }}>
+              <h1 style={{ margin: 0, fontSize: narrow ? '24px' : '29px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
+              <p style={{ margin: '10px 0 0', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, maxWidth: '580px' }}>
+                Adaptus walks you through rolling out a change from start to finish — no change-management experience required. Create your first project below.
+              </p>
+            </div>
+            {!narrow && <FlaskConical size={56} color="rgba(255,255,255,0.22)" strokeWidth={1} style={{ flexShrink: 0 }} />}
           </div>
-          {!narrow && <FlaskConical size={56} color="rgba(255,255,255,0.22)" strokeWidth={1} style={{ flexShrink: 0 }} />}
-        </div>
+        )}
+
+        {/* Next Best Action — the guide-me card, promoted to the top. */}
+        {active && nextStage && (
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: active.currentStage })}
+            style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lightbulb size={22} color="var(--accent-text)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>Pick up where you left off</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.name || 'Untitled project'}</div>
+              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                Next step: <nextStage.icon size={14} color="var(--accent-text)" /> {nextStage.label}
+              </div>
+            </div>
+            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
+              Continue <ArrowRight size={17} />
+            </span>
+          </button>
+        )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
@@ -232,26 +247,6 @@ export function Dashboard() {
                 />
               )
             })}
-          </div>
-        )}
-
-        {state.projects.length > 0 && (
-          <div style={{ marginTop: '18px', background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.2)', borderRadius: '12px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Lightbulb size={22} color="var(--accent-text)" style={{ flexShrink: 0 }} />
-            <div>
-              <div style={{ fontWeight: 700, fontSize: '13px', color: 'var(--accent-text)', marginBottom: '2px' }}>Next Best Action</div>
-              <div style={{ color: 'rgba(var(--fg),0.6)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                {active && nextStage ? (
-                  <>
-                    <span>Continue “{active.name || 'Untitled project'}” →</span>
-                    <nextStage.icon size={14} color="var(--accent-text)" />
-                    <span>{nextStage.label}</span>
-                  </>
-                ) : (
-                  'All projects complete! Start a new change initiative.'
-                )}
-              </div>
-            </div>
           </div>
         )}
 
