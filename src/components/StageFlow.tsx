@@ -66,6 +66,13 @@ const StageGateCtx = createContext<(showComplete: boolean) => void>(() => {})
  */
 export const ReadOnlyCtx = createContext(false)
 
+/**
+ * Lets StageFlow tell the Workspace when the guided intro screen is showing, so
+ * the Workspace can hide its (otherwise duplicate) stage title there — the big
+ * hero title on the intro carries it.
+ */
+export const StageScreenCtx = createContext<(onIntro: boolean) => void>(() => {})
+
 export function StageGateProvider({ onChange, children }: { onChange: (showComplete: boolean) => void; children: ReactNode }) {
   return <StageGateCtx.Provider value={onChange}>{children}</StageGateCtx.Provider>
 }
@@ -148,6 +155,7 @@ function ModeToggle() {
 export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlowProps) {
   const { mode } = useWizardMode()
   const setShowComplete = useContext(StageGateCtx)
+  const setOnIntro = useContext(StageScreenCtx)
   // -1 = intro screen, 0..steps.length-1 = questions, steps.length = review.
   const [step, setStep] = useState(-1)
   const topRef = useRef<HTMLDivElement>(null)
@@ -168,8 +176,12 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
   // reset, avoiding a one-frame flash of the button on the intro.
   useLayoutEffect(() => {
     setShowComplete(summaryMode || onReview)
-    return () => setShowComplete(true)
-  }, [summaryMode, onReview, setShowComplete])
+    setOnIntro(step < 0 && !summaryMode)
+    return () => {
+      setShowComplete(true)
+      setOnIntro(false)
+    }
+  }, [summaryMode, onReview, step, setShowComplete, setOnIntro])
 
   // Scroll each new screen to the top (skip the first render).
   useEffect(() => {

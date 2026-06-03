@@ -8,7 +8,7 @@ import { fetchFeedback } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
-import { StageGateProvider, ReadOnlyCtx } from '@/components/StageFlow'
+import { StageGateProvider, ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
 import { ProjectOnboarding } from '@/components/ProjectOnboarding'
 import { ShareModal } from '@/components/ShareModal'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
@@ -24,6 +24,9 @@ export function Workspace({ project }: { project: Project }) {
   // Whether to show the "Mark this step complete" button. The guided wizard hides
   // it until the review screen; non-wizard stages leave it on (default true).
   const [showComplete, setShowComplete] = useState(true)
+  // Whether the guided intro screen is showing, so we can hide the duplicate
+  // stage title in the header (the big hero title carries it there).
+  const [onIntro, setOnIntro] = useState(false)
   const p2 = pct(project)
   const stage = STAGES[state.stageIdx]
   const done = project.completedStages.includes(stage.id)
@@ -52,7 +55,9 @@ export function Workspace({ project }: { project: Project }) {
   if (prevStageKey.current !== stageKey) {
     prevStageKey.current = stageKey
     setShowComplete(true)
+    setOnIntro(false)
   }
+  const phaseLabel = PHASES.find((ph) => ph.id === stage.phase)?.label ?? ''
 
   // Show the welcome deck once per project, before the workspace itself.
   const [onboarding, setOnboarding] = useState(false)
@@ -242,16 +247,17 @@ export function Workspace({ project }: { project: Project }) {
         <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '22px' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
                   <stage.icon size={14} color="var(--accent-text)" />
-                  <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{stage.tag}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{phaseLabel}</span>
                 </div>
                 {stage.tier === 'advanced' && (
-                  <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
                 )}
               </div>
-              <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>
+              {/* The big hero title carries the name on the intro, so don't repeat it here. */}
+              {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>}
             </div>
             {done && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
@@ -271,9 +277,11 @@ export function Workspace({ project }: { project: Project }) {
               disabled fieldset makes every input read-only. */}
           <ReadOnlyCtx.Provider value={isViewer}>
             <fieldset disabled={isViewer} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
-              <StageGateProvider onChange={setShowComplete}>
-                {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
-              </StageGateProvider>
+              <StageScreenCtx.Provider value={setOnIntro}>
+                <StageGateProvider onChange={setShowComplete}>
+                  {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
+                </StageGateProvider>
+              </StageScreenCtx.Provider>
             </fieldset>
           </ReadOnlyCtx.Provider>
 
