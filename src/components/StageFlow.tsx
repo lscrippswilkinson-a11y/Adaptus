@@ -140,7 +140,7 @@ function ModeToggle() {
         Guided
       </button>
       <button type="button" style={seg(mode === 'summary')} onClick={() => setMode('summary')} aria-pressed={mode === 'summary'}>
-        Summary view
+        Summary
       </button>
     </div>
   )
