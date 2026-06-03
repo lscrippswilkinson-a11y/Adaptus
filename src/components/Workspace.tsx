@@ -117,9 +117,9 @@ export function Workspace({ project }: { project: Project }) {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>{project.name}</span>
-            <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>{p2}% of the core steps done</span>
+            <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.6)' }}>{p2}% of the essential steps done</span>
           </div>
-          <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', background: 'rgba(var(--fg),0.16)', borderRadius: '3px', overflow: 'hidden', border: '1px solid rgba(var(--fg),0.08)' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
           </div>
         </div>
