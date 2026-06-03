@@ -149,7 +149,11 @@ export function Dashboard() {
                 Adaptus walks you through rolling out a change from start to finish — no change-management experience required. Create your first project below.
               </p>
             </div>
-            {!narrow && <FlaskConical size={56} color="rgba(255,255,255,0.22)" strokeWidth={1} style={{ flexShrink: 0 }} />}
+            {!narrow && (
+              <div style={{ flexShrink: 0, width: '88px', height: '88px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <FlaskConical size={44} color="rgba(255,255,255,0.92)" strokeWidth={1.4} />
+              </div>
+            )}
           </div>
         )}
 
