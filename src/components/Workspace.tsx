@@ -165,22 +165,28 @@ export function Workspace({ project }: { project: Project }) {
                         className={'sb-btn' + (active ? ' active' : '')}
                         onClick={() => dispatch({ type: 'GO_TO_STAGE', stageIdx: i })}
                       >
+                        {/* Distinct states: done = filled check, current = ring
+                            with a dot, to-do = hollow ring. */}
                         <div
                           style={{
                             width: '20px',
                             height: '20px',
                             borderRadius: '50%',
                             flexShrink: 0,
+                            boxSizing: 'border-box',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            background: isDone ? '#22c55e' : active ? '#5B86A3' : 'rgba(var(--fg),0.08)',
-                            color: isDone || active ? 'var(--on-accent)' : 'rgba(var(--fg),0.3)',
+                            color: 'var(--on-accent)',
+                            background: isDone ? '#22c55e' : 'transparent',
+                            border: isDone ? '2px solid #22c55e' : active ? '2px solid #5B86A3' : '1.5px solid rgba(var(--fg),0.28)',
                           }}
                         >
-                          {isDone && <Check size={12} strokeWidth={3} />}
+                          {isDone ? (
+                            <Check size={12} strokeWidth={3} />
+                          ) : active ? (
+                            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#5B86A3' }} />
+                          ) : null}
                         </div>
                         <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {s.label}
