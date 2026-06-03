@@ -384,7 +384,7 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
       </div>
       <div style={{ marginBottom: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-          <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>Core progress</span>
+          <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>Progress</span>
           {complete ? (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: '#86efac' }}><Check size={12} strokeWidth={3} /> Complete</span>
           ) : (
@@ -402,8 +402,8 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
             Risk: {riskLabel(avg)}
           </div>
         )}
-        <div style={{ background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>
-          {coreDone}/{ESSENTIAL_COUNT} core steps
+        <div style={{ background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>
+          {coreDone} of {ESSENTIAL_COUNT} essential steps
         </div>
       </div>
     </div>
