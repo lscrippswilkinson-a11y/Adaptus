@@ -155,16 +155,24 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         </div>
       ))}
 
-      {/* Manual combine bar */}
-      {selected.size >= 2 && (
+      {/* Manual combine bar — appears on the first tick so the checkboxes
+          explain themselves. */}
+      {selected.size >= 1 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '10px', padding: '10px 14px', marginBottom: '10px' }}>
-          <span style={{ flex: 1, fontSize: '12.5px', color: 'var(--accent-text)', fontWeight: 600 }}>{selected.size} groups selected</span>
-          <button type="button" onClick={() => combine([...selected])} style={combineBtn}>Combine selected</button>
+          <span style={{ flex: 1, fontSize: '12.5px', color: 'var(--accent-text)', fontWeight: 600 }}>
+            {selected.size === 1 ? 'Tick another team to combine it with this one' : `${selected.size} teams selected`}
+          </span>
+          {selected.size >= 2 && <button type="button" onClick={() => combine([...selected])} style={combineBtn}>Combine selected</button>}
           <button type="button" onClick={() => setSelected(new Set())} style={{ ...combineBtn, background: 'transparent', color: 'rgba(var(--fg),0.5)', border: '1px solid rgba(var(--fg),0.15)' }}>Clear</button>
         </div>
       )}
 
       {/* Rows */}
+      {teams.length > 1 && selected.size === 0 && (
+        <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.45)', marginBottom: '8px' }}>
+          Tip: tick teams that are the same to combine duplicate names.
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {teams.map((t) => {
           const isOpen = expanded === t.key
