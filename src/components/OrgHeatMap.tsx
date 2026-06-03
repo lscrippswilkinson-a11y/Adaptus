@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronRight, Flame, GitMerge, RotateCcw, Users } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Flame, GitMerge, RotateCcw, Users } from 'lucide-react'
 import type { Project } from '@/types'
 import { buildHeatMap, looseKey, readinessBand, type HeatTeam, type LoadBand, type ReadinessBand } from '@/lib/heatmap'
 
@@ -16,8 +16,12 @@ const READY_COLOR: Record<ReadinessBand, string> = { Low: '#ef4444', Mixed: '#f5
 const ALARM = '#ef4444'
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
 
-/** A 180° SVG arc gauge with the value in the bowl. */
-function Gauge({ value, color, label, caption }: { value: number; color: string; label: string; caption: string }) {
+/**
+ * A 180° SVG arc gauge: value in the bowl, scale shown as "/ 100", and a
+ * directional cue so the user can tell at a glance whether high is good or bad
+ * (readiness: higher is better; load: lower is better).
+ */
+function Gauge({ value, color, label, band, goodWhenLow }: { value: number; color: string; label: string; band: string; goodWhenLow: boolean }) {
   const r = 58
   const cx = 72
   const cy = 72
@@ -25,15 +29,18 @@ function Gauge({ value, color, label, caption }: { value: number; color: string;
   const off = len * (1 - clamp(value, 0, 100) / 100)
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
   return (
-    <div style={{ textAlign: 'center', width: '144px', flexShrink: 0 }}>
-      <svg width="144" height="80" viewBox="0 0 144 80" role="img" aria-label={`${label}: ${Math.round(value)} of 100, ${caption}`}>
-        <path d={arc} fill="none" stroke="rgba(var(--fg),0.1)" strokeWidth={12} strokeLinecap="round" />
-        <path d={arc} fill="none" stroke={color} strokeWidth={12} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset 0.5s' }} />
-        <text x={cx} y={62} textAnchor="middle" style={{ fontSize: '26px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
-        <text x={cx} y={76} textAnchor="middle" style={{ fontSize: '9px', fill: 'rgba(var(--fg),0.4)' }}>/ 100</text>
+    <div style={{ textAlign: 'center', width: '150px', flexShrink: 0 }}>
+      <svg width="150" height="80" viewBox="0 0 150 80" role="img" aria-label={`${label}: ${Math.round(value)} out of 100, ${band}, ${goodWhenLow ? 'lower is better' : 'higher is better'}`}>
+        <path d={arc} transform="translate(3,0)" fill="none" stroke="rgba(var(--fg),0.1)" strokeWidth={12} strokeLinecap="round" />
+        <path d={arc} transform="translate(3,0)" fill="none" stroke={color} strokeWidth={12} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset 0.5s' }} />
+        <text x={cx + 3} y={62} textAnchor="middle" style={{ fontSize: '26px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
+        <text x={cx + 3} y={76} textAnchor="middle" style={{ fontSize: '9px', fill: 'rgba(var(--fg),0.4)' }}>/ 100</text>
       </svg>
       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginTop: '-4px' }}>{label}</div>
-      <div style={{ fontSize: '11px', fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{caption}</div>
+      <div style={{ fontSize: '11px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{band}</div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>
+        {goodWhenLow ? <ArrowDown size={10} /> : <ArrowUp size={10} />} {goodWhenLow ? 'lower is better' : 'higher is better'}
+      </div>
     </div>
   )
 }
@@ -120,8 +127,8 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
       {/* Gauges + KPI tiles */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', marginBottom: '22px', paddingBottom: '20px', borderBottom: '1px solid rgba(var(--fg),0.07)' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <Gauge value={summary.orgLoad} color={LOAD_COLOR[summary.orgBand]} label="Change load" caption={`${summary.orgBand} · lower is better`} />
-          <Gauge value={summary.avgReadiness} color={READY_COLOR[readinessBand(summary.avgReadiness)]} label="Avg readiness" caption={`${readinessBand(summary.avgReadiness)} · higher is better`} />
+          <Gauge value={summary.orgLoad} color={LOAD_COLOR[summary.orgBand]} label="Change load" band={summary.orgBand} goodWhenLow />
+          <Gauge value={summary.avgReadiness} color={READY_COLOR[readinessBand(summary.avgReadiness)]} label="Avg readiness" band={readinessBand(summary.avgReadiness)} goodWhenLow={false} />
         </div>
         <div style={{ flex: 1, minWidth: '260px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           <Stat value={summary.teamsImpacted} label="Teams impacted" />
