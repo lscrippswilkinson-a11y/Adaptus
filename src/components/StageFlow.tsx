@@ -275,7 +275,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
             <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--accent-text)', textTransform: 'uppercase' }}>
               {onReview ? 'Review' : hub ? `Step ${itemPos} of ${itemLen}` : `Step ${current + 1} of ${total}`}
             </span>
-            {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{steps[current].title}</span>}
+            {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)' }}>{steps[current].title}</span>}
           </div>
           <div style={{ height: '5px', background: 'rgba(var(--fg),0.08)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${progressPct}%`, borderRadius: '3px', transition: 'width 0.4s' }} />

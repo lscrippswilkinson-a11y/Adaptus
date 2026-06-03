@@ -151,7 +151,7 @@ export function Workspace({ project }: { project: Project }) {
               const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.35)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.6)' }}>
                     <span>{pi + 1}. {phase.label}</span>
                     <span style={{ color: '#5B86A3' }}>{doneCount}/{visible.length}</span>
                   </div>
@@ -188,14 +188,14 @@ export function Workspace({ project }: { project: Project }) {
                             <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#5B86A3' }} />
                           ) : null}
                         </div>
-                        <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.45)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.62)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {s.label}
                         </span>
                         {openByStage[s.id] > 0 && (
                           <span title={`${openByStage[s.id]} open feedback`} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', minWidth: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>{openByStage[s.id]}</span>
                         )}
                         {s.tier === 'advanced' && !openByStage[s.id] && (
-                          <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.3)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
+                          <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
                         )}
                       </button>
                     )
