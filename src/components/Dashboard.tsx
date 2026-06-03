@@ -180,7 +180,7 @@ export function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
             <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
             {total > 0 && (
-              <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)' }}>
                 {total} project{total === 1 ? '' : 's'} · {completed} complete
               </span>
             )}
@@ -396,7 +396,7 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
         </div>
       </div>
       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: 'auto' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: 'rgba(var(--fg),0.5)' }}><StageIcon size={12} /> {stageTag}</div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: 'rgba(var(--fg),0.62)' }}><StageIcon size={12} /> {stageTag}</div>
         {avg !== null && (
           <div style={{ background: `rgba(${riskRgb},0.1)`, border: `1px solid rgba(${riskRgb},0.25)`, borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: riskColor(avg) }}>
             Risk: {riskLabel(avg)}

@@ -40,11 +40,11 @@ function Gauge({ value, color, label, band, goodWhenLow }: { value: number; colo
         <path d={arc} transform="translate(3,0)" fill="none" stroke="rgba(var(--fg),0.1)" strokeWidth={12} strokeLinecap="round" />
         <path d={arc} transform="translate(3,0)" fill="none" stroke={color} strokeWidth={12} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset 0.5s' }} />
         <text x={cx + 3} y={62} textAnchor="middle" style={{ fontSize: '26px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
-        <text x={cx + 3} y={76} textAnchor="middle" style={{ fontSize: '9px', fill: 'rgba(var(--fg),0.4)' }}>/ 100</text>
+        <text x={cx + 3} y={76} textAnchor="middle" style={{ fontSize: '9px', fill: 'rgba(var(--fg),0.55)' }}>/ 100</text>
       </svg>
       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginTop: '-4px' }}>{label}</div>
       <div style={{ fontSize: '11px', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{band}</div>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: 'rgba(var(--fg),0.62)', marginTop: '1px' }}>
         {goodWhenLow ? <ArrowDown size={10} /> : <ArrowUp size={10} />} {goodWhenLow ? 'lower is better' : 'higher is better'}
       </div>
     </div>
@@ -56,7 +56,7 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
   return (
     <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '12px', padding: '14px 16px' }}>
       <div style={{ fontSize: '24px', fontWeight: 800, color: color ?? 'var(--text)', lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '6px' }}>{label}</div>
+      <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.62)', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '6px' }}>{label}</div>
     </div>
   )
 }
@@ -126,7 +126,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         <Flame size={17} color="#f59e0b" />
         <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Organization change heat map</span>
       </div>
-      <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', marginBottom: '18px', lineHeight: 1.5 }}>
+      <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)', marginBottom: '18px', lineHeight: 1.5 }}>
         Which teams are absorbing the most change across all your initiatives. Higher load = more concurrent change — watch for fatigue.
       </div>
 
@@ -189,7 +189,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
                       <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
                       {t.isAtRisk && <span style={{ flexShrink: 0, fontSize: '9.5px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: ALARM, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '5px', padding: '1px 6px' }}>At risk</span>}
                     </span>
-                    <span style={{ display: 'block', fontSize: '11px', color: 'rgba(var(--fg),0.5)', marginTop: '1px' }}>
+                    <span style={{ display: 'block', fontSize: '11px', color: 'rgba(var(--fg),0.62)', marginTop: '1px' }}>
                       {t.initiativeCount} initiative{t.initiativeCount === 1 ? '' : 's'}{t.peopleCount > 0 ? ` · ~${t.peopleCount} people` : ''}
                     </span>
                   </span>
