@@ -12,7 +12,7 @@ import {
 import type { Project, StageData, StageId } from '@/types'
 import { appReducer, type AppAction, type AppState } from '@/state/appReducer'
 import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
-import { createSeed } from '@/data/seed'
+import { createSeed, SAMPLE_NAME } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase, supabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
@@ -100,7 +100,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // localStorage — so the seed happens once across all devices and a later
       // deletion sticks. Skip the insert if the sample is already present (e.g.
       // from an earlier seed) so we never create a duplicate.
-      const SAMPLE_NAME = 'Salesforce CRM Rollout'
       if (user.user_metadata?.adaptus_seeded !== true) {
         try {
           if (!projects.some((p) => p.name === SAMPLE_NAME)) {

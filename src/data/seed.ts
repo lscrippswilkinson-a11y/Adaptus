@@ -33,10 +33,18 @@ export function emptyProject(): Project {
   }
 }
 
+/** Name of the auto-seeded demo project — also how we recognize it later. */
+export const SAMPLE_NAME = 'Salesforce CRM Rollout'
+
+/** True for the auto-seeded demo project (matched by name; renaming adopts it). */
+export function isSampleProject(p: Project): boolean {
+  return p.name === SAMPLE_NAME
+}
+
 /** Demo project shown on first run (ported from the artifact's SEED). */
 export function createSeed(): Project {
   const p = emptyProject()
-  p.name = 'Salesforce CRM Rollout'
+  p.name = SAMPLE_NAME
   p.type = 'Software / Technology Rollout'
   p.stageData.define = {
     statement: 'Replacing legacy CRM with Salesforce to unify pipeline visibility across Sales and CS.',

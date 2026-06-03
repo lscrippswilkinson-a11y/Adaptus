@@ -17,7 +17,7 @@ import {
 import { useApp } from '@/state/AppContext'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
-import { createSeed, emptyProject } from '@/data/seed'
+import { createSeed, emptyProject, isSampleProject } from '@/data/seed'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
@@ -111,7 +111,10 @@ export function Dashboard() {
     })
 
 
-  const active = state.projects.find((p) => !isComplete(p))
+  // "Pick up where you left off" points at the user's own work — never the
+  // auto-seeded sample. First-timers (whose only project is the sample) get a
+  // "start a new project" prompt in that slot instead.
+  const active = state.projects.find((p) => !isComplete(p) && !isSampleProject(p))
   const nextStage = active ? STAGES[active.currentStage] : null
 
   return (
@@ -157,8 +160,9 @@ export function Dashboard() {
           </div>
         )}
 
-        {/* Next Best Action — the guide-me card, promoted to the top. */}
-        {active && nextStage && (
+        {/* Top guide-me slot. Returning users: pick up where they left off.
+            First-timers (only the sample): a prompt to start their own. */}
+        {active && nextStage ? (
           <button
             type="button"
             onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: active.currentStage })}
@@ -178,7 +182,27 @@ export function Dashboard() {
               Continue <ArrowRight size={17} />
             </span>
           </button>
-        )}
+        ) : total > 0 ? (
+          <button
+            type="button"
+            onClick={() => setWizardOpen(true)}
+            style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={22} color="var(--accent-text)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>Ready to begin?</div>
+              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>Start your first change project</div>
+              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '2px' }}>
+                Explore the sample below, then map out your own change.
+              </div>
+            </div>
+            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
+              New project <ArrowRight size={17} />
+            </span>
+          </button>
+        ) : null}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
@@ -239,6 +263,7 @@ export function Dashboard() {
                   name={proj.name}
                   type={proj.type}
                   role={proj.role}
+                  isSample={isSampleProject(proj)}
                   p2={pct(proj)}
                   stageIcon={cs.icon}
                   stageTag={cs.tag}
@@ -306,6 +331,7 @@ interface ProjectCardProps {
   name: string
   type: string
   role?: Role
+  isSample?: boolean
   p2: number
   stageIcon: LucideIcon
   stageTag: string
@@ -332,7 +358,7 @@ const cardIconBtn: React.CSSProperties = {
   lineHeight: 1,
 }
 
-function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
+function ProjectCard({ name, type, role, isSample, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
   const [hover, setHover] = useState(false)
   // Mouse users: reveal the edit/delete icons on hover only (less clutter).
   // Touch users (no hover): keep them visible since there's nothing to hover.
@@ -370,7 +396,10 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
           line up across cards regardless of title length or completion state. */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.3, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', marginBottom: '4px', minHeight: '37px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name || 'Untitled project'}</div>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', marginBottom: '4px', minHeight: '37px' }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: '14px', fontWeight: 700, lineHeight: 1.3, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name || 'Untitled project'}</div>
+            {isSample && <span style={{ flexShrink: 0, marginTop: '1px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#fcd34d', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '6px', padding: '2px 7px' }}>Sample</span>}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(var(--fg),0.55)', minWidth: 0 }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type}</span>
             {shared && <span style={{ flexShrink: 0, textTransform: 'capitalize', color: 'var(--accent-text)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '1px 6px', fontWeight: 600 }}>Shared · {role}</span>}
