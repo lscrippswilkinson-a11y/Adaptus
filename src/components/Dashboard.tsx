@@ -357,20 +357,22 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
         transition: 'all 0.2s',
         transform: hover ? 'translateY(-2px)' : 'none',
         boxShadow: 'var(--box-shadow)',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', marginBottom: '3px' }}>{name || 'Untitled project'}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(var(--fg),0.55)' }}>
-            {type}
-            {shared && <span style={{ textTransform: 'capitalize', color: 'var(--accent-text)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '1px 6px', fontWeight: 600 }}>Shared · {role}</span>}
+      {/* Header: title region is a fixed 2-line height so subtitle/progress/tags
+          line up across cards regardless of title length or completion state. */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '14px', fontWeight: 700, lineHeight: 1.3, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', marginBottom: '4px', minHeight: '37px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name || 'Untitled project'}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(var(--fg),0.55)', minWidth: 0 }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type}</span>
+            {shared && <span style={{ flexShrink: 0, textTransform: 'capitalize', color: 'var(--accent-text)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '1px 6px', fontWeight: 600 }}>Shared · {role}</span>}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          {complete && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '4px 10px', fontSize: '11px', color: '#86efac', fontWeight: 600 }}><Check size={12} strokeWidth={3} /> Complete</div>
-          )}
           {/* Revealed on hover for mouse users; always shown on touch (no hover). */}
           {canEdit && (
             <button type="button" style={{ ...cardIconBtn, opacity: actionsShown ? 1 : 0, pointerEvents: actionsShown ? 'auto' : 'none', transition: 'opacity 0.15s' }} title="Edit project details" aria-label="Edit project details" onClick={stop(onEdit)}><Pencil size={13} /></button>
@@ -381,15 +383,19 @@ function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg
         </div>
       </div>
       <div style={{ marginBottom: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
           <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>Core progress</span>
-          <span style={{ fontSize: '11px', color: 'var(--accent-text)', fontWeight: 600 }}>{p2}%</span>
+          {complete ? (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 700, color: '#86efac' }}><Check size={12} strokeWidth={3} /> Complete</span>
+          ) : (
+            <span style={{ fontSize: '11px', color: 'var(--accent-text)', fontWeight: 600 }}>{p2}%</span>
+          )}
         </div>
         <div style={{ height: '4px', background: 'rgba(var(--fg),0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${p2}%`, background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', borderRadius: '2px' }} />
+          <div style={{ height: '100%', width: `${complete ? 100 : p2}%`, background: complete ? '#22c55e' : 'linear-gradient(90deg,#5B86A3,#8FB3C7)', borderRadius: '2px' }} />
         </div>
       </div>
-      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: 'auto' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', background: 'rgba(var(--fg),0.04)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: 'rgba(var(--fg),0.5)' }}><StageIcon size={12} /> {stageTag}</div>
         {avg !== null && (
           <div style={{ background: `rgba(${riskRgb},0.1)`, border: `1px solid rgba(${riskRgb},0.25)`, borderRadius: '8px', padding: '4px 9px', fontSize: '11px', color: riskColor(avg) }}>
