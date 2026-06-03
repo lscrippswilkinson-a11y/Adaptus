@@ -7,6 +7,8 @@ interface AuthValue {
   user: User | null
   loading: boolean
   signInWithGoogle: () => Promise<void>
+  /** Passwordless sign-in: emails a magic link to any address. */
+  sendMagicLink: (email: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
 
@@ -37,12 +39,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) console.error('[adaptus] Google sign-in failed', error)
   }
 
+  const sendMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: window.location.origin },
+    })
+    if (error) {
+      console.error('[adaptus] magic-link sign-in failed', error)
+      return { error: error.message }
+    }
+    return { error: null }
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
   }
 
   return (
-    <AuthCtx.Provider value={{ session, user: session?.user ?? null, loading, signInWithGoogle, signOut }}>
+    <AuthCtx.Provider value={{ session, user: session?.user ?? null, loading, signInWithGoogle, sendMagicLink, signOut }}>
       {children}
     </AuthCtx.Provider>
   )

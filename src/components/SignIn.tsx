@@ -1,9 +1,29 @@
-import { FlaskConical } from 'lucide-react'
+import { useState } from 'react'
+import { FlaskConical, Mail, MailCheck } from 'lucide-react'
 import { useAuth } from '@/state/AuthContext'
 
 /** Full-screen gate shown when Supabase is configured but no one is signed in. */
 export function SignIn() {
-  const { signInWithGoogle } = useAuth()
+  const { signInWithGoogle, sendMagicLink } = useAuth()
+  const [email, setEmail] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sentTo, setSentTo] = useState('')
+  const [error, setError] = useState('')
+
+  const send = async () => {
+    const e = email.trim()
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
+      setError('Enter a valid email address.')
+      return
+    }
+    setSending(true)
+    setError('')
+    const { error } = await sendMagicLink(e)
+    setSending(false)
+    if (error) setError(error)
+    else setSentTo(e)
+  }
+
   return (
     <div className="cq-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div
@@ -23,19 +43,73 @@ export function SignIn() {
           </div>
         </div>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: '#fff' }}>Adaptus</h1>
-        <p style={{ margin: '8px 0 28px', fontSize: '14px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
-          Sign in to access your change projects and collaborate with your team.
-        </p>
-        <button
-          type="button"
-          onClick={signInWithGoogle}
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', background: '#fff', color: '#2c4a60', border: 'none', borderRadius: '10px', padding: '13px 20px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
-        >
-          <GoogleMark /> Continue with Google
-        </button>
+
+        {sentTo ? (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 14px' }}>
+              <MailCheck size={40} color="#86efac" />
+            </div>
+            <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>Check your email</p>
+            <p style={{ margin: '0 0 24px', fontSize: '13.5px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
+              We sent a sign-in link to <strong style={{ color: '#fff' }}>{sentTo}</strong>. Click it to get in — no password needed.
+            </p>
+            <button type="button" onClick={() => { setSentTo(''); setEmail('') }} style={textBtn}>Use a different email</button>
+          </>
+        ) : (
+          <>
+            <p style={{ margin: '8px 0 26px', fontSize: '14px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
+              Sign in to access your change projects and collaborate with your team.
+            </p>
+            <button
+              type="button"
+              onClick={signInWithGoogle}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', background: '#fff', color: '#2c4a60', border: 'none', borderRadius: '10px', padding: '13px 20px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+            >
+              <GoogleMark /> Continue with Google
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>or</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+            </div>
+
+            <input
+              type="email"
+              value={email}
+              placeholder="you@work.com"
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && send()}
+              style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px', padding: '12px 14px', color: '#fff', fontSize: '14px', fontFamily: 'inherit', outline: 'none', marginBottom: '10px' }}
+            />
+            <button
+              type="button"
+              onClick={send}
+              disabled={sending}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', background: 'rgba(255,255,255,0.14)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px', padding: '12px 20px', fontWeight: 700, fontSize: '14px', cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.6 : 1, fontFamily: 'inherit' }}
+            >
+              <Mail size={17} /> {sending ? 'Sending…' : 'Email me a sign-in link'}
+            </button>
+            {error && <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#fca5a5' }}>{error}</div>}
+            <p style={{ margin: '18px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
+              Works with any email — Google not required.
+            </p>
+          </>
+        )}
       </div>
     </div>
   )
+}
+
+const textBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'rgba(255,255,255,0.75)',
+  fontSize: '13px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  textDecoration: 'underline',
 }
 
 function GoogleMark() {
