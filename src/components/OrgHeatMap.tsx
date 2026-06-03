@@ -1,27 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Flame, GitMerge, RotateCcw, Users } from 'lucide-react'
-import type { Impact, Project, Readiness } from '@/types'
+import type { Project } from '@/types'
+import { buildHeatMap, looseKey, readinessBand, type HeatTeam, type LoadBand, type ReadinessBand } from '@/lib/heatmap'
 
 /**
- * Organization-wide change heat map. Aggregates the impacted groups from every
- * project to show which teams are absorbing the most change across all
- * initiatives — the "change load" that signals fatigue/risk. Because the same
- * team is often typed slightly differently across projects ("Sales" vs "Sales
- * Team"), users can combine similar names for cleaner reporting; the mapping is
- * remembered locally.
+ * Organization-wide change heat map. All values come from `buildHeatMap` (one
+ * source of truth on one absolute scale), so the gauges, stat cards and team
+ * rows always agree. Similar group names can be combined for cleaner reporting;
+ * the mapping is remembered locally.
  */
 
 const ALIAS_KEY = 'adaptus.groupAliases'
-const IMPACT_W: Record<Impact, number> = { High: 3, Medium: 2, Low: 1 }
-const READY_RANK: Record<Readiness, number> = { Low: 0, Medium: 1, High: 2 }
-const READY_LABEL = ['Low', 'Medium', 'High']
-const READY_COLOR = ['#ef4444', '#f59e0b', '#22c55e']
-
-const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ')
-const loose = (s: string) => norm(s).replace(/[^a-z0-9]/g, '').replace(/(teams?|departments?|depts?|groups?|divisions?|orgs?)$/, '')
-const heatColor = (ratio: number) => (ratio >= 0.66 ? '#ef4444' : ratio >= 0.33 ? '#f59e0b' : '#22c55e')
+const LOAD_COLOR: Record<LoadBand, string> = { Light: '#22c55e', Moderate: '#f59e0b', Heavy: '#ef4444' }
+const READY_COLOR: Record<ReadinessBand, string> = { Low: '#ef4444', Mixed: '#f59e0b', Strong: '#22c55e' }
+const ALARM = '#ef4444'
 const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n))
-const loadBand = (r: number) => (r >= 0.66 ? 'Heavy' : r >= 0.33 ? 'Moderate' : 'Light')
 
 /** A 180° SVG arc gauge with the value in the bowl. */
 function Gauge({ value, color, label, caption }: { value: number; color: string; label: string; caption: string }) {
@@ -33,10 +26,11 @@ function Gauge({ value, color, label, caption }: { value: number; color: string;
   const arc = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
   return (
     <div style={{ textAlign: 'center', width: '144px', flexShrink: 0 }}>
-      <svg width="144" height="80" viewBox="0 0 144 80">
+      <svg width="144" height="80" viewBox="0 0 144 80" role="img" aria-label={`${label}: ${Math.round(value)} of 100, ${caption}`}>
         <path d={arc} fill="none" stroke="rgba(var(--fg),0.1)" strokeWidth={12} strokeLinecap="round" />
         <path d={arc} fill="none" stroke={color} strokeWidth={12} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={off} style={{ transition: 'stroke-dashoffset 0.5s' }} />
-        <text x={cx} y={66} textAnchor="middle" style={{ fontSize: '28px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
+        <text x={cx} y={62} textAnchor="middle" style={{ fontSize: '26px', fontWeight: 800, fill: 'var(--text)' }}>{Math.round(value)}</text>
+        <text x={cx} y={76} textAnchor="middle" style={{ fontSize: '9px', fill: 'rgba(var(--fg),0.4)' }}>/ 100</text>
       </svg>
       <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginTop: '-4px' }}>{label}</div>
       <div style={{ fontSize: '11px', fontWeight: 600, color, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{caption}</div>
@@ -52,18 +46,6 @@ function Stat({ value, label, color }: { value: string | number; label: string; 
       <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.45)', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '6px' }}>{label}</div>
     </div>
   )
-}
-
-const READY_VAL: Record<Readiness, number> = { Low: 15, Medium: 55, High: 95 }
-
-interface GroupAgg {
-  key: string
-  display: string
-  initiatives: string[]
-  people: number
-  load: number
-  readyWorst: number
-  rows: { project: string; impact: Impact; readiness: Readiness; people: number }[]
 }
 
 export function OrgHeatMap({ projects }: { projects: Project[] }) {
@@ -85,95 +67,24 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
     }
   }, [aliases])
 
-  const resolve = useMemo(() => {
-    return (n: string) => {
-      let cur = n
-      const seen = new Set<string>()
-      while (aliases[cur] && !seen.has(cur)) {
-        seen.add(cur)
-        cur = aliases[cur]
-      }
-      return cur
-    }
-  }, [aliases])
+  const { teams, summary } = useMemo(() => buildHeatMap(projects, aliases), [projects, aliases])
 
-  const groups = useMemo(() => {
-    const map = new Map<string, GroupAgg & { rawCounts: Record<string, number> }>()
-    for (const p of projects) {
-      const pname = p.name || 'Untitled project'
-      for (const g of p.stageData.groups.groups) {
-        const name = g.name.trim()
-        if (!name) continue
-        const key = resolve(norm(name))
-        let e = map.get(key)
-        if (!e) {
-          e = { key, display: name, initiatives: [], people: 0, load: 0, readyWorst: 2, rows: [], rawCounts: {} }
-          map.set(key, e)
-        }
-        if (!e.initiatives.includes(pname)) e.initiatives.push(pname)
-        const ppl = parseInt(String(g.size).replace(/[^0-9]/g, ''), 10) || 0
-        e.people += ppl
-        e.load += IMPACT_W[g.impact] ?? 2
-        e.readyWorst = Math.min(e.readyWorst, READY_RANK[g.readiness] ?? 1)
-        e.rawCounts[name] = (e.rawCounts[name] || 0) + 1
-        e.rows.push({ project: pname, impact: g.impact, readiness: g.readiness, people: ppl })
-      }
-    }
-    const list = [...map.values()].map((e) => {
-      e.display = Object.entries(e.rawCounts).sort((a, b) => b[1] - a[1])[0][0]
-      return e as GroupAgg
-    })
-    return list.sort((a, b) => b.load - a.load || b.initiatives.length - a.initiatives.length)
-  }, [projects, resolve])
-
-  const maxLoad = Math.max(1, ...groups.map((g) => g.load))
-
-  // Org-level metrics for the gauges + KPI tiles.
-  const metrics = useMemo(() => {
-    const initiatives = new Set<string>()
-    let people = 0
-    let loadSum = 0
-    let rSum = 0
-    let rN = 0
-    let atRisk = 0
-    for (const g of groups) {
-      g.initiatives.forEach((i) => initiatives.add(i))
-      people += g.people
-      loadSum += g.load
-      for (const row of g.rows) {
-        rSum += READY_VAL[row.readiness]
-        rN += 1
-      }
-      if (g.readyWorst === 0 && g.load / maxLoad >= 0.5) atRisk += 1
-    }
-    const loadIndex = clamp(Math.round((loadSum / groups.length / 9) * 100), 4, 100)
-    const readinessIndex = rN ? Math.round(rSum / rN) : 0
-    return { teams: groups.length, initiatives: initiatives.size, people, atRisk, loadIndex, readinessIndex }
-  }, [groups, maxLoad])
-
-  const loadColor = metrics.loadIndex >= 67 ? '#ef4444' : metrics.loadIndex >= 34 ? '#f59e0b' : '#22c55e'
-  const loadCaption = metrics.loadIndex >= 67 ? 'Heavy' : metrics.loadIndex >= 34 ? 'Moderate' : 'Light'
-  const readyColor = metrics.readinessIndex >= 67 ? '#22c55e' : metrics.readinessIndex >= 34 ? '#f59e0b' : '#ef4444'
-  const readyCaption = metrics.readinessIndex >= 67 ? 'Strong' : metrics.readinessIndex >= 34 ? 'Mixed' : 'Low'
-  const fmtPeople = metrics.people >= 1000 ? `${(metrics.people / 1000).toFixed(1)}k` : String(metrics.people)
-
-  // Suggested combines: distinct groups that collapse to the same loose key.
+  // Suggested combines: distinct teams that collapse to the same loose key.
   const suggestions = useMemo(() => {
-    const byLoose = new Map<string, GroupAgg[]>()
-    for (const g of groups) {
-      const lk = loose(g.display)
+    const byLoose = new Map<string, HeatTeam[]>()
+    for (const t of teams) {
+      const lk = looseKey(t.name)
       if (!lk) continue
       const arr = byLoose.get(lk) ?? []
-      arr.push(g)
+      arr.push(t)
       byLoose.set(lk, arr)
     }
     return [...byLoose.values()].filter((arr) => arr.length > 1).slice(0, 3)
-  }, [groups])
+  }, [teams])
 
   const combine = (keys: string[]) => {
     if (keys.length < 2) return
-    // Merge into the highest-load group (first, since `groups` is load-sorted).
-    const ordered = groups.filter((g) => keys.includes(g.key)).sort((a, b) => b.load - a.load)
+    const ordered = teams.filter((t) => keys.includes(t.key)).sort((a, b) => b.loadScore - a.loadScore)
     const target = ordered[0].key
     setAliases((prev) => {
       const next = { ...prev }
@@ -191,9 +102,10 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
       return next
     })
 
-  if (groups.length === 0) return null
+  if (teams.length === 0) return null
 
   const hasCombines = Object.keys(aliases).length > 0
+  const fmtPeople = summary.peopleAffected >= 1000 ? `${(summary.peopleAffected / 1000).toFixed(1)}k` : String(summary.peopleAffected)
 
   return (
     <div className="cq-card" style={{ marginTop: '18px' }}>
@@ -208,14 +120,14 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
       {/* Gauges + KPI tiles */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', marginBottom: '22px', paddingBottom: '20px', borderBottom: '1px solid rgba(var(--fg),0.07)' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
-          <Gauge value={metrics.loadIndex} color={loadColor} label="Change load" caption={loadCaption} />
-          <Gauge value={metrics.readinessIndex} color={readyColor} label="Avg readiness" caption={readyCaption} />
+          <Gauge value={summary.orgLoad} color={LOAD_COLOR[summary.orgBand]} label="Change load" caption={`${summary.orgBand} · lower is better`} />
+          <Gauge value={summary.avgReadiness} color={READY_COLOR[readinessBand(summary.avgReadiness)]} label="Avg readiness" caption={`${readinessBand(summary.avgReadiness)} · higher is better`} />
         </div>
         <div style={{ flex: 1, minWidth: '260px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          <Stat value={metrics.teams} label="Teams impacted" />
-          <Stat value={metrics.initiatives} label="Active initiatives" />
+          <Stat value={summary.teamsImpacted} label="Teams impacted" />
+          <Stat value={summary.initiatives} label="Active initiatives" />
           <Stat value={`~${fmtPeople}`} label="People affected" />
-          <Stat value={metrics.atRisk} label="Teams at risk" color={metrics.atRisk > 0 ? '#ef4444' : undefined} />
+          <Stat value={summary.teamsAtRisk} label="Teams at risk" color={summary.teamsAtRisk > 0 ? ALARM : undefined} />
         </div>
       </div>
 
@@ -224,9 +136,9 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.2)', borderRadius: '10px', padding: '10px 14px', marginBottom: '10px' }}>
           <GitMerge size={15} color="var(--accent-text)" style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, fontSize: '12.5px', color: 'rgba(var(--fg),0.7)', lineHeight: 1.5 }}>
-            These look like the same team: {cluster.map((g) => `“${g.display}”`).join(', ')}
+            These look like the same team: {cluster.map((t) => `“${t.name}”`).join(', ')}
           </span>
-          <button type="button" onClick={() => combine(cluster.map((g) => g.key))} style={combineBtn}>Combine</button>
+          <button type="button" onClick={() => combine(cluster.map((t) => t.key))} style={combineBtn}>Combine</button>
         </div>
       ))}
 
@@ -241,40 +153,43 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
 
       {/* Rows */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {groups.map((g) => {
-          const ratio = g.load / maxLoad
-          const isOpen = expanded === g.key
-          const isSel = selected.has(g.key)
+        {teams.map((t) => {
+          const isOpen = expanded === t.key
+          const isSel = selected.has(t.key)
+          const borderColor = isSel ? 'rgba(91,134,163,0.45)' : t.isAtRisk ? 'rgba(239,68,68,0.4)' : 'rgba(var(--fg),0.07)'
           return (
-            <div key={g.key} style={{ border: `1px solid ${isSel ? 'rgba(91,134,163,0.45)' : 'rgba(var(--fg),0.07)'}`, borderRadius: '10px', background: 'rgba(var(--fg),0.02)', overflow: 'hidden' }}>
+            <div key={t.key} style={{ border: `1px solid ${borderColor}`, borderLeft: t.isAtRisk ? `3px solid ${ALARM}` : `1px solid ${borderColor}`, borderRadius: '10px', background: 'rgba(var(--fg),0.02)', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px' }}>
-                <input type="checkbox" checked={isSel} onChange={() => toggleSelect(g.key)} aria-label={`Select ${g.display}`} style={{ flexShrink: 0, cursor: 'pointer', accentColor: '#5B86A3' }} />
-                <button type="button" onClick={() => setExpanded(isOpen ? null : g.key)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
+                <input type="checkbox" checked={isSel} onChange={() => toggleSelect(t.key)} aria-label={`Select ${t.name}`} style={{ flexShrink: 0, cursor: 'pointer', accentColor: '#5B86A3' }} />
+                <button type="button" onClick={() => setExpanded(isOpen ? null : t.key)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '12px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
                   {isOpen ? <ChevronDown size={14} color="rgba(var(--fg),0.4)" /> : <ChevronRight size={14} color="rgba(var(--fg),0.4)" />}
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: '13.5px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.display}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                      {t.isAtRisk && <span style={{ flexShrink: 0, fontSize: '9.5px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: ALARM, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '5px', padding: '1px 6px' }}>At risk</span>}
+                    </span>
                     <span style={{ display: 'block', fontSize: '11px', color: 'rgba(var(--fg),0.5)', marginTop: '1px' }}>
-                      {g.initiatives.length} initiative{g.initiatives.length === 1 ? '' : 's'}{g.people > 0 ? ` · ~${g.people} people` : ''}
+                      {t.initiativeCount} initiative{t.initiativeCount === 1 ? '' : 's'}{t.peopleCount > 0 ? ` · ~${t.peopleCount} people` : ''}
                     </span>
                   </span>
                 </button>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: READY_COLOR[g.readyWorst], flexShrink: 0 }}>{READY_LABEL[g.readyWorst]} readiness</span>
-                {/* Heat meter */}
+                <span style={{ fontSize: '11px', fontWeight: 600, color: READY_COLOR[t.readinessBand], flexShrink: 0 }}>{t.readinessBand} readiness</span>
+                {/* Heat meter (absolute 0–100) */}
                 <div style={{ width: '110px', flexShrink: 0 }}>
                   <div style={{ height: '8px', background: 'rgba(var(--fg),0.08)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.round(ratio * 100)}%`, background: heatColor(ratio), borderRadius: '4px', transition: 'width 0.4s' }} />
+                    <div style={{ height: '100%', width: `${t.loadScore}%`, background: LOAD_COLOR[t.band], borderRadius: '4px', transition: 'width 0.4s' }} />
                   </div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: heatColor(ratio), textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '3px', textAlign: 'right' }}>{loadBand(ratio)} load</div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: LOAD_COLOR[t.band], textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '3px', textAlign: 'right' }}>{t.band} load</div>
                 </div>
               </div>
               {isOpen && (
                 <div style={{ borderTop: '1px solid rgba(var(--fg),0.06)', padding: '8px 12px 10px 38px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                  {g.rows.map((r, i) => (
+                  {t.rows.map((r, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: 'rgba(var(--fg),0.65)' }}>
                       <Users size={12} style={{ flexShrink: 0, opacity: 0.6 }} />
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.project}</span>
                       <span style={{ flexShrink: 0, color: r.impact === 'High' ? '#fca5a5' : r.impact === 'Medium' ? '#fcd34d' : 'rgba(var(--fg),0.5)' }}>{r.impact} impact</span>
-                      <span style={{ flexShrink: 0, color: READY_COLOR[READY_RANK[r.readiness]] }}>{r.readiness} ready</span>
+                      <span style={{ flexShrink: 0, color: 'rgba(var(--fg),0.5)' }}>{r.readiness} ready</span>
                     </div>
                   ))}
                 </div>
