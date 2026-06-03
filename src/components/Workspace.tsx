@@ -204,19 +204,20 @@ export function Workspace({ project }: { project: Project }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '7px',
-                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'rgba(91,134,163,0.16)',
-                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.45)'}`,
-                borderRadius: '9px',
-                padding: '11px 12px',
+                gap: '8px',
+                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'linear-gradient(135deg, rgba(91,134,163,0.28), rgba(91,134,163,0.18))',
+                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.6)'}`,
+                borderRadius: '10px',
+                padding: showAdvanced ? '11px 12px' : '13px 14px',
                 color: showAdvanced ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
-                fontSize: '12.5px',
+                fontSize: showAdvanced ? '12.5px' : '13.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
+                boxShadow: showAdvanced ? 'none' : '0 3px 14px rgba(91,134,163,0.22)',
               }}
             >
-              <Sparkles size={15} />
+              <Sparkles size={showAdvanced ? 15 : 17} />
               {showAdvanced ? 'Hide advanced steps' : `Show advanced steps (${advancedCount})`}
             </button>
             <div
