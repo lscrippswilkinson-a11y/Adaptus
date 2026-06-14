@@ -38,7 +38,24 @@ export function DefineStage() {
           example={f.scope.example}
           onUseExample={() => update({ scope: f.scope.example })}
         >
-          <TextInput value={data.scope} onCommit={(v) => update({ scope: v })} placeholder="e.g., All North America operations, ~320 employees" />
+          <TextInput value={data.scope} onCommit={(v) => update({ scope: v })} placeholder="e.g., All North America operations — field, support, and dispatch teams" />
+        </FieldCoach>
+      ),
+    },
+    {
+      id: 'headcount',
+      title: 'How many people',
+      isFilled: !!data.headcount.trim(),
+      summary: data.headcount,
+      emptyLabel: 'Not answered yet',
+      node: (
+        <FieldCoach
+          label={f.headcount.label}
+          why={f.headcount.why}
+          example={f.headcount.example}
+          onUseExample={() => update({ headcount: f.headcount.example })}
+        >
+          <TextInput value={data.headcount} onCommit={(v) => update({ headcount: v })} placeholder="e.g., ~320 people" />
         </FieldCoach>
       ),
     },
@@ -78,5 +95,5 @@ export function DefineStage() {
     },
   ]
 
-  return <StageFlow stageId="define" icon={coaching.define.icon} blurb={coaching.define.intro} steps={steps} />
+  return <StageFlow stageId="define" icon={coaching.define.icon} blurb={coaching.define.intro} steps={steps} guided={false} guidance={false} />
 }

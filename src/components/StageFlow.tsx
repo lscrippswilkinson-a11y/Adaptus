@@ -3,7 +3,7 @@ import { Check, ChevronLeft, ChevronRight, Pencil } from 'lucide-react'
 import type { StageId } from '@/types'
 import { STAGES } from '@/data/stages'
 import { useWizardMode } from '@/state/WizardModeContext'
-import { FieldCoachVariant, StageIntro } from '@/components/ui'
+import { FieldCoachVariant, FlatContainers, StageIntro } from '@/components/ui'
 import { TipBox } from '@/components/TipBox'
 
 export interface WizardStep {
@@ -41,6 +41,18 @@ export interface StageFlowProps {
   /** Extra summary-only chrome (e.g. a stage-level InsightCallout). */
   extra?: ReactNode
   steps: WizardStep[]
+  /**
+   * Whether the guided (one-screen-at-a-time) flow is offered. Defaults to true.
+   * Set false for stages too simple to warrant a guide: they always render the
+   * flat all-at-once layout and the Guided/Summary toggle is hidden.
+   */
+  guided?: boolean
+  /**
+   * Whether the instructional chrome — the stage intro blurb and the "why this
+   * matters" TipBox — is shown. Defaults to true. Set false for stages plain
+   * enough that the field labels speak for themselves (death to instruction).
+   */
+  guidance?: boolean
   /**
    * Hub mode (list stages): when provided, the guided flow becomes
    * hub-and-spoke. The "review" screen renders this hub — a summary of all
@@ -152,7 +164,7 @@ function ModeToggle() {
  * full-page layout). The step index is local state, so it resets to the intro
  * screen whenever the stage/project remounts.
  */
-export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlowProps) {
+export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, guidance = true, hub }: StageFlowProps) {
   const { mode } = useWizardMode()
   const setShowComplete = useContext(StageGateCtx)
   const setOnIntro = useContext(StageScreenCtx)
@@ -170,7 +182,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
   // Hub stages ignore the summary toggle — the hub IS their overview. But a
   // read-only viewer always gets the flat summary (all fields, no navigation).
   const readOnly = useContext(ReadOnlyCtx)
-  const summaryMode = readOnly || (mode === 'summary' && !hub)
+  const summaryMode = readOnly || !guided || (mode === 'summary' && !hub)
 
   // The complete button belongs on the review/hub screen, or the summary view —
   // never on the intro card or a question screen. A layout effect (not a plain
@@ -202,7 +214,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
 
   const header = (
     <div ref={topRef} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: hub ? 0 : '14px' }}>
-      {!hub && <ModeToggle />}
+      {!hub && guided && <ModeToggle />}
     </div>
   )
 
@@ -210,12 +222,14 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
     return (
       <div>
         {header}
-        <StageIntro icon={icon}>{blurb}</StageIntro>
-        <TipBox stageId={stageId} />
+        {guidance && <StageIntro icon={icon}>{blurb}</StageIntro>}
+        {guidance && <TipBox stageId={stageId} />}
         {extra}
-        {steps.map((s) => (
-          <div key={s.id}>{s.node}</div>
-        ))}
+        <FlatContainers>
+          {steps.map((s) => (
+            <div key={s.id}>{s.node}</div>
+          ))}
+        </FlatContainers>
       </div>
     )
   }
@@ -303,7 +317,9 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, hub }: StageFlow
               <FieldCoachVariant variant="hero">{steps[current].node}</FieldCoachVariant>
             </StageNavCtx.Provider>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Sticky so Back/Next stay reachable on tall question screens without
+              scrolling; on short screens it just sits inline at the content end. */}
+          <div style={{ position: 'sticky', bottom: 0, zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0 14px', background: 'var(--bg-base)' }}>
             <button type="button" style={ghostBtn} onClick={goPrev}>
               <ChevronLeft size={16} /> {backIsHub ? 'Back to list' : 'Back'}
             </button>
