@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
-import { useAuth } from '@/state/AuthContext'
 import { hasSupabase } from '@/lib/supabase'
 import { fetchFeedback } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
@@ -11,7 +10,6 @@ import { STAGE_COMPONENTS } from '@/components/stages'
 import { StageGateProvider, ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
 import { ShareModal } from '@/components/ShareModal'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
-import { FeedbackPanel } from '@/components/FeedbackPanel'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 
@@ -54,16 +52,13 @@ export function Workspace({ project }: { project: Project }) {
     setShowComplete(true)
     setOnIntro(false)
   }
-  const phaseLabel = PHASES.find((ph) => ph.id === stage.phase)?.label ?? ''
 
   const [sharing, setSharing] = useState(false)
   const [collab, setCollab] = useState(false)
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'
 
-  // Per-section review feedback (cloud only).
-  const { session } = useAuth()
-  const currentUserId = session?.user.id ?? ''
+  // Per-section review feedback (cloud only) — kept to power the sidebar open-feedback counts.
   const [feedback, setFeedback] = useState<FeedbackItem[]>([])
   const loadFeedback = () => {
     if (!hasSupabase) return
@@ -81,7 +76,6 @@ export function Workspace({ project }: { project: Project }) {
     for (const f of feedback) if (!f.resolved) m[f.stageId] = (m[f.stageId] ?? 0) + 1
     return m
   }, [feedback])
-  const stageFeedback = feedback.filter((f) => f.stageId === stage.id)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'transparent' }}>
@@ -234,17 +228,11 @@ export function Workspace({ project }: { project: Project }) {
         <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '22px' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
-                {stage.id !== 'define' && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
-                    <stage.icon size={14} color="var(--accent-text)" />
-                    <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{phaseLabel}</span>
-                  </div>
-                )}
-                {stage.tier === 'advanced' && (
+              {stage.tier === 'advanced' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
                   <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
-                )}
-              </div>
+                </div>
+              )}
               {/* The big hero title carries the name on the intro, so don't repeat it here. */}
               {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>}
             </div>
@@ -294,17 +282,6 @@ export function Workspace({ project }: { project: Project }) {
             </fieldset>
           </ReadOnlyCtx.Provider>
 
-          {hasSupabase && currentUserId && (
-            <FeedbackPanel
-              projectId={project.id}
-              stageId={stage.id}
-              stageLabel={stage.label}
-              items={stageFeedback}
-              currentUserId={currentUserId}
-              isOwner={isOwner}
-              onChanged={loadFeedback}
-            />
-          )}
         </div>
       </div>
 
