@@ -1,5 +1,5 @@
 import { useStageEditor } from '@/state/AppContext'
-import { FieldCoach, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, TextArea } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 
@@ -22,40 +22,6 @@ export function DefineStage() {
           onUseExample={() => update({ statement: f.statement.example })}
         >
           <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder="e.g., We’re switching from X to Y, and people will now do Z." rows={3} />
-        </FieldCoach>
-      ),
-    },
-    {
-      id: 'scope',
-      title: 'Who it affects',
-      isFilled: !!data.scope.trim(),
-      summary: data.scope,
-      emptyLabel: 'Not answered yet',
-      node: (
-        <FieldCoach
-          label={f.scope.label}
-          why={f.scope.why}
-          example={f.scope.example}
-          onUseExample={() => update({ scope: f.scope.example })}
-        >
-          <TextInput value={data.scope} onCommit={(v) => update({ scope: v })} placeholder="e.g., All North America operations — field, support, and dispatch teams" />
-        </FieldCoach>
-      ),
-    },
-    {
-      id: 'headcount',
-      title: 'How many people',
-      isFilled: !!data.headcount.trim(),
-      summary: data.headcount,
-      emptyLabel: 'Not answered yet',
-      node: (
-        <FieldCoach
-          label={f.headcount.label}
-          why={f.headcount.why}
-          example={f.headcount.example}
-          onUseExample={() => update({ headcount: f.headcount.example })}
-        >
-          <TextInput value={data.headcount} onCommit={(v) => update({ headcount: v })} placeholder="e.g., ~320 people" />
         </FieldCoach>
       ),
     },
