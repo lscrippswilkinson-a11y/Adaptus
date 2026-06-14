@@ -9,14 +9,11 @@ import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
 import { StageGateProvider, ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
-import { ProjectOnboarding } from '@/components/ProjectOnboarding'
 import { ShareModal } from '@/components/ShareModal'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
 import { FeedbackPanel } from '@/components/FeedbackPanel'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
-/** Per-project flag: has the user already clicked through the welcome deck? */
-const onboardedKey = (projectId: string) => `adaptus.onboarded.${projectId}`
 
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
@@ -59,20 +56,6 @@ export function Workspace({ project }: { project: Project }) {
   }
   const phaseLabel = PHASES.find((ph) => ph.id === stage.phase)?.label ?? ''
 
-  // Show the welcome deck once per project, before the workspace itself.
-  const [onboarding, setOnboarding] = useState(false)
-  useEffect(() => {
-    setOnboarding(!localStorage.getItem(onboardedKey(project.id)))
-  }, [project.id])
-  const finishOnboarding = () => {
-    try {
-      localStorage.setItem(onboardedKey(project.id), '1')
-    } catch {
-      /* storage unavailable (private mode) — deck just shows again next time */
-    }
-    setOnboarding(false)
-  }
-
   const [sharing, setSharing] = useState(false)
   const [collab, setCollab] = useState(false)
   const isOwner = (project.role ?? 'owner') === 'owner'
@@ -99,8 +82,6 @@ export function Workspace({ project }: { project: Project }) {
     return m
   }, [feedback])
   const stageFeedback = feedback.filter((f) => f.stageId === stage.id)
-
-  if (onboarding) return <ProjectOnboarding onDone={finishOnboarding} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'transparent' }}>
@@ -250,8 +231,8 @@ export function Workspace({ project }: { project: Project }) {
         </div>
 
         {/* Main */}
-        <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '22px' }}>
+        <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '22px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
@@ -265,11 +246,31 @@ export function Workspace({ project }: { project: Project }) {
               {/* The big hero title carries the name on the intro, so don't repeat it here. */}
               {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>}
             </div>
-            {done && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
+            {/* Top-right action: the green "Complete" badge once done, otherwise —
+                on the review/summary screens (showComplete) — the primary
+                "mark complete" button, placed up here so it's easy to find
+                instead of buried at the bottom of a long page. */}
+            {done ? (
+              <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
                 <Check size={15} strokeWidth={3} /> Complete
               </div>
-            )}
+            ) : showComplete && !isViewer ? (
+              <button
+                type="button"
+                className="cq-complete-btn"
+                disabled={!canComplete}
+                style={canComplete ? { flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' } : { flexShrink: 0, opacity: 0.5, cursor: 'not-allowed' }}
+                onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
+              >
+                {canComplete ? (
+                  <>
+                    <Check size={17} strokeWidth={3} /> Mark this step complete
+                  </>
+                ) : (
+                  `Complete the launch tasks to finish (currently ${prep.pct}%)`
+                )}
+              </button>
+            ) : null}
           </div>
 
           {isViewer && (
@@ -290,26 +291,6 @@ export function Workspace({ project }: { project: Project }) {
               </StageScreenCtx.Provider>
             </fieldset>
           </ReadOnlyCtx.Provider>
-
-          {!done && showComplete && !isViewer && (
-            <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(var(--fg),0.06)' }}>
-              <button
-                type="button"
-                className="cq-complete-btn"
-                disabled={!canComplete}
-                style={canComplete ? { display: 'inline-flex', alignItems: 'center', gap: '8px' } : { opacity: 0.5, cursor: 'not-allowed' }}
-                onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
-              >
-                {canComplete ? (
-                  <>
-                    <Check size={17} strokeWidth={3} /> Mark this step complete
-                  </>
-                ) : (
-                  `Complete the launch tasks to finish (currently ${prep.pct}%)`
-                )}
-              </button>
-            </div>
-          )}
 
           {hasSupabase && currentUserId && (
             <FeedbackPanel
