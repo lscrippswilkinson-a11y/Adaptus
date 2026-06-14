@@ -113,7 +113,8 @@ export function Dashboard() {
   return (
     <div className="cq-root">
       {/* Header */}
-      <div style={{ padding: '22px 34px', borderBottom: '1px solid rgba(var(--fg),0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ borderBottom: '1px solid rgba(var(--fg),0.06)' }}>
+       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '22px 34px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'linear-gradient(135deg,#5B86A3,#8FB3C7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FlaskConical size={20} color="var(--on-accent)" /></div>
           <div>
@@ -132,9 +133,10 @@ export function Dashboard() {
             <Plus size={16} /> New Project
           </button>
         </div>
+       </div>
       </div>
 
-      <div style={{ padding: '28px 34px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 34px' }}>
         {total === 0 ? (
           /* First run — a compact, left-aligned hero whose primary action is to
              create the first project, kept near the top-left so it's the obvious
