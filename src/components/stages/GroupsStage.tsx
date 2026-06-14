@@ -107,7 +107,7 @@ export function GroupsStage() {
   const setGroup = (id: number, patch: Partial<ImpactedGroup>) =>
     update({ groups: data.groups.map((g) => (g.id === id ? { ...g, ...patch } : g)) })
   const delGroup = (id: number) => update({ groups: data.groups.filter((g) => g.id !== id) })
-  const addGroup = () => update({ groups: [...data.groups, { id: uid(), name: '', size: '', impact: 'High', readiness: 'Low' }] })
+  const addGroup = () => update({ groups: [...data.groups, { id: uid(), name: '', size: '', impact: 'Medium', readiness: 'Medium' }] })
 
   const steps: WizardStep[] = []
 

@@ -71,22 +71,34 @@ export function DependenciesStage() {
       ),
     })
 
-    // Screen 2 — owner + needed by
+    // Screen 2 — owner
     steps.push({
-      id: `${d.id}-detail`,
-      title: `${what}: owner & date`,
+      id: `${d.id}-owner`,
+      title: `${what}: owner`,
       isFilled: !!d.name.trim(),
-      summary: [d.owner, d.neededBy && `by ${d.neededBy}`].filter(Boolean).join(' · ') || undefined,
+      summary: d.owner || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who owns it, and when do you need it?</h2>
+          <h2 style={headline}>Who owns it?</h2>
           <div style={whyStyle}>{w.detail.why}</div>
           <Label>Owner — who’s responsible?</Label>
           <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="e.g., IT — Priya" />
-          <div style={{ marginTop: '14px' }}>
-            <Label>Needed by</Label>
-            <input type="date" className="cq-input" value={d.neededBy} onChange={(e) => setItem(d.id, { neededBy: e.target.value })} />
-          </div>
+        </div>
+      ),
+    })
+
+    // Screen 3 — needed by
+    steps.push({
+      id: `${d.id}-date`,
+      title: `${what}: needed by`,
+      isFilled: !!d.name.trim(),
+      summary: d.neededBy ? `by ${d.neededBy}` : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>When do you need it?</h2>
+          <div style={whyStyle}>{w.detail.why}</div>
+          <Label>Needed by</Label>
+          <input type="date" className="cq-input" value={d.neededBy} onChange={(e) => setItem(d.id, { neededBy: e.target.value })} />
         </div>
       ),
     })

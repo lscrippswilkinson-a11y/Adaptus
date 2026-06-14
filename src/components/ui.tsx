@@ -19,13 +19,48 @@ export function FieldCoachVariant({ variant, children }: { variant: 'default' | 
   return <FieldCoachVariantCtx.Provider value={variant}>{children}</FieldCoachVariantCtx.Provider>
 }
 
-/** Section card (.cq-card). */
+/**
+ * When true (set by <FlatContainers>), Cards drop their boxed chrome — border,
+ * background, shadow, padding — and render as plain spaced blocks. The summary
+ * view uses this so a stage reads as one clean form rather than a stack of boxes.
+ */
+const FlatContainerCtx = createContext(false)
+
+/**
+ * Renders the summary view's fields as a flat, divided list (styled by the
+ * `.cq-summary-fields` rules in index.css) and tells descendant Cards / FieldCoach
+ * to drop their boxed chrome.
+ */
+export function FlatContainers({ children }: { children: ReactNode }) {
+  return (
+    <FlatContainerCtx.Provider value={true}>
+      <div className="cq-summary-fields">{children}</div>
+    </FlatContainerCtx.Provider>
+  )
+}
+
+/** Section card (.cq-card) — flattened to a plain block inside <FlatContainers>. */
 export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  const flat = useContext(FlatContainerCtx)
+  if (flat) return <div style={style}>{children}</div>
   return (
     <div className="cq-card" style={style}>
       {children}
     </div>
   )
+}
+
+/** Header used per field in the flat summary view — clear, but smaller than the guided hero. */
+const summaryHeaderStyle: CSSProperties = { margin: '0 0 6px', fontSize: '17px', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)' }
+
+/**
+ * A section title that reads as a proper header in the flat summary view and as
+ * a compact uppercase field label everywhere else.
+ */
+export function SectionTitle({ children }: { children: ReactNode }) {
+  const flat = useContext(FlatContainerCtx)
+  if (flat) return <h3 style={summaryHeaderStyle}>{children}</h3>
+  return <Label>{children}</Label>
 }
 
 /** Uppercase field label (.cq-lbl). */
@@ -222,6 +257,7 @@ const linkBtnStyle: CSSProperties = {
 export function FieldCoach({ label, why, example, onUseExample, children }: FieldCoachProps) {
   const [showExample, setShowExample] = useState(false)
   const hero = useContext(FieldCoachVariantCtx) === 'hero'
+  const flat = useContext(FlatContainerCtx)
   const cardStyle: CSSProperties | undefined = hero
     ? { borderRadius: '20px', padding: '34px 36px', boxShadow: '0 12px 40px rgba(0,0,0,0.10)', marginBottom: 0 }
     : undefined
@@ -229,6 +265,8 @@ export function FieldCoach({ label, why, example, onUseExample, children }: Fiel
     <Card style={cardStyle}>
       {hero ? (
         <h2 style={{ margin: '0 0 12px', fontSize: '24px', lineHeight: 1.3, fontWeight: 800, color: 'var(--text)' }}>{label}</h2>
+      ) : flat ? (
+        <h3 style={summaryHeaderStyle}>{label}</h3>
       ) : (
         <Label>{label}</Label>
       )}

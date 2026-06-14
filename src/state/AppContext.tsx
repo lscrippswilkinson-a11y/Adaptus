@@ -12,9 +12,8 @@ import {
 import type { Project, StageData, StageId } from '@/types'
 import { appReducer, type AppAction, type AppState } from '@/state/appReducer'
 import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
-import { createSeed, SAMPLE_NAME } from '@/data/seed'
 import { newProjectId } from '@/lib/id'
-import { hasSupabase, supabase } from '@/lib/supabase'
+import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
 import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
 
@@ -48,89 +47,95 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(!cloud)
   const lastSynced = useRef<Project[] | null>(null)
 
-  // Hydrate from Supabase once signed in (and migrate any local projects on first login).
+  // Hydrate from Supabase once signed in (and migrate any local projects on first
+  // login). The whole load runs inside a ref-held promise so that the effect
+  // re-running reuses the SAME hydration instead of starting a second one (which
+  // could double-insert during the one-time local-project migration). It re-runs
+  // because StrictMode double-invokes effects in dev, and because `user` is a
+  // fresh reference on every auth event (incl. periodic token refreshes). The
+  // `hydrated` guard then stops a later refresh from re-dispatching stale projects
+  // over the user's edits. Both refs reset with the provider on sign-out.
+  const hydration = useRef<Promise<{ projects: Project[]; joinedId: string | null }> | null>(null)
+  const hydrated = useRef(false)
   useEffect(() => {
-    if (!cloud || !user) return
+    if (!cloud || !user || hydrated.current) return
+    const u = user
     let cancelled = false
-    ;(async () => {
-      // Claim any pending email invites before loading, so shared projects show up.
-      try {
-        await acceptPendingInvites()
-      } catch (err) {
-        console.error('[adaptus] failed to accept pending invites (continuing)', err)
-      }
 
-      // Claim a pending invite-link (stashed pre-auth), then open that project.
-      let joinedId: string | null = null
-      try {
-        const token = localStorage.getItem('adaptus.pendingJoin')
-        if (token) {
-          joinedId = await acceptInviteLink(token)
-          localStorage.removeItem('adaptus.pendingJoin')
-        }
-      } catch (err) {
-        console.error('[adaptus] failed to accept invite link (continuing)', err)
-      }
-
-      let projects: Project[] = []
-      try {
-        projects = await fetchProjects()
-      } catch (err) {
-        console.error('[adaptus] failed to load projects from Supabase', err)
-      }
-
-      // Best-effort one-time migration of local projects — must not block the app.
-      const migrationKey = `adaptus.migrated.${user.id}`
-      if (projects.length === 0 && !localStorage.getItem(migrationKey)) {
+    if (!hydration.current) {
+      hydration.current = (async () => {
+        // Claim any pending email invites before loading, so shared projects show up.
         try {
-          // Legacy local projects may carry non-uuid ids (old numeric ids / 1001 demo).
-          const local = loadStoredProjects().map((p) => (UUID_RE.test(p.id) ? p : { ...p, id: newProjectId() }))
-          if (local.length) {
-            await Promise.all(local.map((p) => insertProject(p, user.id)))
-            projects = local
-          }
-          localStorage.setItem(migrationKey, '1')
+          await acceptPendingInvites()
         } catch (err) {
-          console.error('[adaptus] migration of local projects failed (continuing)', err)
+          console.error('[adaptus] failed to accept pending invites (continuing)', err)
         }
-      }
 
-      // Seed the demo project once per account (existing + new) so everyone has a
-      // worked example to explore. Tracked in the user's Supabase metadata — not
-      // localStorage — so the seed happens once across all devices and a later
-      // deletion sticks. Skip the insert if the sample is already present (e.g.
-      // from an earlier seed) so we never create a duplicate.
-      if (user.user_metadata?.adaptus_seeded !== true) {
+        // Claim a pending invite-link (stashed pre-auth), then open that project.
+        let joinedId: string | null = null
         try {
-          if (!projects.some((p) => p.name === SAMPLE_NAME)) {
-            const demo = createSeed()
-            await insertProject(demo, user.id)
-            projects = [...projects, demo]
+          const token = localStorage.getItem('adaptus.pendingJoin')
+          if (token) {
+            joinedId = await acceptInviteLink(token)
+            localStorage.removeItem('adaptus.pendingJoin')
           }
-          await supabase.auth.updateUser({ data: { adaptus_seeded: true } })
         } catch (err) {
-          console.error('[adaptus] failed to seed demo project (continuing)', err)
+          console.error('[adaptus] failed to accept invite link (continuing)', err)
         }
-      }
 
-      // Tag each project with the signed-in user's role (owner default for any
-      // not yet reflected in the membership table — e.g. just-created ones).
-      try {
-        const roles = await fetchMyRoles(user.id)
-        projects = projects.map((p) => ({ ...p, role: roles[p.id] ?? 'owner' }))
-      } catch (err) {
-        console.error('[adaptus] failed to load roles (continuing)', err)
-      }
+        let projects: Project[] = []
+        try {
+          projects = await fetchProjects()
+        } catch (err) {
+          console.error('[adaptus] failed to load projects from Supabase', err)
+        }
 
-      if (cancelled) return
-      lastSynced.current = projects
-      dispatch({ type: 'SET_PROJECTS', projects })
-      setReady(true)
-      // If they just joined via a link, drop them straight into that project.
-      if (joinedId && projects.some((p) => p.id === joinedId)) {
-        dispatch({ type: 'OPEN_PROJECT', id: joinedId, stageIdx: 0 })
-      }
-    })()
+        // Best-effort one-time migration of local projects — must not block the app.
+        const migrationKey = `adaptus.migrated.${u.id}`
+        if (projects.length === 0 && !localStorage.getItem(migrationKey)) {
+          try {
+            // Legacy local projects may carry non-uuid ids (old numeric ids / 1001 demo).
+            const local = loadStoredProjects().map((p) => (UUID_RE.test(p.id) ? p : { ...p, id: newProjectId() }))
+            if (local.length) {
+              await Promise.all(local.map((p) => insertProject(p, u.id)))
+              projects = local
+            }
+            localStorage.setItem(migrationKey, '1')
+          } catch (err) {
+            console.error('[adaptus] migration of local projects failed (continuing)', err)
+          }
+        }
+
+        // Tag each project with the signed-in user's role (owner default for any
+        // not yet reflected in the membership table — e.g. just-created ones).
+        try {
+          const roles = await fetchMyRoles(u.id)
+          projects = projects.map((p) => ({ ...p, role: roles[p.id] ?? 'owner' }))
+        } catch (err) {
+          console.error('[adaptus] failed to load roles (continuing)', err)
+        }
+
+        return { projects, joinedId }
+      })()
+    }
+
+    hydration.current
+      .then(({ projects, joinedId }) => {
+        if (cancelled) return
+        hydrated.current = true
+        lastSynced.current = projects
+        dispatch({ type: 'SET_PROJECTS', projects })
+        setReady(true)
+        // If they just joined via a link, drop them straight into that project.
+        if (joinedId && projects.some((p) => p.id === joinedId)) {
+          dispatch({ type: 'OPEN_PROJECT', id: joinedId, stageIdx: 0 })
+        }
+      })
+      .catch((err) => {
+        console.error('[adaptus] hydration failed (continuing)', err)
+        if (!cancelled) setReady(true)
+      })
+
     return () => {
       cancelled = true
     }

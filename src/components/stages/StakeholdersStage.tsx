@@ -28,7 +28,7 @@ export function StakeholdersStage() {
   const setRow = (id: number, patch: Partial<StakeholderRow>) =>
     update({ rows: data.rows.map((r) => (r.id === id ? { ...r, ...patch } : r)) })
   const delRow = (id: number) => update({ rows: data.rows.filter((r) => r.id !== id) })
-  const addRow = () => update({ rows: [...data.rows, { id: uid(), name: '', role: '', influence: 'High', support: 'Neutral', action: '' }] })
+  const addRow = () => update({ rows: [...data.rows, { id: uid(), name: '', role: '', influence: 'Medium', support: 'Neutral', action: '' }] })
 
   const coalition = coaching.stakeholders.summary(data.rows)
 

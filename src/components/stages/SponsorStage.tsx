@@ -1,7 +1,7 @@
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
 import type { EscalationRule } from '@/types'
-import { AddButton, DelButton, FieldCoach, InsightCallout, Card, Label, Select, TextArea, TextInput } from '@/components/ui'
+import { AddButton, DelButton, FieldCoach, InsightCallout, Card, SectionTitle, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { ESCALATION_ISSUE_TYPES, ESCALATION_RESPONSE_TIMES, SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -95,7 +95,7 @@ export function SponsorStage() {
       summary: `${data.sponsorActions.length} action${data.sponsorActions.length === 1 ? '' : 's'} selected`,
       node: (
         <Card>
-          <Label>Sponsor Actions — what will this sponsor actively do?</Label>
+          <SectionTitle>Sponsor Actions — what will this sponsor actively do?</SectionTitle>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
             {SPONSOR_ACTIONS.map((action) => {
               const checked = data.sponsorActions.includes(action)
@@ -171,7 +171,7 @@ export function SponsorStage() {
       summary: rules.length ? `${rules.length} escalation rule${rules.length === 1 ? '' : 's'}` : undefined,
       node: (
         <Card>
-          <Label>{f.escalation.label}</Label>
+          <SectionTitle>{f.escalation.label}</SectionTitle>
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '4px 0 16px' }}>
             {f.escalation.why}
           </div>

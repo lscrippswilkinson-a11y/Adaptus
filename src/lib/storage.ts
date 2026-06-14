@@ -1,5 +1,5 @@
 import type { Project, StageData } from '@/types'
-import { createSeed, emptyProject } from '@/data/seed'
+import { emptyProject } from '@/data/seed'
 import { STAGES } from '@/data/stages'
 
 export const STORAGE_KEY = 'adaptus.projects.v1'
@@ -30,19 +30,19 @@ export function migrateProject(p: Project): Project {
 
 /**
  * Load the project list from localStorage. On first run (or any read/parse
- * problem) we fall back to a single demo project so the app is never empty.
+ * problem) the user simply starts with no projects.
  */
 export function loadProjects(): Project[] {
-  if (typeof localStorage === 'undefined') return [createSeed()]
+  if (typeof localStorage === 'undefined') return []
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return [createSeed()]
+    if (!raw) return []
     const parsed = JSON.parse(raw) as Project[]
-    if (!Array.isArray(parsed) || parsed.length === 0) return [createSeed()]
+    if (!Array.isArray(parsed) || parsed.length === 0) return []
     return parsed.map(migrateProject)
   } catch (err) {
     console.warn('[adaptus] failed to load saved projects; starting fresh', err)
-    return [createSeed()]
+    return []
   }
 }
 

@@ -100,20 +100,32 @@ export function RiskStage() {
       ),
     })
 
-    // Screen 2 — likelihood + impact
+    // Screen 2 — likelihood
     steps.push({
-      id: `${r.id}-rate`,
-      title: `${what}: likelihood & impact`,
+      id: `${r.id}-likelihood`,
+      title: `${what}: likelihood`,
       isFilled: !!r.description.trim(),
-      summary: `${LIKELIHOOD[r.likelihood]} · ${IMPACT[r.impact]} impact`,
+      summary: LIKELIHOOD[r.likelihood],
       node: (
         <div>
-          <h2 style={headline}>How likely is it — and how bad would it be?</h2>
+          <h2 style={headline}>How likely is it to happen?</h2>
           <div style={whyStyle}>{w.rate.why}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <Slider label="Likelihood" value={r.likelihood} labels={LIKELIHOOD} onChange={(v) => setItem(r.id, { likelihood: v })} />
-            <Slider label="Impact" value={r.impact} labels={IMPACT} onChange={(v) => setItem(r.id, { impact: v })} />
-          </div>
+          <Slider label="Likelihood" value={r.likelihood} labels={LIKELIHOOD} onChange={(v) => setItem(r.id, { likelihood: v })} />
+        </div>
+      ),
+    })
+
+    // Screen 3 — impact
+    steps.push({
+      id: `${r.id}-impact`,
+      title: `${what}: impact`,
+      isFilled: !!r.description.trim(),
+      summary: `${IMPACT[r.impact]} impact`,
+      node: (
+        <div>
+          <h2 style={headline}>How bad would it be if it did?</h2>
+          <div style={whyStyle}>{w.rate.why}</div>
+          <Slider label="Impact" value={r.impact} labels={IMPACT} onChange={(v) => setItem(r.id, { impact: v })} />
         </div>
       ),
     })

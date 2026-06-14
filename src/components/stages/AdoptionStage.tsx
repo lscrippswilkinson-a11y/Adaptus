@@ -64,26 +64,34 @@ export function AdoptionStage() {
       ),
     })
 
-    // Screen 2 — target + current (+ progress, insight on the last)
+    // Screen 2 — target
     steps.push({
-      id: `${m.id}-targets`,
-      title: `${what}: target & current`,
+      id: `${m.id}-target`,
+      title: `${what}: target`,
+      isFilled: !!m.name.trim(),
+      summary: m.target ? `Target ${m.target}${m.unit}` : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>What’s the target?</h2>
+          <div style={whyStyle}>{w.targets.why}</div>
+          <Label>Target ({m.unit})</Label>
+          <TextInput value={m.target} onCommit={(v) => setMetric(m.id, { target: v })} placeholder="e.g., 90" />
+        </div>
+      ),
+    })
+
+    // Screen 3 — current (+ progress, insight on the last)
+    steps.push({
+      id: `${m.id}-current`,
+      title: `${what}: current`,
       isFilled: !!m.name.trim(),
       summary: m.target ? `${m.current || '—'} / ${m.target}${m.unit}` : undefined,
       node: (
         <div>
-          <h2 style={headline}>What’s the target — and where are you now?</h2>
+          <h2 style={headline}>Where are you now?</h2>
           <div style={whyStyle}>{w.targets.why}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <div>
-              <Label>Target ({m.unit})</Label>
-              <TextInput value={m.target} onCommit={(v) => setMetric(m.id, { target: v })} placeholder="e.g., 90" />
-            </div>
-            <div>
-              <Label>Current ({m.unit})</Label>
-              <TextInput value={m.current} onCommit={(v) => setMetric(m.id, { current: v })} placeholder="e.g., 55" />
-            </div>
-          </div>
+          <Label>Current ({m.unit})</Label>
+          <TextInput value={m.current} onCommit={(v) => setMetric(m.id, { current: v })} placeholder="e.g., 55" />
           {hasProgress && (
             <div style={{ marginTop: '14px' }}>
               <div style={{ height: '6px', background: 'rgba(var(--fg),0.06)', borderRadius: '3px', overflow: 'hidden' }}>

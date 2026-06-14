@@ -60,46 +60,66 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 2 — audience + format
+    // Screen 2 — audience
     steps.push({
       id: `${t.id}-audience`,
-      title: `${what}: audience & format`,
+      title: `${what}: audience`,
       isFilled: !!t.title.trim(),
-      summary: [t.audience, t.format].filter(Boolean).join(' · ') || undefined,
+      summary: t.audience || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who is it for, and in what format?</h2>
+          <h2 style={headline}>Who is it for?</h2>
           <div style={whyStyle}>{w.audience.why}</div>
           <Label>Audience</Label>
           <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder="e.g., All timekeepers" />
-          <div style={{ marginTop: '18px' }}>
-            <GuidedLabel>Format</GuidedLabel>
-            <ChipPicker value={t.format} options={TRAINING_FORMATS} onChange={(v) => setItem(t.id, { format: v })} />
-          </div>
         </div>
       ),
     })
 
-    // Screen 3 — duration + owner
+    // Screen 3 — format
     steps.push({
-      id: `${t.id}-logistics`,
-      title: `${what}: duration & owner`,
+      id: `${t.id}-format`,
+      title: `${what}: format`,
       isFilled: !!t.title.trim(),
-      summary: [t.duration, t.owner && `led by ${t.owner}`].filter(Boolean).join(' · ') || undefined,
+      summary: t.format || undefined,
       node: (
         <div>
-          <h2 style={headline}>How long is it, and who runs it?</h2>
+          <h2 style={headline}>In what format?</h2>
+          <div style={whyStyle}>{w.audience.why}</div>
+          <GuidedLabel>Format</GuidedLabel>
+          <ChipPicker value={t.format} options={TRAINING_FORMATS} onChange={(v) => setItem(t.id, { format: v })} />
+        </div>
+      ),
+    })
+
+    // Screen 4 — duration
+    steps.push({
+      id: `${t.id}-duration`,
+      title: `${what}: duration`,
+      isFilled: !!t.title.trim(),
+      summary: t.duration || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>How long is it?</h2>
           <div style={whyStyle}>{w.logistics.why}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <div>
-              <Label>Duration</Label>
-              <TextInput value={t.duration} onCommit={(v) => setItem(t.id, { duration: v })} placeholder="e.g., 45 min" />
-            </div>
-            <div>
-              <Label>Owner</Label>
-              <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
-            </div>
-          </div>
+          <Label>Duration</Label>
+          <TextInput value={t.duration} onCommit={(v) => setItem(t.id, { duration: v })} placeholder="e.g., 45 min" />
+        </div>
+      ),
+    })
+
+    // Screen 5 — owner (last screen of the item)
+    steps.push({
+      id: `${t.id}-owner`,
+      title: `${what}: owner`,
+      isFilled: !!t.title.trim(),
+      summary: t.owner ? `led by ${t.owner}` : undefined,
+      node: (
+        <div>
+          <h2 style={headline}>Who runs it?</h2>
+          <div style={whyStyle}>{w.logistics.why}</div>
+          <Label>Owner</Label>
+          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
           {isLast && <AddAnotherButton label="Add another training activity" onAdd={addItem} />}
         </div>
       ),

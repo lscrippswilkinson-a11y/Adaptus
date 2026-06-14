@@ -71,22 +71,34 @@ export function TestingStage() {
       ),
     })
 
-    // Screen 2 — owner + status
+    // Screen 2 — owner
     steps.push({
       id: `${t.id}-owner`,
-      title: `${what}: owner & status`,
+      title: `${what}: owner`,
       isFilled: !!t.name.trim(),
-      summary: [t.owner, t.status].filter(Boolean).join(' · ') || undefined,
+      summary: t.owner || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who runs it, and where does it stand?</h2>
+          <h2 style={headline}>Who runs it?</h2>
           <div style={whyStyle}>{w.owner.why}</div>
           <Label>Owner — who runs it?</Label>
           <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="e.g., IT — Sam" />
-          <div style={{ marginTop: '18px' }}>
-            <GuidedLabel>Status</GuidedLabel>
-            <LevelPicker value={t.status} options={STATUS_LEVELS} onChange={(v) => setItem(t.id, { status: v })} />
-          </div>
+        </div>
+      ),
+    })
+
+    // Screen 3 — status
+    steps.push({
+      id: `${t.id}-status`,
+      title: `${what}: status`,
+      isFilled: !!t.name.trim(),
+      summary: t.status || undefined,
+      node: (
+        <div>
+          <h2 style={headline}>Where does it stand?</h2>
+          <div style={whyStyle}>{w.owner.why}</div>
+          <GuidedLabel>Status</GuidedLabel>
+          <LevelPicker value={t.status} options={STATUS_LEVELS} onChange={(v) => setItem(t.id, { status: v })} />
         </div>
       ),
     })

@@ -55,6 +55,7 @@ export type Severity = 'High' | 'Medium' | 'Low'
 export interface DefineData {
   statement: string
   scope: string
+  headcount: string
   successLooks: string
   whyNow: string
 }

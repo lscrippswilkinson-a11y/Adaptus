@@ -153,6 +153,25 @@ body {
   padding: 18px 22px;
   margin-bottom: 14px;
 }
+/* Summary view: flat fields with a clear, compact hierarchy and a divider line
+   between each one. The list stages reuse their guided "hero" headline/why
+   markup, so we tame those down to summary scale here (they're inline-styled). */
+.cq-summary-fields > div + div {
+  border-top: 1px solid rgba(var(--fg), 0.1);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.cq-summary-fields h2 {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin: 0 0 6px !important;
+}
+.cq-summary-fields h2 + div {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  margin-bottom: 14px !important;
+}
 .cq-lbl {
   font-size: 11px;
   color: rgba(var(--fg), 0.45);

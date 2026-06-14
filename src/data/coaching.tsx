@@ -43,9 +43,14 @@ export const coaching = {
           'We’re replacing our old desktop billing software with Clio, a cloud system everyone logs into through a web browser. Timekeepers will enter their own time directly instead of emailing it to the billing team.',
       } satisfies FieldCopy,
       scope: {
-        label: 'Who does this affect — and how many people?',
-        why: 'List every team, role, or location the change touches, plus a rough headcount. This isn’t busywork: the number and spread of people is what determines how much communicating and training you’ll really need down the line.',
-        example: 'All 38 attorneys and paralegals, plus our 4-person billing team — about 50 people across two offices.',
+        label: 'Who does this change affect?',
+        why: 'List every team, role, or location the change touches. Name concrete groups — “Billing team,” “Field technicians” — rather than “everyone,” so you can plan for each one’s real needs later.',
+        example: 'All 38 attorneys and paralegals, plus our 4-person billing team across two offices.',
+      } satisfies FieldCopy,
+      headcount: {
+        label: 'About how many people in total?',
+        why: 'A rough headcount is enough. The number and spread of people is what determines how much communicating and training you’ll really need down the line — so even a ballpark helps you size the effort.',
+        example: 'About 50 people',
       } satisfies FieldCopy,
       successLooks: {
         label: 'How will you know it worked?',
