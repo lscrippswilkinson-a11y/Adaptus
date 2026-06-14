@@ -5,7 +5,6 @@ import {
   FlaskConical,
   Lightbulb,
   LogOut,
-  Map,
   Pencil,
   Plus,
   RotateCcw,
@@ -17,13 +16,12 @@ import {
 import { useApp } from '@/state/AppContext'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
-import { createSeed, emptyProject, isSampleProject } from '@/data/seed'
+import { emptyProject } from '@/data/seed'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
 import { Wizard, type ProjectDraft } from '@/components/Wizard'
 import { EditProjectModal } from '@/components/EditProjectModal'
-import { OrgHeatMap } from '@/components/OrgHeatMap'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import type { Project, Role } from '@/types'
 
@@ -81,9 +79,6 @@ export function Dashboard() {
     dispatch({ type: 'ADD_PROJECT', project })
   }
 
-  // Add the pre-filled demo without navigating into it, so it lands in the list.
-  const loadExample = () => dispatch({ type: 'SET_PROJECTS', projects: [...state.projects, createSeed()] })
-
   const deleteProject = (proj: Project) => {
     const snapshot = state.projects
     dispatch({ type: 'DELETE_PROJECT', id: proj.id })
@@ -111,10 +106,8 @@ export function Dashboard() {
     })
 
 
-  // "Pick up where you left off" points at the user's own work — never the
-  // auto-seeded sample. First-timers (whose only project is the sample) get a
-  // "start a new project" prompt in that slot instead.
-  const active = state.projects.find((p) => !isComplete(p) && !isSampleProject(p))
+  // "Pick up where you left off" points at the first project still in progress.
+  const active = state.projects.find((p) => !isComplete(p))
   const nextStage = active ? STAGES[active.currentStage] : null
 
   return (
@@ -142,144 +135,126 @@ export function Dashboard() {
       </div>
 
       <div style={{ padding: '28px 34px' }}>
-        {/* Welcome hero — first-run only. Returning users go straight to work;
-            the single "new project" CTA lives in the nav. */}
-        {total === 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: narrow ? '0' : '28px', background: 'radial-gradient(620px 280px at 88% -30%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '18px', padding: narrow ? '20px 24px' : '24px 44px', marginBottom: '20px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)', overflow: 'hidden' }}>
-            <div style={{ flex: 1 }}>
-              <h1 style={{ margin: 0, fontSize: narrow ? '24px' : '29px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.6px' }}>Lead your change with confidence</h1>
-              <p style={{ margin: '10px 0 0', fontSize: '14.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.55, maxWidth: '580px' }}>
-                Adaptus walks you through rolling out a change from start to finish — no change-management experience required. Create your first project below.
-              </p>
-            </div>
-            {!narrow && (
-              <div style={{ flexShrink: 0, width: '88px', height: '88px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <FlaskConical size={44} color="rgba(255,255,255,0.92)" strokeWidth={1.4} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Top guide-me slot. Returning users: pick up where they left off.
-            First-timers (only the sample): a prompt to start their own. */}
-        {active && nextStage ? (
-          <button
-            type="button"
-            onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: active.currentStage })}
-            style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Lightbulb size={22} color="var(--accent-text)" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>Pick up where you left off</div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.name || 'Untitled project'}</div>
-              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                Next step: <nextStage.icon size={14} color="var(--accent-text)" /> {nextStage.label}
-              </div>
-            </div>
-            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
-              Continue <ArrowRight size={17} />
-            </span>
-          </button>
-        ) : total > 0 ? (
-          <button
-            type="button"
-            onClick={() => setWizardOpen(true)}
-            style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
-          >
-            <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={22} color="var(--accent-text)" />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>Ready to begin?</div>
-              <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>Start your first change project</div>
-              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '2px' }}>
-                Explore the sample below, then map out your own change.
-              </div>
-            </div>
-            <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
-              New project <ArrowRight size={17} />
-            </span>
-          </button>
-        ) : null}
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-            <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
-            {total > 0 && (
-              <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)' }}>
-                {total} project{total === 1 ? '' : 's'} · {completed} complete
-              </span>
-            )}
-          </div>
-          {total > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <Search size={14} style={{ position: 'absolute', left: '10px', color: 'rgba(var(--fg),0.4)', pointerEvents: 'none' }} />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search projects"
-                  aria-label="Search projects"
-                  style={{ background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '10px', padding: '8px 12px 8px 30px', color: 'var(--text)', fontSize: '13px', outline: 'none', fontFamily: 'inherit', width: '180px' }}
-                />
-              </div>
-              <select className="cq-select" value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} aria-label="Sort projects" style={{ width: 'auto', fontSize: '13px' }}>
-                <option value="recent">Recent</option>
-                <option value="progress">Progress</option>
-                <option value="name">Name (A–Z)</option>
-              </select>
-            </div>
-          )}
-        </div>
-
         {total === 0 ? (
-          <div style={{ textAlign: 'center', padding: '64px 40px', background: 'rgba(var(--fg),0.02)', border: '1px dashed rgba(var(--fg),0.1)', borderRadius: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}><Map size={44} color="#8FB3C7" strokeWidth={1.4} /></div>
-            <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>No projects yet</div>
-            <div style={{ color: 'rgba(var(--fg),0.5)', marginBottom: '22px', fontSize: '14px' }}>Start your first guided change management journey — or explore a finished example first.</div>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => setWizardOpen(true)} style={{ ...primaryBtn, padding: '12px 24px' }}>
-                Create your first project <ArrowRight size={16} />
-              </button>
-              <button type="button" onClick={loadExample} style={ghostBtn} title="Add a pre-filled sample project you can explore, then delete">
-                <Sparkles size={16} /> Load an example
-              </button>
-            </div>
-          </div>
-        ) : visible.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 40px', color: 'rgba(var(--fg),0.5)', fontSize: '14px', background: 'rgba(var(--fg),0.02)', border: '1px dashed rgba(var(--fg),0.1)', borderRadius: '16px' }}>
-            No projects match “{query}”.
+          /* First run — a compact, left-aligned hero whose primary action is to
+             create the first project, kept near the top-left so it's the obvious
+             next step (no big centered empty state taking up the page). */
+          <div style={{ maxWidth: '680px', background: 'radial-gradient(560px 240px at 92% -40%, rgba(255,255,255,0.16), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '16px', padding: narrow ? '24px 22px' : '30px 32px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)' }}>
+            <h1 style={{ margin: 0, fontSize: narrow ? '23px' : '27px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.5px' }}>Lead your change with confidence</h1>
+            <p style={{ margin: '10px 0 22px', fontSize: '14.5px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.55, maxWidth: '460px' }}>
+              Adaptus walks you through rolling out a change from start to finish — no change-management experience required.
+            </p>
+            <button
+              type="button"
+              onClick={() => setWizardOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', background: '#fff', border: 'none', borderRadius: '12px', padding: '14px 24px', color: '#1f3445', fontWeight: 800, fontSize: '15.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 18px rgba(0,0,0,0.22)' }}
+            >
+              <Plus size={19} strokeWidth={2.5} /> Create your first project <ArrowRight size={19} />
+            </button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '12px' }}>
-            {visible.map((proj) => {
-              const cs = STAGES[proj.currentStage]
-              return (
-                <ProjectCard
-                  key={proj.id}
-                  name={proj.name}
-                  type={proj.type}
-                  role={proj.role}
-                  isSample={isSampleProject(proj)}
-                  p2={pct(proj)}
-                  stageIcon={cs.icon}
-                  stageTag={cs.tag}
-                  avg={avgRisk(proj.stageData.risk.items)}
-                  coreDone={essentialsDone(proj)}
-                  complete={isComplete(proj)}
-                  onClick={() => dispatch({ type: 'OPEN_PROJECT', id: proj.id, stageIdx: proj.currentStage })}
-                  onEdit={() => setEditing(proj)}
-                  onDelete={() => deleteProject(proj)}
-                />
-              )
-            })}
-          </div>
-        )}
+          <>
+            {/* Top guide-me slot — pick up the first in-progress project, or, if
+                everything's done, a prompt to start the next one. */}
+            {active && nextStage ? (
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: active.currentStage })}
+                style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Lightbulb size={22} color="var(--accent-text)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>Pick up where you left off</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.name || 'Untitled project'}</div>
+                  <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                    Next step: <nextStage.icon size={14} color="var(--accent-text)" /> {nextStage.label}
+                  </div>
+                </div>
+                <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
+                  Continue <ArrowRight size={17} />
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setWizardOpen(true)}
+                style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Sparkles size={22} color="var(--accent-text)" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>All caught up</div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>Start your next change project</div>
+                </div>
+                <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg, #2dd4bf 0%, #12b3a1 100%)', color: '#06302b', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', boxShadow: '0 4px 14px rgba(18,179,161,0.35)' }}>
+                  New project <ArrowRight size={17} />
+                </span>
+              </button>
+            )}
 
-        <OrgHeatMap projects={state.projects} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <span style={{ fontSize: '16px', fontWeight: 700 }}>Your Projects</span>
+                <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)' }}>
+                  {total} project{total === 1 ? '' : 's'} · {completed} complete
+                </span>
+              </div>
+              {total > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Search size={14} style={{ position: 'absolute', left: '10px', color: 'rgba(var(--fg),0.4)', pointerEvents: 'none' }} />
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search projects"
+                      aria-label="Search projects"
+                      style={{ background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '10px', padding: '8px 12px 8px 30px', color: 'var(--text)', fontSize: '13px', outline: 'none', fontFamily: 'inherit', width: '180px' }}
+                    />
+                  </div>
+                  <select className="cq-select" value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} aria-label="Sort projects" style={{ width: 'auto', fontSize: '13px' }}>
+                    <option value="recent">Recent</option>
+                    <option value="progress">Progress</option>
+                    <option value="name">Name (A–Z)</option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {visible.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '48px 40px', color: 'rgba(var(--fg),0.5)', fontSize: '14px', background: 'rgba(var(--fg),0.02)', border: '1px dashed rgba(var(--fg),0.1)', borderRadius: '16px' }}>
+                No projects match “{query}”.
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))', gap: '12px' }}>
+                {visible.map((proj) => {
+                  const cs = STAGES[proj.currentStage]
+                  return (
+                    <ProjectCard
+                      key={proj.id}
+                      name={proj.name}
+                      type={proj.type}
+                      role={proj.role}
+                      p2={pct(proj)}
+                      stageIcon={cs.icon}
+                      stageTag={cs.tag}
+                      avg={avgRisk(proj.stageData.risk.items)}
+                      coreDone={essentialsDone(proj)}
+                      complete={isComplete(proj)}
+                      onClick={() => dispatch({ type: 'OPEN_PROJECT', id: proj.id, stageIdx: proj.currentStage })}
+                      onEdit={() => setEditing(proj)}
+                      onDelete={() => deleteProject(proj)}
+                    />
+                  )
+                })}
+              </div>
+            )}
+
+          </>
+        )}
       </div>
 
       {wizardOpen && <Wizard onClose={() => setWizardOpen(false)} onCreate={createProject} />}
@@ -331,7 +306,6 @@ interface ProjectCardProps {
   name: string
   type: string
   role?: Role
-  isSample?: boolean
   p2: number
   stageIcon: LucideIcon
   stageTag: string
@@ -358,7 +332,7 @@ const cardIconBtn: React.CSSProperties = {
   lineHeight: 1,
 }
 
-function ProjectCard({ name, type, role, isSample, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
+function ProjectCard({ name, type, role, p2, stageIcon: StageIcon, stageTag, avg, coreDone, complete, onClick, onEdit, onDelete }: ProjectCardProps) {
   const [hover, setHover] = useState(false)
   // Mouse users: reveal the edit/delete icons on hover only (less clutter).
   // Touch users (no hover): keep them visible since there's nothing to hover.
@@ -398,7 +372,6 @@ function ProjectCard({ name, type, role, isSample, p2, stageIcon: StageIcon, sta
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', marginBottom: '4px', minHeight: '37px' }}>
             <div style={{ flex: 1, minWidth: 0, fontSize: '14px', fontWeight: 700, lineHeight: 1.3, color: name ? 'var(--text)' : 'rgba(var(--fg),0.45)', fontStyle: name ? 'normal' : 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{name || 'Untitled project'}</div>
-            {isSample && <span style={{ flexShrink: 0, marginTop: '1px', fontSize: '10px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: '#fcd34d', background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: '6px', padding: '2px 7px' }}>Sample</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(var(--fg),0.55)', minWidth: 0 }}>
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{type}</span>
