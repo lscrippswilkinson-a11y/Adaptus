@@ -235,10 +235,12 @@ export function Workspace({ project }: { project: Project }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '22px' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
-                  <stage.icon size={14} color="var(--accent-text)" />
-                  <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{phaseLabel}</span>
-                </div>
+                {stage.id !== 'define' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '20px', padding: '4px 12px' }}>
+                    <stage.icon size={14} color="var(--accent-text)" />
+                    <span style={{ fontSize: '11px', color: 'var(--accent-text)', letterSpacing: '1.5px', textTransform: 'uppercase', fontWeight: 600 }}>{phaseLabel}</span>
+                  </div>
+                )}
                 {stage.tier === 'advanced' && (
                   <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
                 )}
