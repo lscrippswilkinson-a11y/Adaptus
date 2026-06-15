@@ -13,15 +13,15 @@ const ThemeCtx = createContext<ThemeValue | null>(null)
 
 /**
  * Holds the light/dark theme, persists it, and reflects it onto
- * <html data-theme="..."> so the CSS token overrides take effect. Dark is the
+ * <html data-theme="..."> so the CSS token overrides take effect. Light is the
  * default for anyone who hasn't chosen.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     try {
-      return localStorage.getItem(STORAGE_KEY) === 'light' ? 'light' : 'dark'
+      return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light'
     } catch {
-      return 'dark'
+      return 'light'
     }
   })
 

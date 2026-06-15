@@ -123,7 +123,7 @@ export function Dashboard() {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ThemeToggle />
+          <ThemeToggle prominent />
           {hasSupabase && session && (
             <button type="button" onClick={signOut} style={ghostBtn} title={session.user.email ? `Sign out (${session.user.email})` : 'Sign out'}>
               <LogOut size={15} /> Sign out

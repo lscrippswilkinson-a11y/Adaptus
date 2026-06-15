@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { ArrowLeft, ArrowRight, Check, Eye, Share2, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { hasSupabase } from '@/lib/supabase'
@@ -7,18 +7,32 @@ import { fetchFeedback } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
-import { StageGateProvider, ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
+import { ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
 import { ShareModal } from '@/components/ShareModal'
+import { ShareCtx } from '@/state/ShareContext'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
 
 
+const navBoxKicker: CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--accent-text)', marginBottom: '2px' }
+const navBoxLabel: CSSProperties = { display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+const navBoxStyle = (side: 'left' | 'right'): CSSProperties => ({
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  justifyContent: side === 'right' ? 'flex-end' : 'flex-start',
+  background: 'rgba(var(--fg),0.03)',
+  border: '1px solid rgba(var(--fg),0.12)',
+  borderRadius: '12px',
+  padding: '14px 18px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+})
+
 export function Workspace({ project }: { project: Project }) {
   const { state, dispatch } = useApp()
-  const [showAdvanced, setShowAdvanced] = useState(false)
-  // Whether to show the "Mark this step complete" button. The guided wizard hides
-  // it until the review screen; non-wizard stages leave it on (default true).
-  const [showComplete, setShowComplete] = useState(true)
   // Whether the guided intro screen is showing, so we can hide the duplicate
   // stage title in the header (the big hero title carries it there).
   const [onIntro, setOnIntro] = useState(false)
@@ -31,9 +45,6 @@ export function Workspace({ project }: { project: Project }) {
   const prep = preparedness(project)
   const canComplete = stage.id !== 'milestones' || prep.pct === 100
 
-  // Reveal advanced steps if the one being viewed is itself advanced.
-  const showAdv = showAdvanced || stage.tier === 'advanced'
-  const advancedCount = STAGES.filter((s) => s.tier === 'advanced').length
 
   // Scroll the content panel back to the top whenever the stage (or project) changes.
   const mainRef = useRef<HTMLDivElement>(null)
@@ -49,7 +60,6 @@ export function Workspace({ project }: { project: Project }) {
   const prevStageKey = useRef(stageKey)
   if (prevStageKey.current !== stageKey) {
     prevStageKey.current = stageKey
-    setShowComplete(true)
     setOnIntro(false)
   }
 
@@ -57,6 +67,18 @@ export function Workspace({ project }: { project: Project }) {
   const [collab, setCollab] = useState(false)
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'
+
+  // Section-level Previous/Next. Advancing auto-completes the current step:
+  // COMPLETE_STAGE both marks it done and moves on (skipped for viewers, or when
+  // the launch dashboard isn't fully prepared, or when it's already complete).
+  const prevStage = state.stageIdx > 0 ? STAGES[state.stageIdx - 1] : null
+  const nextStage = state.stageIdx < STAGES.length - 1 ? STAGES[state.stageIdx + 1] : null
+  const goPrev = () => prevStage && dispatch({ type: 'GO_TO_STAGE', stageIdx: state.stageIdx - 1 })
+  const goNext = () => {
+    if (!nextStage) return
+    if (!isViewer && !done && canComplete) dispatch({ type: 'COMPLETE_STAGE' })
+    else dispatch({ type: 'GO_TO_STAGE', stageIdx: state.stageIdx + 1 })
+  }
 
   // Per-section review feedback (cloud only) — kept to power the sidebar open-feedback counts.
   const [feedback, setFeedback] = useState<FeedbackItem[]>([])
@@ -121,8 +143,7 @@ export function Workspace({ project }: { project: Project }) {
         <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(var(--fg),0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }}>
             {PHASES.map((phase, pi) => {
-              const all = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
-              const visible = all.filter(({ s }) => s.tier === 'essential' || showAdv)
+              const visible = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
               const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
@@ -179,49 +200,6 @@ export function Workspace({ project }: { project: Project }) {
               )
             })}
           </div>
-
-          {/* Advanced-steps toggle, with hover-revealed help */}
-          <div className="adv-help-wrap" style={{ position: 'relative', margin: '8px 14px 4px' }}>
-            <button
-              type="button"
-              onClick={() => setShowAdvanced((v) => !v)}
-              style={{
-                width: '100%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'linear-gradient(135deg, rgba(91,134,163,0.28), rgba(91,134,163,0.18))',
-                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.6)'}`,
-                borderRadius: '10px',
-                padding: showAdvanced ? '11px 12px' : '13px 14px',
-                color: showAdvanced ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
-                fontSize: showAdvanced ? '12.5px' : '13.5px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: showAdvanced ? 'none' : '0 3px 14px rgba(91,134,163,0.22)',
-              }}
-            >
-              <Sparkles size={showAdvanced ? 15 : 17} />
-              {showAdvanced ? 'Hide advanced steps' : `Show advanced steps (${advancedCount})`}
-            </button>
-            <div
-              className="adv-help"
-              style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--surface-card)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(var(--fg),0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
-            >
-              Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
-              <div style={{ marginTop: '8px' }}>
-                <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots
-                of people affected, you're replacing an important system, or a rough rollout would really hurt. They help
-                you win people over, plan for problems, and avoid nasty surprises.
-              </div>
-              <div style={{ marginTop: '6px' }}>
-                <span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
-                changes only a few people touch — the core steps above are plenty.
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Main */}
@@ -236,31 +214,13 @@ export function Workspace({ project }: { project: Project }) {
               {/* The big hero title carries the name on the intro, so don't repeat it here. */}
               {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>}
             </div>
-            {/* Top-right action: the green "Complete" badge once done, otherwise —
-                on the review/summary screens (showComplete) — the primary
-                "mark complete" button, placed up here so it's easy to find
-                instead of buried at the bottom of a long page. */}
-            {done ? (
+            {/* Top-right: a quiet "Complete" badge once the step is done. Steps now
+                complete automatically when you advance with Next, below. */}
+            {done && (
               <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
                 <Check size={15} strokeWidth={3} /> Complete
               </div>
-            ) : showComplete && !isViewer ? (
-              <button
-                type="button"
-                className="cq-complete-btn"
-                disabled={!canComplete}
-                style={canComplete ? { flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '8px' } : { flexShrink: 0, opacity: 0.5, cursor: 'not-allowed' }}
-                onClick={() => canComplete && dispatch({ type: 'COMPLETE_STAGE' })}
-              >
-                {canComplete ? (
-                  <>
-                    <Check size={17} strokeWidth={3} /> Mark this step complete
-                  </>
-                ) : (
-                  `Complete the launch tasks to finish (currently ${prep.pct}%)`
-                )}
-              </button>
-            ) : null}
+            )}
           </div>
 
           {isViewer && (
@@ -275,13 +235,40 @@ export function Workspace({ project }: { project: Project }) {
           <ReadOnlyCtx.Provider value={isViewer}>
             <fieldset disabled={isViewer} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
               <StageScreenCtx.Provider value={setOnIntro}>
-                <StageGateProvider onChange={setShowComplete}>
+                <ShareCtx.Provider value={() => setSharing(true)}>
                   {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
-                </StageGateProvider>
+                </ShareCtx.Provider>
               </StageScreenCtx.Provider>
             </fieldset>
           </ReadOnlyCtx.Provider>
 
+          {/* Section-level Previous / Next, each labeled with the section it leads to. */}
+          {(prevStage || nextStage) && (
+            <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
+              {prevStage ? (
+                <button type="button" onClick={goPrev} style={navBoxStyle('left')}>
+                  <ArrowLeft size={18} style={{ flexShrink: 0, color: 'var(--accent-text)' }} />
+                  <span style={{ minWidth: 0 }}>
+                    <span style={navBoxKicker}>Previous</span>
+                    <span style={navBoxLabel}>{prevStage.label}</span>
+                  </span>
+                </button>
+              ) : (
+                <span style={{ flex: 1 }} />
+              )}
+              {nextStage ? (
+                <button type="button" onClick={goNext} style={navBoxStyle('right')}>
+                  <span style={{ minWidth: 0, textAlign: 'right' }}>
+                    <span style={navBoxKicker}>Next</span>
+                    <span style={navBoxLabel}>{nextStage.label}</span>
+                  </span>
+                  <ArrowRight size={18} style={{ flexShrink: 0, color: 'var(--accent-text)' }} />
+                </button>
+              ) : (
+                <span style={{ flex: 1 }} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

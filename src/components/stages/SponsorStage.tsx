@@ -1,11 +1,12 @@
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
-import type { EscalationRule } from '@/types'
-import { AddButton, DelButton, FieldCoach, InsightCallout, Card, SectionTitle, Select, TextArea, TextInput } from '@/components/ui'
+import { FieldCoach, InsightCallout, Card, SectionTitle, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { ESCALATION_ISSUE_TYPES, ESCALATION_RESPONSE_TIMES, SPONSOR_ACTIONS } from '@/data/constants'
+import { SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
-import { uid } from '@/lib/id'
+
+/** The five highest-impact sponsor actions; the rest collapse into an "Other" box. */
+const TOP_SPONSOR_ACTIONS = SPONSOR_ACTIONS.slice(0, 5)
 
 export function SponsorStage() {
   const { data, update } = useStageEditor('sponsor')
@@ -25,12 +26,12 @@ export function SponsorStage() {
     update({ sponsorActions: [...cur] })
   }
 
-  const rules = data.escalationRules ?? []
-  const addRule = () =>
-    update({ escalationRules: [...rules, { id: uid(), issueType: ESCALATION_ISSUE_TYPES[0], owner: '', responseTime: ESCALATION_RESPONSE_TIMES[1] }] })
-  const setRule = (id: number, patch: Partial<EscalationRule>) =>
-    update({ escalationRules: rules.map((r) => (r.id === id ? { ...r, ...patch } : r)) })
-  const delRule = (id: number) => update({ escalationRules: rules.filter((r) => r.id !== id) })
+  // Anything selected that isn't one of the top 5 is the free-text "Other" entry.
+  const otherAction = data.sponsorActions.find((a) => !TOP_SPONSOR_ACTIONS.includes(a)) ?? ''
+  const setOtherAction = (v: string) => {
+    const kept = data.sponsorActions.filter((a) => TOP_SPONSOR_ACTIONS.includes(a))
+    update({ sponsorActions: v.trim() ? [...kept, v.trim()] : kept })
+  }
 
   const actionsInsight = coaching.sponsor.actionsInsight(data.sponsorActions.length)
   const f = coaching.sponsor.fields
@@ -97,7 +98,7 @@ export function SponsorStage() {
         <Card>
           <SectionTitle>Sponsor Actions — what will this sponsor actively do?</SectionTitle>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
-            {SPONSOR_ACTIONS.map((action) => {
+            {TOP_SPONSOR_ACTIONS.map((action) => {
               const checked = data.sponsorActions.includes(action)
               return (
                 <div
@@ -140,68 +141,15 @@ export function SponsorStage() {
               )
             })}
           </div>
+          <div style={{ marginTop: '12px' }}>
+            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginBottom: '6px' }}>Other</div>
+            <TextInput value={otherAction} onCommit={setOtherAction} placeholder="Add another action this sponsor will take…" />
+          </div>
           {actionsInsight && (
             <InsightCallout tone={actionsInsight.tone} style={{ marginTop: '12px' }}>
               {actionsInsight.text}
             </InsightCallout>
           )}
-        </Card>
-      ),
-    },
-    {
-      id: 'commitments',
-      title: 'Commitments',
-      isFilled: !!data.commitments.trim(),
-      summary: data.commitments,
-      node: (
-        <FieldCoach
-          label={f.commitments.label}
-          why={f.commitments.why}
-          example={f.commitments.example}
-          onUseExample={() => update({ commitments: f.commitments.example })}
-        >
-          <TextArea value={data.commitments} onCommit={(v) => update({ commitments: v })} placeholder="e.g., Personal video to all staff, co-present at all-hands..." rows={4} />
-        </FieldCoach>
-      ),
-    },
-    {
-      id: 'escalation',
-      title: 'Escalation path',
-      isFilled: rules.length > 0,
-      summary: rules.length ? `${rules.length} escalation rule${rules.length === 1 ? '' : 's'}` : undefined,
-      node: (
-        <Card>
-          <SectionTitle>{f.escalation.label}</SectionTitle>
-          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '4px 0 16px' }}>
-            {f.escalation.why}
-          </div>
-
-          {rules.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', gap: '8px', padding: '0 4px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.4)' }}>
-                <span style={{ flex: '1 1 0', minWidth: 0 }}>Issue type</span>
-                <span style={{ flex: '1 1 0', minWidth: 0 }}>Owner</span>
-                <span style={{ width: '130px', flexShrink: 0 }}>Response time</span>
-                <span style={{ width: '32px', flexShrink: 0 }} />
-              </div>
-              {rules.map((r) => (
-                <div key={r.id} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
-                    <Select value={r.issueType} options={ESCALATION_ISSUE_TYPES} onChange={(v) => setRule(r.id, { issueType: v })} />
-                  </div>
-                  <div style={{ flex: '1 1 0', minWidth: 0 }}>
-                    <TextInput value={r.owner} onCommit={(v) => setRule(r.id, { owner: v })} placeholder="Who handles it?" />
-                  </div>
-                  <div style={{ width: '130px', flexShrink: 0 }}>
-                    <Select value={r.responseTime} options={ESCALATION_RESPONSE_TIMES} onChange={(v) => setRule(r.id, { responseTime: v })} />
-                  </div>
-                  <DelButton onClick={() => delRule(r.id)} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <AddButton label="Add another escalation rule" onClick={addRule} />
         </Card>
       ),
     },

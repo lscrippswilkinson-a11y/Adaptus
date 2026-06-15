@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, ChevronRight, type LucideIcon } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronRight, Share2, type LucideIcon } from 'lucide-react'
 import { useApp, useStageEditor } from '@/state/AppContext'
+import { useShare } from '@/state/ShareContext'
 import type { MilestoneOwner, StageId } from '@/types'
-import { AddButton, DelButton, StageIntro, TextInput } from '@/components/ui'
-import { coaching } from '@/data/coaching'
+import { AddButton, DelButton, TextInput } from '@/components/ui'
 import { STAGES } from '@/data/stages'
 import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
 import { uid } from '@/lib/id'
@@ -80,6 +80,7 @@ function GoLiveCountdown({ date }: { date: string }) {
 
 export function DashboardStage() {
   const { dispatch } = useApp()
+  const openShare = useShare()
   const { project, data: milestones, update: updateMilestones } = useStageEditor('milestones')
   const { update: updateTesting } = useStageEditor('testing')
   const { update: updateDeps } = useStageEditor('dependencies')
@@ -156,7 +157,41 @@ export function DashboardStage() {
 
   return (
     <div>
-      <StageIntro icon={coaching.dashboard.icon}>{coaching.dashboard.intro}</StageIntro>
+      {/* Prominent share CTA — sharing the plan is the intended next move here. */}
+      {openShare && (
+        <button
+          type="button"
+          onClick={openShare}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            textAlign: 'left',
+            background: 'linear-gradient(135deg, #5B86A3 0%, #3E6580 100%)',
+            border: 'none',
+            borderRadius: '14px',
+            padding: '18px 22px',
+            marginBottom: '16px',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            boxShadow: '0 8px 22px rgba(62,101,128,0.4)',
+          }}
+        >
+          <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Share2 size={22} color="#fff" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Share this plan with your team</div>
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>
+              Send a read-only brief to your sponsor or team so everyone sees the plan and where it stands.
+            </div>
+          </div>
+          <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.95)', color: '#1f3445', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px' }}>
+            Share <ArrowRight size={17} />
+          </span>
+        </button>
+      )}
 
       {/* Go-live countdown */}
       <div className="cq-card">
