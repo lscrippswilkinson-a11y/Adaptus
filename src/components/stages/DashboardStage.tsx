@@ -150,7 +150,7 @@ export function DashboardStage() {
   const summary: { icon: LucideIcon; label: string; value: string; empty: string; jump: StageId; color?: string }[] = [
     { icon: iconFor('define'), label: 'The change', value: sd.define.statement, empty: 'Define what’s changing', jump: 'define' },
     { icon: iconFor('groups'), label: 'Impacted groups', value: groupsCount ? `${groupsCount} group${groupsCount === 1 ? '' : 's'} mapped` : '', empty: 'List who’s affected', jump: 'groups' },
-    { icon: iconFor('sponsor'), label: 'Sponsor', value: sponsorVal, empty: 'Name your sponsor', jump: 'sponsor' },
+    { icon: iconFor('sponsor'), label: 'Sponsor', value: sd.sponsor.noSponsor ? 'No sponsor — flagged as a risk' : sponsorVal, empty: 'Name your sponsor', jump: 'sponsor', color: sd.sponsor.noSponsor ? '#fca5a5' : undefined },
     { icon: iconFor('risk'), label: 'Overall risk', value: avg !== null ? `${riskLabel(avg)} · ${avg}/10` : '', empty: 'Log your risks', jump: 'risk', color: avg !== null ? riskColor(avg) : undefined },
     { icon: iconFor('stakeholders'), label: 'Coalition', value: sd.stakeholders.rows.length ? `${adv} advocate${adv === 1 ? '' : 's'} · ${res} resistant` : '', empty: 'Map stakeholders', jump: 'stakeholders' },
   ]

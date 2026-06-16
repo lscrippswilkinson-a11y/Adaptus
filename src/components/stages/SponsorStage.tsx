@@ -35,44 +35,67 @@ export function SponsorStage() {
 
   const actionsInsight = coaching.sponsor.actionsInsight(data.sponsorActions.length)
   const f = coaching.sponsor.fields
+  const noSponsor = data.noSponsor
 
-  const steps: WizardStep[] = [
-    {
-      id: 'name',
-      title: 'Your sponsor',
-      isFilled: !!data.name.trim(),
-      summary: data.name,
-      node: (
-        <FieldCoach
-          label={f.name.label}
-          why={f.name.why}
-          example={f.name.example}
-          onUseExample={() => update({ name: f.name.example })}
-        >
-          <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder="e.g., Elena Torres" />
-          {myName && data.name !== myName && (
-            <button
-              type="button"
-              onClick={() => update({ name: myName })}
-              style={{
-                marginTop: '8px',
-                background: 'rgba(91,134,163,0.15)',
-                border: '1px solid rgba(91,134,163,0.35)',
-                borderRadius: '6px',
-                padding: '6px 12px',
-                color: 'var(--accent-text)',
-                fontSize: '12px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              The sponsor is me, use “{myName}”
-            </button>
-          )}
-        </FieldCoach>
-      ),
-    },
+  // Declaring "no sponsor" clears any half-entered name/role so the brief and
+  // dashboard read cleanly as "not identified" rather than a stale name.
+  const toggleNoSponsor = (v: boolean) =>
+    update(v ? { noSponsor: true, name: '', role: '' } : { noSponsor: false })
+
+  const nameStep: WizardStep = {
+    id: 'name',
+    title: 'Your sponsor',
+    isFilled: noSponsor || !!data.name.trim(),
+    summary: noSponsor ? 'No executive sponsor — flagged as a risk' : data.name,
+    node: (
+      <FieldCoach
+        label={f.name.label}
+        why={f.name.why}
+        example={f.name.example}
+        onUseExample={() => update({ name: f.name.example })}
+      >
+        <InsightCallout tone="info" style={{ marginBottom: '12px' }}>{coaching.sponsor.whoIs}</InsightCallout>
+
+        {!noSponsor && (
+          <>
+            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder="e.g., Elena Torres" />
+            {myName && data.name !== myName && (
+              <button
+                type="button"
+                onClick={() => update({ name: myName })}
+                style={{
+                  marginTop: '8px',
+                  background: 'rgba(91,134,163,0.15)',
+                  border: '1px solid rgba(91,134,163,0.35)',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  color: 'var(--accent-text)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                The sponsor is me, use “{myName}”
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Escape hatch: many real projects launch without a named sponsor. */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '9px', marginTop: '14px', cursor: 'pointer', fontSize: '13px', color: 'rgba(var(--fg),0.7)' }}>
+          <input type="checkbox" checked={noSponsor} onChange={(e) => toggleNoSponsor(e.target.checked)} style={{ width: '17px', height: '17px', accentColor: '#ef4444', cursor: 'pointer', flexShrink: 0 }} />
+          We don’t have an executive sponsor (yet)
+        </label>
+
+        {noSponsor && (
+          <InsightCallout tone="warn" style={{ marginTop: '12px' }}>{coaching.sponsor.noSponsorRisk}</InsightCallout>
+        )}
+      </FieldCoach>
+    ),
+  }
+
+  const restSteps: WizardStep[] = [
     {
       id: 'role',
       title: 'Their role',
@@ -154,6 +177,10 @@ export function SponsorStage() {
       ),
     },
   ]
+
+  // With no sponsor, asking for their role/actions is moot — show just the
+  // declaration step (which carries the risk flag).
+  const steps: WizardStep[] = noSponsor ? [nameStep] : [nameStep, ...restSteps]
 
   return <StageFlow stageId="sponsor" icon={coaching.sponsor.icon} blurb={coaching.sponsor.intro} steps={steps} />
 }

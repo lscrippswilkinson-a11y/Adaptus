@@ -115,6 +115,20 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         {/* 3: What could go wrong? */}
         <div className="bs">
           <div className="bst">Top risks to watch</div>
+          {/* A declared lack of executive sponsor is the single biggest predictor
+              of failure, so it leads the list as a critical risk. */}
+          {sd.sponsor.noSponsor && (
+            <div className="bai">
+              <div className="bad" style={{ background: '#ef4444' }} />
+              <div style={{ flex: 1 }}>
+                No executive sponsor identified
+                <span className="btag r" style={{ marginLeft: '8px' }}>Critical</span>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>
+                  The top predictor of change failure — a senior leader needs to own this.
+                </div>
+              </div>
+            </div>
+          )}
           {topRisks.length ? (
             topRisks.map((r) => (
               <div key={r.id} className="bai">
@@ -125,16 +139,18 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
                 </div>
               </div>
             ))
-          ) : (
+          ) : !sd.sponsor.noSponsor ? (
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>No risks logged yet.</div>
-          )}
+          ) : null}
         </div>
 
         {/* 3: Who's on board? */}
         <div className="bs">
           <div className="bst">Who’s on board?</div>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.7 }}>
-            {sd.sponsor.name ? (
+            {sd.sponsor.noSponsor ? (
+              <span style={{ color: '#fca5a5', fontWeight: 600 }}>⚠ No executive sponsor — flagged as a risk</span>
+            ) : sd.sponsor.name ? (
               <>Sponsor: <strong style={{ color: '#fff' }}>{sd.sponsor.name}</strong>{sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}</>
             ) : (
               <span style={{ color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>No sponsor named yet</span>

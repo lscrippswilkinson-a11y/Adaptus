@@ -16,7 +16,7 @@ export function emptyProject(): Project {
     stageData: {
       define: { statement: '', scope: '', headcount: '', successLooks: '', whyNow: '' },
       groups: { groups: [] },
-      sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationRules: [] },
+      sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationRules: [], noSponsor: false },
       stakeholders: { rows: [] },
       risk: { items: [] },
       comms: { channels: [], keyMessages: '', schedule: [] },

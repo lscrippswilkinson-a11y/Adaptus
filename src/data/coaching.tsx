@@ -123,6 +123,19 @@ export const coaching = {
         leaders <em>do</em>. Name yours below, and pin down what they’ll actually do.
       </>
     ),
+    /** Plain-language description of exactly who qualifies as an executive sponsor. */
+    whoIs: (
+      <>
+        Your executive sponsor is the <strong>most senior leader who owns this change</strong> — typically a director,
+        VP, partner, or C-level exec. They have the authority to free up budget and people, the clout to unblock things
+        no one else can, and when <em>they</em> are visibly behind it, everyone else takes it seriously. It is{' '}
+        <strong>not</strong> the project manager or change lead (that’s you) — it’s the leader you escalate to. One
+        specific person, not a committee.
+      </>
+    ),
+    /** Shown when the user declares there's no sponsor. */
+    noSponsorRisk:
+      'No executive sponsor is the #1 reason changes fail — without a senior owner, decisions stall, funding dries up, and people quietly opt out. We’ve flagged this as a top risk on your status brief. Your most important next move is to find and recruit one: identify the leader who most feels the pain this change solves, and ask them to back it.',
     fields: {
       name: {
         label: 'Who is your executive sponsor?',

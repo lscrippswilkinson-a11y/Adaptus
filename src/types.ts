@@ -84,6 +84,8 @@ export interface SponsorData {
   sponsorActions: string[]
   commitments: string
   escalationRules: EscalationRule[]
+  /** User has explicitly declared there's no executive sponsor — flagged as a risk. */
+  noSponsor: boolean
 }
 
 export interface StakeholderRow {
