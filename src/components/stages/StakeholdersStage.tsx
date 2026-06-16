@@ -8,15 +8,15 @@ import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
 const INFLUENCE_LEVELS: LevelOption<Influence>[] = [
-  { value: 'High', label: 'High influence', desc: 'Can approve, block, or mobilize others — when they speak, people listen.' },
+  { value: 'High', label: 'High influence', desc: 'Can approve, block, or mobilize others; when they speak, people listen.' },
   { value: 'Medium', label: 'Medium influence', desc: 'Sways their own peers and team, but not the whole organization.' },
-  { value: 'Low', label: 'Low influence', desc: 'Limited reach — mainly speaks for themselves.' },
+  { value: 'Low', label: 'Low influence', desc: 'Limited reach, mainly speaks for themselves.' },
 ]
 
 const SUPPORT_LEVELS: LevelOption<Support>[] = [
-  { value: 'Advocate', label: 'Advocate', desc: 'Actively championing the change — already on board and vocal about it.' },
-  { value: 'Neutral', label: 'Neutral', desc: 'Waiting to see — not opposed, but not yet convinced either.' },
-  { value: 'Resistant', label: 'Resistant', desc: 'Pushing back — has real doubts, or is actively against it.' },
+  { value: 'Advocate', label: 'Advocate', desc: 'Actively championing the change, already on board and vocal about it.' },
+  { value: 'Neutral', label: 'Neutral', desc: 'Waiting to see, not opposed, but not yet convinced either.' },
+  { value: 'Resistant', label: 'Resistant', desc: 'Pushing back, has real doubts, or is actively against it.' },
   { value: 'Unknown', label: 'Not sure yet', desc: 'You genuinely don’t know where they stand. Worth finding out.' },
 ]
 
@@ -56,12 +56,12 @@ export function StakeholdersStage() {
     const supportLabel = SUPPORT_LEVELS.find((o) => o.value === r.support)?.label ?? r.support
     const insight = coaching.stakeholders.rowInsight(r)
 
-    // Screen 1 — name & role
+    // Screen 1: name & role
     steps.push({
       id: `${r.id}-name`,
       title: `${who}: name & role`,
       isFilled: !!r.name.trim(),
-      summary: r.name ? (r.role ? `${r.name} — ${r.role}` : r.name) : undefined,
+      summary: r.name ? (r.role ? `${r.name}, ${r.role}` : r.name) : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
@@ -77,7 +77,7 @@ export function StakeholdersStage() {
       ),
     })
 
-    // Screen 2 — influence
+    // Screen 2: influence
     steps.push({
       id: `${r.id}-influence`,
       title: `${who}: influence`,
@@ -92,7 +92,7 @@ export function StakeholdersStage() {
       ),
     })
 
-    // Screen 3 — current support
+    // Screen 3: current support
     steps.push({
       id: `${r.id}-support`,
       title: `${who}: support`,
@@ -107,7 +107,7 @@ export function StakeholdersStage() {
       ),
     })
 
-    // Screen 4 — engagement action (+ live insight, coalition tally on the last)
+    // Screen 4: engagement action (+ live insight, coalition tally on the last)
     steps.push({
       id: `${r.id}-action`,
       title: `${who}: engagement action`,

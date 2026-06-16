@@ -67,7 +67,7 @@ export function SponsorStage() {
                 fontFamily: 'inherit',
               }}
             >
-              The sponsor is me — use “{myName}”
+              The sponsor is me, use “{myName}”
             </button>
           )}
         </FieldCoach>
@@ -96,7 +96,7 @@ export function SponsorStage() {
       summary: `${data.sponsorActions.length} action${data.sponsorActions.length === 1 ? '' : 's'} selected`,
       node: (
         <Card>
-          <SectionTitle>Sponsor Actions — what will this sponsor actively do?</SectionTitle>
+          <SectionTitle>Sponsor Actions: what will this sponsor actively do?</SectionTitle>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
             {TOP_SPONSOR_ACTIONS.map((action) => {
               const checked = data.sponsorActions.includes(action)

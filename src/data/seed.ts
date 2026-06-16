@@ -26,7 +26,7 @@ export function emptyProject(): Project {
       milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {} },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
-      executive: { generated: false, ask: '' },
+      executive: { generated: false, ask: '', hideBranding: false },
       sustainment: { reinforcementOwner: '', checkpointDates: '', metrics: '', risks: '', recognitionPlan: '' },
       closeout: { wins: '', lessons: '', shoutouts: '' },
     },

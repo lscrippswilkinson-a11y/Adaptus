@@ -4,8 +4,8 @@ import { useStageNav } from '@/components/StageFlow'
 
 /**
  * Shared building blocks for the per-item guided flows (one question per
- * screen, TurboTax-style). Each list stage — groups, stakeholders, risks,
- * etc. — walks the user through one item's fields a screen at a time using
+ * screen, TurboTax-style). Each list stage, groups, stakeholders, risks,
+ * etc., walks the user through one item's fields a screen at a time using
  * these primitives, so the look and behaviour stay identical across stages.
  */
 
@@ -34,7 +34,7 @@ export interface LevelOption<T extends string> {
   desc: string
 }
 
-/** Big, explained option cards — replaces a bare dropdown for a guided feel. */
+/** Big, explained option cards, replaces a bare dropdown for a guided feel. */
 export function LevelPicker<T extends string>({ value, options, onChange }: { value: T; options: LevelOption<T>[]; onChange: (v: T) => void }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -146,7 +146,7 @@ export function GuidedLabel({ children }: { children: ReactNode }) {
 
 /* ---- Add / remove item buttons ---- */
 
-/** A plain add button (no navigation) — used for empty-state "Add your first X". */
+/** A plain add button (no navigation), used for empty-state "Add your first X". */
 export function AddItemButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button type="button" style={{ ...addBtn, marginTop: 0 }} onClick={onClick}>

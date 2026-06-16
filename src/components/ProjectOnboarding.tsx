@@ -2,7 +2,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 /**
- * A short, calm welcome deck shown once when a user first opens a project —
+ * A short, calm welcome deck shown once when a user first opens a project,
  * before they reach Stage 1. Three slides: why this exists, the ADKAR
  * framework it's built on, and the three phases they'll work through. Purely
  * presentational; the parent decides when it shows and persists "seen".
@@ -71,13 +71,13 @@ function SlideWelcome() {
     <div>
       <h1 style={headlineStyle}>Let’s build your change plan</h1>
       <p style={bodyStyle}>
-        Adaptus walks you through a proven, structured approach to managing organizational change — from the first
+        Adaptus walks you through a proven, structured approach to managing organizational change, from the first
         conversation to long-term adoption. Most change initiatives fail not because the solution was wrong, but because
         people weren’t brought along. This process fixes that.
       </p>
       <BottomLine>
         It’s built on <strong style={{ color: 'var(--accent-text)' }}>ADKAR</strong>, the most widely used change
-        framework — so you’re following an approach that’s proven, not improvised. You won’t have to learn it; it’s baked
+        framework, so you’re following an approach that’s proven, not improvised. You won’t have to learn it; it’s baked
         into every step.
       </BottomLine>
     </div>

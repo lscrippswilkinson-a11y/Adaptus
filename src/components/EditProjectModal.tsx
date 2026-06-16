@@ -15,7 +15,7 @@ const sideBtn: React.CSSProperties = {
 
 /**
  * Edit an existing project's identifying details (name, type, description,
- * target date). Stage data is left untouched — this only updates the metadata
+ * target date). Stage data is left untouched; this only updates the metadata
  * captured by the new-project wizard.
  */
 export function EditProjectModal({ project, onClose, onSave }: { project: Project; onClose: () => void; onSave: (updated: Project) => void }) {

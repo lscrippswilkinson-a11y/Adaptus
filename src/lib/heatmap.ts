@@ -2,7 +2,7 @@ import type { Impact, Project, Readiness } from '@/types'
 
 /**
  * Single source of truth for the organization change heat map. Every displayed
- * value — both gauges, all four stat cards, and every team row — is derived
+ * value, both gauges, all four stat cards, and every team row, is derived
  * from `buildHeatMap`, on ONE absolute scale, so the rollup can never contradict
  * the rows (e.g. "org load LIGHT while teams read HEAVY").
  */
@@ -37,7 +37,7 @@ export interface HeatSummary {
   peopleAffected: number
   initiatives: number
   avgReadiness: number
-  /** Org change load — the aggregate of team loadScores; never lower than the
+  /** Org change load, the aggregate of team loadScores; never lower than the
    *  hottest team, so it can't read lighter than the rows. */
   orgLoad: number
   orgBand: LoadBand

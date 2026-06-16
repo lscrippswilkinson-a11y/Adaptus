@@ -8,7 +8,7 @@ import { STAGES } from '@/data/stages'
 import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
 import { uid } from '@/lib/id'
 
-// Green once meaningfully on track (>70%), amber mid, red low — green reads as
+// Green once meaningfully on track (>70%), amber mid, red low, green reads as
 // good progress rather than a warning.
 const prepColor = (p: number) => (p >= 70 ? '#22c55e' : p >= 40 ? '#f59e0b' : '#ef4444')
 const GROUP_ORDER = [
@@ -157,7 +157,7 @@ export function DashboardStage() {
 
   return (
     <div>
-      {/* Prominent share CTA — sharing the plan is the intended next move here. */}
+      {/* Prominent share CTA: sharing the plan is the intended next move here. */}
       {openShare && (
         <button
           type="button"
@@ -226,7 +226,7 @@ export function DashboardStage() {
       {/* Aggregated task list */}
       <div className="cq-card">
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section — your score updates either way.</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section, your score updates either way.</div>
 
         {GROUP_ORDER.map((group, gi) => {
           const items = tasks.filter((t) => t.group === group)
@@ -239,7 +239,7 @@ export function DashboardStage() {
           // Completed sections collapse by default to cut scroll; "Additional
           // tasks" stays open so its add field is always reachable.
           const open = groupOpen[group] ?? (isCustom ? true : !allDone)
-          // checkoff items are manual confirmations, not auto-derived — flag that.
+          // checkoff items are manual confirmations, not auto-derived; flag that.
           const isCheckoff = total > 0 && items.every((t) => t.source === 'checkoff')
 
           return (

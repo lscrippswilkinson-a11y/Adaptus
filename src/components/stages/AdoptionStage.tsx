@@ -43,7 +43,7 @@ export function AdoptionStage() {
     const hasProgress = m.current && m.target
     const p2 = hasProgress ? Math.min(100, Math.round((parseFloat(m.current) / parseFloat(m.target)) * 100)) : 0
 
-    // Screen 1 — name + unit
+    // Screen 1: name + unit
     steps.push({
       id: `${m.id}-name`,
       title: `${what}: metric & unit`,
@@ -64,7 +64,7 @@ export function AdoptionStage() {
       ),
     })
 
-    // Screen 2 — target
+    // Screen 2: target
     steps.push({
       id: `${m.id}-target`,
       title: `${what}: target`,
@@ -80,12 +80,12 @@ export function AdoptionStage() {
       ),
     })
 
-    // Screen 3 — current (+ progress, insight on the last)
+    // Screen 3: current (+ progress, insight on the last)
     steps.push({
       id: `${m.id}-current`,
       title: `${what}: current`,
       isFilled: !!m.name.trim(),
-      summary: m.target ? `${m.current || '—'} / ${m.target}${m.unit}` : undefined,
+      summary: m.target ? `${m.current || '-'} / ${m.target}${m.unit}` : undefined,
       node: (
         <div>
           <h2 style={headline}>Where are you now?</h2>
@@ -109,7 +109,7 @@ export function AdoptionStage() {
     })
   })
 
-  // Final step — the qualitative "what are you hearing" notes, independent of metrics.
+  // Final step: the qualitative "what are you hearing" notes, independent of metrics.
   steps.push({
     id: 'notes',
     title: 'From the field',

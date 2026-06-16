@@ -9,7 +9,7 @@ import {
 import { Plus, X } from 'lucide-react'
 
 /**
- * Lets an ancestor switch FieldCoach into a larger "hero" presentation — used by
+ * Lets an ancestor switch FieldCoach into a larger "hero" presentation, used by
  * the guided wizard so a single question reads like a headline rather than a
  * dense form field. Defaults to the compact form used everywhere else.
  */
@@ -20,8 +20,8 @@ export function FieldCoachVariant({ variant, children }: { variant: 'default' | 
 }
 
 /**
- * When true (set by <FlatContainers>), Cards drop their boxed chrome — border,
- * background, shadow, padding — and render as plain spaced blocks. The summary
+ * When true (set by <FlatContainers>), Cards drop their boxed chrome: border,
+ * background, shadow, padding, and render as plain spaced blocks. The summary
  * view uses this so a stage reads as one clean form rather than a stack of boxes.
  */
 const FlatContainerCtx = createContext(false)
@@ -39,7 +39,7 @@ export function FlatContainers({ children }: { children: ReactNode }) {
   )
 }
 
-/** Section card (.cq-card) — flattened to a plain block inside <FlatContainers>. */
+/** Section card (.cq-card), flattened to a plain block inside <FlatContainers>. */
 export function Card({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   const flat = useContext(FlatContainerCtx)
   if (flat) return <div style={style}>{children}</div>
@@ -50,7 +50,7 @@ export function Card({ children, style }: { children: ReactNode; style?: CSSProp
   )
 }
 
-/** Header used per field in the flat summary view — clear, but smaller than the guided hero. */
+/** Header used per field in the flat summary view, clear, but smaller than the guided hero. */
 const summaryHeaderStyle: CSSProperties = { margin: '0 0 6px', fontSize: '17px', fontWeight: 700, lineHeight: 1.35, color: 'var(--text)' }
 
 /**
@@ -232,7 +232,7 @@ interface FieldCoachProps {
   why: ReactNode
   /** An optional worked example the user can read and drop into the field. */
   example?: string
-  /** Called when the user clicks "Use this example" — should set the field. */
+  /** Called when the user clicks "Use this example", should set the field. */
   onUseExample?: () => void
   /** The input itself. */
   children: ReactNode

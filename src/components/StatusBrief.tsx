@@ -4,8 +4,8 @@ import { avgRisk, preparedness, riskColor, riskLabel } from '@/lib/format'
 /**
  * The forwardable artifact: a forward-looking, exec-shaped status brief derived
  * from a project's stage data. Structured around the four questions a busy
- * leader scans for — Are we on track? What could go wrong? Who's on board? What
- * do you need from me? — plus an adoption snapshot. Rendered both in the in-app
+ * leader scans for: Are we on track? What could go wrong? Who's on board? What
+ * do you need from me? plus an adoption snapshot. Rendered both in the in-app
  * share preview and on the public, no-login share page (`publicView`).
  */
 
@@ -24,7 +24,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
   const goLive = sd.milestones.goLiveDate
     ? new Date(sd.milestones.goLiveDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : project.targetDate || '—'
+    : project.targetDate || '-'
 
   const topRisks = sd.risk.items
     .filter((r) => r.description.trim())
@@ -38,6 +38,8 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
   const metrics = sd.adoption.metrics.filter((m) => m.name.trim())
   const ask = sd.executive.ask?.trim()
+  // White-label: when on, the brief carries no "Adaptus" mark and no CTA.
+  const branded = !sd.executive.hideBranding
 
   return (
     <div className="brief-wrap">
@@ -45,10 +47,12 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         className="brief-hdr"
         style={{ background: 'radial-gradient(130% 150% at 88% -25%, rgba(255,255,255,0.20), rgba(255,255,255,0) 55%), linear-gradient(135deg,#6B97B4 0%,#3E6580 58%,#2C4A5F 100%)' }}
       >
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', marginBottom: '14px' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', fontSize: '12px' }}>✦</span>
-          Adaptus
-        </div>
+        {branded && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', marginBottom: '14px' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', fontSize: '12px' }}>✦</span>
+            Adaptus
+          </div>
+        )}
         <div className="brief-badge" style={{ borderColor: 'rgba(255,255,255,0.35)' }}>
           {statusWord(prep.pct)} · {prep.pct}% ready
         </div>
@@ -57,17 +61,17 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
       </div>
 
       <div className="brief-body">
-        {/* 1 — Are we on track? */}
+        {/* 1: Are we on track? */}
         <div className="bs">
           <div className="bst">Are we on track?</div>
           <div className="bsg">
             <div className="bsc"><div className="v" style={{ color: prepColor(prep.pct) }}>{prep.pct}%</div><div className="l">Launch ready</div></div>
             <div className="bsc"><div className="v">{goLive}</div><div className="l">Go-live</div></div>
-            <div className="bsc"><div className="v">{prep.total ? `${prep.done}/${prep.total}` : '—'}</div><div className="l">Steps complete</div></div>
+            <div className="bsc"><div className="v">{prep.total ? `${prep.done}/${prep.total}` : '-'}</div><div className="l">Steps complete</div></div>
           </div>
         </div>
 
-        {/* 2 — What could go wrong? */}
+        {/* 2: What could go wrong? */}
         <div className="bs">
           <div className="bst">Top risks to watch</div>
           {topRisks.length ? (
@@ -85,7 +89,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           )}
         </div>
 
-        {/* 3 — Who's on board? */}
+        {/* 3: Who's on board? */}
         <div className="bs">
           <div className="bst">Who’s on board?</div>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.7 }}>
@@ -104,7 +108,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           )}
         </div>
 
-        {/* 4 — What do you need from me? (the reply hook) */}
+        {/* 4: What do you need from me? (the reply hook) */}
         {(ask || !publicView) && (
           <div className="bs">
             <div className="bst">What I need from you</div>
@@ -114,7 +118,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
               </div>
             ) : (
               <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>
-                Add a clear ask — it’s the line that gets your sponsor to reply.
+                Add a clear ask, it’s the line that gets your sponsor to reply.
               </div>
             )}
           </div>
@@ -159,21 +163,29 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         )}
       </div>
 
-      <div className="brief-ft">
-        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
-          Generated from your <span style={{ color: '#B8D0DE' }}>Adaptus</span> change plan
+      {/* Footer carries the branding + growth CTA; white-labeled briefs drop it
+          entirely for public viewers, and keep only the date in owner preview. */}
+      {!(publicView && !branded) && (
+        <div className="brief-ft">
+          {branded ? (
+            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+              Generated from your <span style={{ color: '#B8D0DE' }}>Adaptus</span> change plan
+            </div>
+          ) : (
+            <span />
+          )}
+          {publicView ? (
+            <a
+              href="/"
+              style={{ fontSize: '12px', fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', borderRadius: '999px', padding: '7px 16px', textDecoration: 'none' }}
+            >
+              Build your own change plan →
+            </a>
+          ) : (
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{longDate(new Date())}</div>
+          )}
         </div>
-        {publicView ? (
-          <a
-            href="/"
-            style={{ fontSize: '12px', fontWeight: 700, color: '#fff', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', borderRadius: '999px', padding: '7px 16px', textDecoration: 'none' }}
-          >
-            Build your own change plan →
-          </a>
-        ) : (
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{longDate(new Date())}</div>
-        )}
-      </div>
+      )}
     </div>
   )
 }

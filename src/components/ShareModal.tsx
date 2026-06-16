@@ -13,15 +13,22 @@ import { StatusBrief } from '@/components/StatusBrief'
  */
 export function ShareModal({ project, onUpdate, onClose }: { project: Project; onUpdate: (p: Project) => void; onClose: () => void }) {
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
+  const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
 
   const token = project.shareToken ?? null
   const shareUrl = token ? `${window.location.origin}/?share=${token}` : ''
 
-  // Preview reflects the in-progress ask edit, even before it's committed.
+  // Preview reflects the in-progress ask edit + branding toggle, pre-commit.
   const previewProject: Project = {
     ...project,
-    stageData: { ...project.stageData, executive: { ...project.stageData.executive, ask } },
+    stageData: { ...project.stageData, executive: { ...project.stageData.executive, ask, hideBranding } },
+  }
+
+  const toggleBranding = () => {
+    const next = !hideBranding
+    setHideBranding(next)
+    onUpdate({ ...project, stageData: { ...project.stageData, executive: { ...project.stageData.executive, ask, hideBranding: next } } })
   }
 
   const commitAsk = () => {
@@ -43,7 +50,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
     } catch {
-      /* clipboard blocked — the URL is still selectable in the field */
+      /* clipboard blocked; the URL is still selectable in the field */
     }
   }
 
@@ -56,7 +63,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
         <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>Share</div>
         <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Status brief for leadership</h2>
         <p style={{ margin: '0 0 22px', fontSize: '13px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
-          A read-only, one-glance summary anyone can open — no login. Forward it to your sponsor or exec.
+          A read-only, one-glance summary anyone can open, no login. Forward it to your sponsor or exec.
         </p>
 
         {!hasSupabase ? (
@@ -71,7 +78,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               className="cq-textarea"
               rows={3}
               value={ask}
-              placeholder="The one clear ask that gets a reply — e.g., “Email all staff before go-live, and join the launch all-hands.”"
+              placeholder="The one clear ask that gets a reply, e.g., “Email all staff before go-live, and join the launch all-hands.”"
               style={{ marginBottom: '20px' }}
               onChange={(e) => setAsk(e.target.value)}
               onBlur={commitAsk}
@@ -108,6 +115,24 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 <Link2 size={16} /> Create share link
               </button>
             )}
+
+            {/* White-label toggle: make the brief look fully the user's own. */}
+            <label
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '12px', padding: '14px 16px', marginBottom: '24px' }}
+            >
+              <input
+                type="checkbox"
+                checked={hideBranding}
+                onChange={toggleBranding}
+                style={{ width: '18px', height: '18px', marginTop: '1px', accentColor: '#3E6580', cursor: 'pointer', flexShrink: 0 }}
+              />
+              <span>
+                <span style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>Remove Adaptus branding</span>
+                <span style={{ display: 'block', fontSize: '12px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5, marginTop: '3px' }}>
+                  Hide the logo and the “Build your own” link so the brief looks entirely your own.
+                </span>
+              </span>
+            </label>
 
             {/* Live preview of exactly what recipients see */}
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>Preview</div>

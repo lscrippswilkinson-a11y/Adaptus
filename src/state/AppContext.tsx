@@ -15,13 +15,19 @@ import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
-import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, updateProject } from '@/lib/projectsRepo'
+import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, inviteCollaborator, updateProject } from '@/lib/projectsRepo'
 
 interface AppContextValue {
   state: AppState
   dispatch: React.Dispatch<AppAction>
   /** False while the cloud project list is still loading. */
   ready: boolean
+  /**
+   * Add a new project and, in cloud mode, grant the given emails editor access
+   * once the project row exists in Supabase (invites require the project + an
+   * owner membership, both created on insert).
+   */
+  addProject: (project: Project, invites?: string[]) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -46,6 +52,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, undefined, init)
   const [ready, setReady] = useState(!cloud)
   const lastSynced = useRef<Project[] | null>(null)
+  // Emails to invite as editors, keyed by project id, queued until the project
+  // is first inserted into Supabase (invites FK the project and need an owner).
+  const pendingInvites = useRef<Record<string, string[]>>({})
+
+  const addProject = useCallback((project: Project, invites: string[] = []) => {
+    if (cloud && invites.length) pendingInvites.current[project.id] = invites
+    dispatch({ type: 'ADD_PROJECT', project })
+  }, [])
 
   // Hydrate from Supabase once signed in (and migrate any local projects on first
   // login). The whole load runs inside a ref-held promise so that the effect
@@ -90,7 +104,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           console.error('[adaptus] failed to load projects from Supabase', err)
         }
 
-        // Best-effort one-time migration of local projects — must not block the app.
+        // Best-effort one-time migration of local projects, must not block the app.
         const migrationKey = `adaptus.migrated.${u.id}`
         if (projects.length === 0 && !localStorage.getItem(migrationKey)) {
           try {
@@ -107,7 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
 
         // Tag each project with the signed-in user's role (owner default for any
-        // not yet reflected in the membership table — e.g. just-created ones).
+        // not yet reflected in the membership table, e.g. just-created ones).
         try {
           const roles = await fetchMyRoles(u.id)
           projects = projects.map((p) => ({ ...p, role: roles[p.id] ?? 'owner' }))
@@ -156,8 +170,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const current = state.projects
         for (const p of current) {
           const before = prev?.find((x) => x.id === p.id)
-          if (!before) await insertProject(p, user.id) // new project
-          else if (before !== p) await updateProject(p) // edited (reference changed)
+          if (!before) {
+            await insertProject(p, user.id) // new project
+            // Grant queued collaborators access now that the row (and the
+            // owner membership) exists; best-effort, never block the sync.
+            const emails = pendingInvites.current[p.id]
+            if (emails?.length) {
+              for (const email of emails) {
+                try {
+                  await inviteCollaborator(p.id, email, 'editor')
+                } catch (err) {
+                  console.error('[adaptus] failed to invite collaborator', email, err)
+                }
+              }
+              delete pendingInvites.current[p.id]
+            }
+          } else if (before !== p) await updateProject(p) // edited (reference changed)
         }
         if (prev) {
           for (const p of prev) {
@@ -172,7 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(handle)
   }, [state.projects, ready, user])
 
-  const value = useMemo(() => ({ state, dispatch, ready }), [state, ready])
+  const value = useMemo(() => ({ state, dispatch, ready, addProject }), [state, ready, addProject])
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }
 

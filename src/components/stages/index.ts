@@ -17,7 +17,7 @@ import { ReportStage } from '@/components/stages/ReportStage'
 
 /**
  * Maps each navigable section id to its component. Keyed by the ids that appear
- * in STAGES (a subset of StageId — e.g. `closeout` is a data slice edited
+ * in STAGES (a subset of StageId, e.g. `closeout` is a data slice edited
  * inside the report, not its own section), so this is a Partial record.
  */
 export const STAGE_COMPONENTS: Partial<Record<StageId, ComponentType>> = {

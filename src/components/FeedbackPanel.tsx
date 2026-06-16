@@ -16,8 +16,8 @@ function ago(iso: string): string {
 }
 
 /**
- * The review thread for one section (stage). Any collaborator — including
- * view-only reviewers — can post feedback here; the author or the project
+ * The review thread for one section (stage). Any collaborator, including
+ * view-only reviewers, can post feedback here; the author or the project
  * owner can resolve or delete it. Rendered outside the workspace's read-only
  * lock so reviewers can comment even though they can't edit the plan.
  */

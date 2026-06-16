@@ -11,8 +11,8 @@ import { uid } from '@/lib/id'
 const STATUS_LEVELS: LevelOption<DependencyStatus>[] = [
   { value: 'Not started', label: 'Not started', desc: 'Hasn’t been kicked off yet.' },
   { value: 'In progress', label: 'In progress', desc: 'Underway, but not finished.' },
-  { value: 'Ready', label: 'Ready', desc: 'Done and confirmed — you can count on it.' },
-  { value: 'At risk', label: 'At risk', desc: 'In doubt — might not land in time. Chase this one now.' },
+  { value: 'Ready', label: 'Ready', desc: 'Done and confirmed, you can count on it.' },
+  { value: 'At risk', label: 'At risk', desc: 'In doubt, might not land in time. Chase this one now.' },
 ]
 
 export function DependenciesStage() {
@@ -50,7 +50,7 @@ export function DependenciesStage() {
     const what = d.name.trim() || `Dependency ${i + 1}`
     const isLast = i === data.items.length - 1
 
-    // Screen 1 — name + type
+    // Screen 1: name + type
     steps.push({
       id: `${d.id}-name`,
       title: `${what}: what & type`,
@@ -71,7 +71,7 @@ export function DependenciesStage() {
       ),
     })
 
-    // Screen 2 — owner
+    // Screen 2: owner
     steps.push({
       id: `${d.id}-owner`,
       title: `${what}: owner`,
@@ -81,13 +81,13 @@ export function DependenciesStage() {
         <div>
           <h2 style={headline}>Who owns it?</h2>
           <div style={whyStyle}>{w.detail.why}</div>
-          <Label>Owner — who’s responsible?</Label>
-          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="e.g., IT — Priya" />
+          <Label>Owner: who’s responsible?</Label>
+          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="e.g., IT - Priya" />
         </div>
       ),
     })
 
-    // Screen 3 — needed by
+    // Screen 3: needed by
     steps.push({
       id: `${d.id}-date`,
       title: `${what}: needed by`,
@@ -103,7 +103,7 @@ export function DependenciesStage() {
       ),
     })
 
-    // Screen 3 — status (+ at-risk note on the last)
+    // Screen 3: status (+ at-risk note on the last)
     steps.push({
       id: `${d.id}-status`,
       title: `${what}: status`,

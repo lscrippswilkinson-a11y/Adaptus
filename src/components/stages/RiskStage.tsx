@@ -79,7 +79,7 @@ export function RiskStage() {
     const what = r.description.trim() || `Risk ${i + 1}`
     const isLast = i === data.items.length - 1
 
-    // Screen 1 — category + description
+    // Screen 1: category + description
     steps.push({
       id: `${r.id}-describe`,
       title: `${what}: what`,
@@ -100,7 +100,7 @@ export function RiskStage() {
       ),
     })
 
-    // Screen 2 — likelihood
+    // Screen 2: likelihood
     steps.push({
       id: `${r.id}-likelihood`,
       title: `${what}: likelihood`,
@@ -115,7 +115,7 @@ export function RiskStage() {
       ),
     })
 
-    // Screen 3 — impact
+    // Screen 3: impact
     steps.push({
       id: `${r.id}-impact`,
       title: `${what}: impact`,
@@ -130,7 +130,7 @@ export function RiskStage() {
       ),
     })
 
-    // Screen 3 — mitigation (+ overall score + insight on the last)
+    // Screen 3: mitigation (+ overall score + insight on the last)
     steps.push({
       id: `${r.id}-mitigation`,
       title: `${what}: mitigation`,
@@ -140,7 +140,7 @@ export function RiskStage() {
         <div>
           <h2 style={headline}>What’s your plan if this happens?</h2>
           <div style={whyStyle}>{w.mitigation.why}</div>
-          <Label>Mitigation plan — your fix if this happens</Label>
+          <Label>Mitigation plan: your fix if this happens</Label>
           <TextInput value={r.mitigation} onCommit={(v) => setItem(r.id, { mitigation: v })} placeholder="e.g., Run both systems in parallel for 2 weeks as a safety net" />
           {mode === 'guided' && isLast && avg !== null && (
             <div style={{ marginTop: '18px' }}>

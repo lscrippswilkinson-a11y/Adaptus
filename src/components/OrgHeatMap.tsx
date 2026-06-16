@@ -11,7 +11,7 @@ import { buildHeatMap, looseKey, readinessBand, type HeatTeam, type LoadBand, ty
  */
 
 const ALIAS_KEY = 'adaptus.groupAliases'
-// Semantic colour tokens — one meaning each.
+// Semantic colour tokens, one meaning each.
 //  • Load heat ramp: good green → caution amber → hot ORANGE (never the alarm
 //    red, so red can't mean two things).
 //  • Readiness: its own scale; "Low" is rose, distinct from load-orange.
@@ -127,7 +127,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Organization change heat map</span>
       </div>
       <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)', marginBottom: '18px', lineHeight: 1.5 }}>
-        Which teams are absorbing the most change across all your initiatives. Higher load = more concurrent change — watch for fatigue.
+        Which teams are absorbing the most change across all your initiatives. Higher load = more concurrent change, watch for fatigue.
       </div>
 
       {/* Gauges + KPI tiles */}
@@ -155,7 +155,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         </div>
       ))}
 
-      {/* Manual combine bar — appears on the first tick so the checkboxes
+      {/* Manual combine bar, appears on the first tick so the checkboxes
           explain themselves. */}
       {selected.size >= 1 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '10px', padding: '10px 14px', marginBottom: '10px' }}>

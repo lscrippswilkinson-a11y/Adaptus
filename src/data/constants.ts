@@ -27,11 +27,11 @@ export interface ChannelInfo {
 
 export const CHANNELS: ChannelInfo[] = [
   { name: 'All-Hands Meeting', best: 'Great for launching and creating shared momentum.', limit: 'Too broad for nuanced questions.' },
-  { name: 'Email Blast', best: 'Creates a paper trail and reaches everyone at once.', limit: 'Low retention — people skim or miss it.' },
+  { name: 'Email Blast', best: 'Creates a paper trail and reaches everyone at once.', limit: 'Low retention; people skim or miss it.' },
   { name: 'Slack / Teams Channel', best: 'Best for quick updates and in-the-moment questions.', limit: 'Easily buried as the feed scrolls past.' },
   { name: 'Manager Cascade', best: 'Best for behavioral change; people trust their direct manager most.', limit: "Less effective if managers aren't briefed properly." },
   { name: 'Town Hall', best: 'Good for casting the big-picture vision and taking questions openly.', limit: 'Can feel one-directional without real Q&A.' },
-  { name: 'Intranet Post', best: 'A durable reference people can return to anytime.', limit: 'Passive — few go looking unless pointed there.' },
+  { name: 'Intranet Post', best: 'A durable reference people can return to anytime.', limit: 'Passive; few go looking unless pointed there.' },
   { name: '1:1 Check-ins', best: 'Best for surfacing individual concerns and quiet resistance.', limit: 'Time-intensive and hard to scale.' },
   { name: 'Video Update', best: "Adds a personal, human tone text can't carry.", limit: 'High effort to produce and you can’t skim it.' },
   { name: 'FAQ Document', best: 'Answers common questions once and deflects repeats.', limit: 'Only helps those who think to look.' },
@@ -114,7 +114,7 @@ export const LAUNCH_EXPLAINERS: Record<string, string> = {
   'Executive sponsor briefed':
     'Your sponsor needs to know what\'s launching, what their visible role is on day one, and how to answer questions from their peers. An uninformed sponsor undermines credibility immediately.',
   'IT/systems ready':
-    'All infrastructure — software, integrations, user accounts, permissions — tested in production. User provisioning complete, help desk routing confirmed, legacy cutover plan locked.',
+    'All infrastructure, software, integrations, user accounts, permissions, tested in production. User provisioning complete, help desk routing confirmed, legacy cutover plan locked.',
   'Training complete':
     'All impacted users have had access to the training they need. For high-risk groups, confirm completion before go-live, not after.',
   'Comms sent':
@@ -126,5 +126,5 @@ export const LAUNCH_EXPLAINERS: Record<string, string> = {
   'Success metrics defined':
     'Pre-defined metrics, data sources, targets, and timeline for assessment. Without them, you can\'t claim success or diagnose failure after go-live.',
   'Go/no-go decision made':
-    'A formal checkpoint — 24–48 hours before launch — where stakeholders review readiness criteria and make an explicit decision to proceed, delay, or cancel.',
+    'A formal checkpoint, 24–48 hours before launch, where stakeholders review readiness criteria and make an explicit decision to proceed, delay, or cancel.',
 }

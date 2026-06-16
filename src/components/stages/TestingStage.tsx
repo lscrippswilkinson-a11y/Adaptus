@@ -11,7 +11,7 @@ import { uid } from '@/lib/id'
 const STATUS_LEVELS: LevelOption<TestStatus>[] = [
   { value: 'Not started', label: 'Not started', desc: 'Haven’t run it yet.' },
   { value: 'In progress', label: 'In progress', desc: 'Currently being tested.' },
-  { value: 'Passed', label: 'Passed', desc: 'Ran it and it works — signed off.' },
+  { value: 'Passed', label: 'Passed', desc: 'Ran it and it works, signed off.' },
   { value: 'Failed', label: 'Failed', desc: 'Ran it and found a problem. Fix the cause and re-test.' },
 ]
 
@@ -50,7 +50,7 @@ export function TestingStage() {
     const what = t.name.trim() || `Test ${i + 1}`
     const isLast = i === data.items.length - 1
 
-    // Screen 1 — name + type
+    // Screen 1: name + type
     steps.push({
       id: `${t.id}-name`,
       title: `${what}: what & type`,
@@ -71,7 +71,7 @@ export function TestingStage() {
       ),
     })
 
-    // Screen 2 — owner
+    // Screen 2: owner
     steps.push({
       id: `${t.id}-owner`,
       title: `${what}: owner`,
@@ -81,13 +81,13 @@ export function TestingStage() {
         <div>
           <h2 style={headline}>Who runs it?</h2>
           <div style={whyStyle}>{w.owner.why}</div>
-          <Label>Owner — who runs it?</Label>
-          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="e.g., IT — Sam" />
+          <Label>Owner: who runs it?</Label>
+          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="e.g., IT - Sam" />
         </div>
       ),
     })
 
-    // Screen 3 — status
+    // Screen 3: status
     steps.push({
       id: `${t.id}-status`,
       title: `${what}: status`,
@@ -103,7 +103,7 @@ export function TestingStage() {
       ),
     })
 
-    // Screen 3 — notes (+ failed note on the last)
+    // Screen 3: notes (+ failed note on the last)
     steps.push({
       id: `${t.id}-notes`,
       title: `${what}: notes`,

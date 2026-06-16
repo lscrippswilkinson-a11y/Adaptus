@@ -78,7 +78,7 @@ export async function deleteProjectRemote(id: string): Promise<void> {
 }
 
 /**
- * Fetch a project by its public share token — works WITHOUT auth via the
+ * Fetch a project by its public share token, works WITHOUT auth via the
  * `get_shared_project` SECURITY DEFINER RPC, which returns only the public-safe
  * columns of the one matching row (and nothing if the token is wrong/revoked).
  */
@@ -116,7 +116,7 @@ interface ProfileRow {
 /** Everyone with access to a project, plus the not-yet-claimed email invites. */
 export async function fetchCollaborators(projectId: string): Promise<{ members: Member[]; invites: Invite[] }> {
   // No FK between project_members and profiles (both point at auth.users), so
-  // PostgREST can't embed — fetch members, then their profiles, and join here.
+  // PostgREST can't embed, fetch members, then their profiles, and join here.
   const [m, i] = await Promise.all([
     supabase.from('project_members').select('user_id, role').eq('project_id', projectId),
     supabase.from('project_invites').select('id, email, role').eq('project_id', projectId),

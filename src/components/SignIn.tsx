@@ -51,7 +51,7 @@ export function SignIn() {
             </div>
             <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>Check your email</p>
             <p style={{ margin: '0 0 24px', fontSize: '13.5px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
-              We sent a sign-in link to <strong style={{ color: '#fff' }}>{sentTo}</strong>. Click it to get in — no password needed.
+              We sent a sign-in link to <strong style={{ color: '#fff' }}>{sentTo}</strong>. Click it to get in, no password needed.
             </p>
             <button type="button" onClick={() => { setSentTo(''); setEmail('') }} style={textBtn}>Use a different email</button>
           </>
@@ -92,7 +92,7 @@ export function SignIn() {
             </button>
             {error && <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#fca5a5' }}>{error}</div>}
             <p style={{ margin: '18px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
-              Works with any email — Google not required.
+              Works with any email, Google not required.
             </p>
           </>
         )}

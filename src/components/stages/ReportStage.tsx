@@ -24,7 +24,7 @@ export function ReportStage() {
   }).length
   const goLive = sd.milestones.goLiveDate
     ? new Date(sd.milestones.goLiveDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    : '—'
+    : '-'
 
   const fc = coaching.closeout.fields
 
@@ -93,7 +93,7 @@ export function ReportStage() {
               <div className="bsg">
                 <div className="bsc"><div className="v" style={{ color: prepColor(prep.pct) }}>{prep.pct}%</div><div className="l">Preparedness</div></div>
                 <div className="bsc"><div className="v">{goLive}</div><div className="l">Go-live</div></div>
-                <div className="bsc"><div className="v">{metrics.length ? `${onTarget}/${metrics.length}` : '—'}</div><div className="l">Metrics on target</div></div>
+                <div className="bsc"><div className="v">{metrics.length ? `${onTarget}/${metrics.length}` : '-'}</div><div className="l">Metrics on target</div></div>
               </div>
             </div>
 

@@ -53,7 +53,7 @@ export function Workspace({ project }: { project: Project }) {
   }, [state.stageIdx, project.id])
 
   // Reset the complete-button gate when the stage changes, in the render phase
-  // (not an effect) so a wizard stage's own gate — set via its layout effect —
+  // (not an effect) so a wizard stage's own gate, set via its layout effect,
   // wins instead of being clobbered. Default visible; StageFlow hides it on its
   // intro/question screens, and non-wizard stages keep it shown.
   const stageKey = `${project.id}-${stage.id}`
@@ -80,7 +80,7 @@ export function Workspace({ project }: { project: Project }) {
     else dispatch({ type: 'GO_TO_STAGE', stageIdx: state.stageIdx + 1 })
   }
 
-  // Per-section review feedback (cloud only) — kept to power the sidebar open-feedback counts.
+  // Per-section review feedback (cloud only), kept to power the sidebar open-feedback counts.
   const [feedback, setFeedback] = useState<FeedbackItem[]>([])
   const loadFeedback = () => {
     if (!hasSupabase) return
@@ -101,7 +101,7 @@ export function Workspace({ project }: { project: Project }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'transparent' }}>
-      {/* Header — quiet progress only */}
+      {/* Header: quiet progress only */}
       <div style={{ padding: '14px 22px', borderBottom: '1px solid rgba(var(--fg),0.06)', display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
         <button
           type="button"
@@ -139,7 +139,7 @@ export function Workspace({ project }: { project: Project }) {
 
       {/* Body */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar — sections grouped by phase */}
+        {/* Sidebar: sections grouped by phase */}
         <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(var(--fg),0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }}>
             {PHASES.map((phase, pi) => {

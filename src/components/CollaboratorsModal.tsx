@@ -149,12 +149,12 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
           </div>
         ) : (
           <>
-            {/* Invite link — the easy path: send it yourself, anyone can join. */}
+            {/* Invite link, the easy path: send it yourself, anyone can join. */}
             {isOwner && (
               <div style={{ marginBottom: '18px' }}>
                 <div className="cq-lbl">Invite link</div>
                 <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', margin: '2px 0 10px', lineHeight: 1.5 }}>
-                  Anyone who opens the link joins as the role you pick — send it however you like.
+                  Anyone who opens the link joins as the role you pick, send it however you like.
                 </div>
                 {links.map((l) => (
                   <div key={l.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>

@@ -35,8 +35,8 @@ const fillBtnStyle: React.CSSProperties = {
 
 /**
  * One planned touchpoint: the logistics row (when/audience/channel) plus an
- * expandable drafter that coaches an effective message — context, core
- * message, and a clear call to action — and assembles a copy-ready draft.
+ * expandable drafter that coaches an effective message, context, core
+ * message, and a clear call to action, and assembles a copy-ready draft.
  */
 function TouchpointCard({
   t,
@@ -64,7 +64,7 @@ function TouchpointCard({
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
     } catch {
-      /* clipboard blocked — the text is still selectable in the field */
+      /* clipboard blocked, the text is still selectable in the field */
     }
   }
 
@@ -78,7 +78,7 @@ function TouchpointCard({
         </div>
         <DelButton onClick={onDelete} />
       </div>
-      <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message — what this audience needs to know" />
+      <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message: what this audience needs to know" />
 
       <div style={{ marginTop: '10px' }}>
         <button type="button" style={linkBtnStyle} onClick={() => setOpen((s) => !s)}>
@@ -150,7 +150,7 @@ export function CommsStage() {
   const setSchedule = (next: CommsTouchpoint[]) => update({ schedule: next })
   const addTouchpoint = (phase: CommsPhase) =>
     setSchedule([...schedule, { id: uid(), phase, when: '', audience: '', channel: data.channels[0] ?? '', message: '' }])
-  // Only offer the channels the user actually selected above — but keep a
+  // Only offer the channels the user actually selected above, but keep a
   // since-deselected channel visible on a touchpoint that still uses it.
   const channelOptionsFor = (current: string) =>
     current && !data.channels.includes(current) ? [current, ...data.channels] : data.channels
@@ -185,7 +185,7 @@ export function CommsStage() {
       <Card>
         <Label>Communication channels</Label>
         <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
-          Pick the channels you’ll use — each plays to a different strength. Most changes need a few working together.
+          Pick the channels you’ll use, each plays to a different strength. Most changes need a few working together.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           {CHANNELS.map((ch) => {
@@ -268,7 +268,7 @@ export function CommsStage() {
 
         {data.channels.length === 0 && (
           <InsightCallout tone="info" style={{ marginBottom: '16px' }}>
-            Pick your channels above first — each touchpoint’s channel dropdown only offers the channels you’ve chosen.
+            Pick your channels above first, each touchpoint’s channel dropdown only offers the channels you’ve chosen.
           </InsightCallout>
         )}
 

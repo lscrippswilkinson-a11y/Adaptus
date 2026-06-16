@@ -9,9 +9,9 @@ import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
 const SEVERITY_LEVELS: LevelOption<Severity>[] = [
-  { value: 'High', label: 'High', desc: 'Could stall or sink the rollout if ignored — needs a real, specific response.' },
+  { value: 'High', label: 'High', desc: 'Could stall or sink the rollout if ignored, needs a real, specific response.' },
   { value: 'Medium', label: 'Medium', desc: 'A genuine drag on momentum, but manageable with attention.' },
-  { value: 'Low', label: 'Low', desc: 'Minor grumbling — worth noting, but not a threat on its own.' },
+  { value: 'Low', label: 'Low', desc: 'Minor grumbling, worth noting, but not a threat on its own.' },
 ]
 
 export function ResistanceStage() {
@@ -48,12 +48,12 @@ export function ResistanceStage() {
     const who = item.group.trim() || item.type
     const isLast = i === data.items.length - 1
 
-    // Screen 1 — type + affected group
+    // Screen 1: type + affected group
     steps.push({
       id: `${item.id}-source`,
       title: `${who}: source`,
       isFilled: !!item.group.trim(),
-      summary: `${item.type}${item.group ? ` — ${item.group}` : ''}`,
+      summary: `${item.type}${item.group ? `, ${item.group}` : ''}`,
       node: (
         <div>
           <h2 style={headline}>{w.source.label}</h2>
@@ -69,7 +69,7 @@ export function ResistanceStage() {
       ),
     })
 
-    // Screen 2 — severity
+    // Screen 2: severity
     steps.push({
       id: `${item.id}-severity`,
       title: `${who}: severity`,
@@ -84,7 +84,7 @@ export function ResistanceStage() {
       ),
     })
 
-    // Screen 3 — intervention (+ high-severity note on the last)
+    // Screen 3: intervention (+ high-severity note on the last)
     steps.push({
       id: `${item.id}-intervention`,
       title: `${who}: intervention`,
@@ -94,7 +94,7 @@ export function ResistanceStage() {
         <div>
           <h2 style={headline}>How will you address it?</h2>
           <div style={whyStyle}>{w.intervention.why}</div>
-          <Label>Intervention — who does what, by when?</Label>
+          <Label>Intervention: who does what, by when?</Label>
           <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, dedicated coaching sprint..." />
           {mode === 'guided' && isLast && highSeverityNote && (
             <InsightCallout tone={highSeverityNote.tone} style={{ marginTop: '16px' }}>{highSeverityNote.text}</InsightCallout>
@@ -105,7 +105,7 @@ export function ResistanceStage() {
     })
   })
 
-  // Final step — the general (ongoing) resistance plan, independent of the items.
+  // Final step: the general (ongoing) resistance plan, independent of the items.
   steps.push({
     id: 'generalPlan',
     title: 'Ongoing plan',

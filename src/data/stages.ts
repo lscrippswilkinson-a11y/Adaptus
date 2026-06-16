@@ -23,7 +23,7 @@ export const PHASES: Phase[] = [
 ]
 
 export const STAGES: Stage[] = [
-  // Phase 1 — Planning
+  // Phase 1: Planning
   { id: 'define', label: 'Define the Change', icon: Target, tag: 'Foundation', xp: 100, phase: 'planning', tier: 'essential' },
   { id: 'groups', label: 'Identify Groups', icon: Users, tag: 'Scope', xp: 80, phase: 'planning', tier: 'essential' },
   { id: 'sponsor', label: 'Sponsor Action Plan', icon: Award, tag: 'Sponsorship', xp: 120, phase: 'planning', tier: 'essential' },
@@ -35,10 +35,10 @@ export const STAGES: Stage[] = [
   { id: 'testing', label: 'Test Before Launch', icon: FlaskConical, tag: 'Testing', xp: 110, phase: 'planning', tier: 'advanced' },
   { id: 'dependencies', label: 'Line Up Dependencies', icon: Link2, tag: 'Dependencies', xp: 110, phase: 'planning', tier: 'advanced' },
 
-  // Phase 2 — Launch Preparation
+  // Phase 2: Launch Preparation
   { id: 'milestones', label: 'Launch Preparation Dashboard', icon: Rocket, tag: 'Launch Readiness', xp: 150, phase: 'launch', tier: 'essential' },
 
-  // Phase 3 — Post-Launch
+  // Phase 3: Post-Launch
   { id: 'adoption', label: 'Adoption Momentum', icon: TrendingUp, tag: 'Tracking', xp: 100, phase: 'postlaunch', tier: 'essential' },
   { id: 'sustainment', label: 'Sustainment Plan', icon: RefreshCw, tag: 'Sustainment', xp: 150, phase: 'postlaunch', tier: 'advanced' },
   { id: 'executive', label: 'Launch Success Report', icon: BarChart3, tag: 'Report', xp: 200, phase: 'postlaunch', tier: 'essential' },

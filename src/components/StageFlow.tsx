@@ -11,7 +11,7 @@ export interface WizardStep {
   id: string
   /** Short label for the "X of N" indicator and the review row, e.g. 'Scope'. */
   title: string
-  /** The field/builder UI — the same JSX the summary view renders. */
+  /** The field/builder UI, the same JSX the summary view renders. */
   node: ReactNode
   /** Compact read-back of the entered value for the review screen. */
   summary?: ReactNode
@@ -32,7 +32,7 @@ export interface WizardStep {
 }
 
 export interface StageFlowProps {
-  /** The stage's id — used to look up its title and tips. */
+  /** The stage's id, used to look up its title and tips. */
   stageId: StageId
   /** Emoji used on the intro screen and the summary-mode banner. */
   icon: string
@@ -48,15 +48,15 @@ export interface StageFlowProps {
    */
   guided?: boolean
   /**
-   * Whether the instructional chrome — the stage intro blurb and the "why this
-   * matters" TipBox — is shown. Defaults to true. Set false for stages plain
+   * Whether the instructional chrome, the stage intro blurb and the "why this
+   * matters" TipBox, is shown. Defaults to true. Set false for stages plain
    * enough that the field labels speak for themselves (death to instruction).
    */
   guidance?: boolean
   /**
    * Hub mode (list stages): when provided, the guided flow becomes
-   * hub-and-spoke. The "review" screen renders this hub — a summary of all
-   * items with add/continue affordances — and editing one item (its
+   * hub-and-spoke. The "review" screen renders this hub, a summary of all
+   * items with add/continue affordances, and editing one item (its
    * `itemFirst`…`itemLast` run of screens) returns here when finished.
    * `editItem` jumps to a given step index (an item's first screen).
    */
@@ -73,14 +73,14 @@ const StageGateCtx = createContext<(showComplete: boolean) => void>(() => {})
 
 /**
  * Read-only mode (e.g. a viewer-role collaborator). When set, every stage
- * renders as the all-at-once summary — no intro gate or step navigation to get
- * trapped behind — and the Workspace disables the inputs around it.
+ * renders as the all-at-once summary, no intro gate or step navigation to get
+ * trapped behind, and the Workspace disables the inputs around it.
  */
 export const ReadOnlyCtx = createContext(false)
 
 /**
  * Lets StageFlow tell the Workspace when the guided intro screen is showing, so
- * the Workspace can hide its (otherwise duplicate) stage title there — the big
+ * the Workspace can hide its (otherwise duplicate) stage title there; the big
  * hero title on the intro carries it.
  */
 export const StageScreenCtx = createContext<(onIntro: boolean) => void>(() => {})
@@ -90,7 +90,7 @@ export function StageGateProvider({ onChange, children }: { onChange: (showCompl
 }
 
 /**
- * Lets a step's own UI drive wizard navigation — e.g. an "Add another" button
+ * Lets a step's own UI drive wizard navigation, e.g. an "Add another" button
  * that appends an item and advances to it in one tap. Null outside a guided flow.
  */
 const StageNavCtx = createContext<{ next: () => void; prev: () => void } | null>(null)
@@ -179,12 +179,12 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
   const onReview = step >= total
   const title = STAGES.find((s) => s.id === stageId)?.label ?? ''
 
-  // Hub stages ignore the summary toggle — the hub IS their overview. But a
+  // Hub stages ignore the summary toggle; the hub IS their overview. But a
   // read-only viewer always gets the flat summary (all fields, no navigation).
   const readOnly = useContext(ReadOnlyCtx)
   const summaryMode = readOnly || !guided || (mode === 'summary' && !hub)
 
-  // The complete button belongs on the review/hub screen, or the summary view —
+  // The complete button belongs on the review/hub screen, or the summary view,
   // never on the intro card or a question screen. A layout effect (not a plain
   // effect) so it settles before paint and beats the Workspace stage-change
   // reset, avoiding a one-frame flash of the button on the intro.
@@ -259,7 +259,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
 
   const progressPct = onReview ? 100 : hub ? Math.round((itemPos / itemLen) * 100) : Math.round(((current + 1) / total) * 100)
 
-  // Intro screen — context and motivation only, no inputs.
+  // Intro screen: context and motivation only, no inputs.
   if (step < 0) {
     return (
       <div style={{ maxWidth: `${CONTENT_MAX}px`, margin: '0 auto' }}>
@@ -338,7 +338,7 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
     <div>
       <h3 style={{ margin: '0 0 4px', fontSize: '19px', fontWeight: 800, color: 'var(--text)' }}>Review your answers</h3>
       <p style={{ margin: '0 0 18px', fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6 }}>
-        Here’s everything you entered. Click any item to change it — then mark the step complete below.
+        Here’s everything you entered. Click any item to change it, then mark the step complete below.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {steps.map((s, i) => {

@@ -42,7 +42,7 @@ export function TrainingStage() {
     const isFirst = i === 0
     const isLast = i === data.items.length - 1
 
-    // Screen 1 — title (+ managers-first note on the first)
+    // Screen 1: title (+ managers-first note on the first)
     steps.push({
       id: `${t.id}-title`,
       title: `${what}: what`,
@@ -60,7 +60,7 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 2 — audience
+    // Screen 2: audience
     steps.push({
       id: `${t.id}-audience`,
       title: `${what}: audience`,
@@ -76,7 +76,7 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 3 — format
+    // Screen 3: format
     steps.push({
       id: `${t.id}-format`,
       title: `${what}: format`,
@@ -92,7 +92,7 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 4 — duration
+    // Screen 4: duration
     steps.push({
       id: `${t.id}-duration`,
       title: `${what}: duration`,
@@ -108,7 +108,7 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 5 — owner (last screen of the item)
+    // Screen 5: owner (last screen of the item)
     steps.push({
       id: `${t.id}-owner`,
       title: `${what}: owner`,

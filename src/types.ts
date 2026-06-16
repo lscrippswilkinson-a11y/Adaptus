@@ -121,7 +121,7 @@ export interface CommsTouchpoint {
   channel: string
   /** The one-line core message / headline for this touchpoint. */
   message: string
-  /** Why this, why now — background that makes the message land. */
+  /** Why this, why now: background that makes the message land. */
   context?: string
   /** The single specific action this audience should take next. */
   cta?: string
@@ -234,6 +234,8 @@ export interface ExecutiveData {
   generated: boolean
   /** The "what I need from you" ask shown on the shareable status brief. */
   ask: string
+  /** White-label the shared brief: hide all "Adaptus" branding + the CTA. */
+  hideBranding: boolean
 }
 
 export interface SustainmentData {

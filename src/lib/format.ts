@@ -34,7 +34,7 @@ export function avgRisk(items: RiskItem[]): number | null {
   return Math.round((sum / items.length) * 10) / 10
 }
 
-/** Total XP summed across every project — drives the user's global level. */
+/** Total XP summed across every project, drives the user's global level. */
 export function totalXp(projects: Project[]): number {
   return projects.reduce((s, p) => s + p.totalXp, 0)
 }
@@ -81,7 +81,7 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
   )
 
-  // Planning items with no completion field of their own — tracked via the
+  // Planning items with no completion field of their own, tracked via the
   // dashboard's checkoff map, so checking them here doesn't alter the plan.
   const ck = m.checkoff ?? {}
   p.stageData.sponsor.sponsorActions.forEach((a) =>
@@ -94,7 +94,7 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   })
   p.stageData.comms.schedule.forEach((c) => {
     const key = `cm:${c.id}`
-    tasks.push({ key, label: `${c.when || 'Touchpoint'}: ${c.audience || '—'}`, group: 'Communications', done: !!ck[key], source: 'checkoff' })
+    tasks.push({ key, label: `${c.when || 'Touchpoint'}: ${c.audience || '-'}`, group: 'Communications', done: !!ck[key], source: 'checkoff' })
   })
   p.stageData.risk.items.forEach((r) => {
     const key = `rk:${r.id}`

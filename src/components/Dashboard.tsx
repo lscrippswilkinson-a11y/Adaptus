@@ -58,7 +58,7 @@ const primaryBtn: React.CSSProperties = {
 }
 
 export function Dashboard() {
-  const { state, dispatch } = useApp()
+  const { state, dispatch, addProject } = useApp()
   const { session, signOut } = useAuth()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Project | null>(null)
@@ -76,7 +76,7 @@ export function Dashboard() {
 
   const createProject = (draft: ProjectDraft) => {
     const project = { ...emptyProject(), name: draft.name, type: draft.type, description: draft.description, targetDate: draft.targetDate }
-    dispatch({ type: 'ADD_PROJECT', project })
+    addProject(project, draft.invites)
   }
 
   const deleteProject = (proj: Project) => {
@@ -138,13 +138,13 @@ export function Dashboard() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '28px 34px' }}>
         {total === 0 ? (
-          /* First run — a compact, left-aligned hero whose primary action is to
+          /* First run: a compact, left-aligned hero whose primary action is to
              create the first project, kept near the top-left so it's the obvious
              next step (no big centered empty state taking up the page). */
           <div style={{ maxWidth: '680px', background: 'radial-gradient(560px 240px at 92% -40%, rgba(255,255,255,0.16), transparent 60%), linear-gradient(120deg, #3e6079 0%, #2c4a60 100%)', borderRadius: '16px', padding: narrow ? '24px 22px' : '30px 32px', boxShadow: '0 12px 32px rgba(20,40,55,0.28)' }}>
             <h1 style={{ margin: 0, fontSize: narrow ? '23px' : '27px', fontWeight: 800, color: '#fff', lineHeight: 1.15, letterSpacing: '-0.5px' }}>Lead your change with confidence</h1>
             <p style={{ margin: '10px 0 22px', fontSize: '14.5px', color: 'rgba(255,255,255,0.82)', lineHeight: 1.55, maxWidth: '460px' }}>
-              Adaptus walks you through rolling out a change from start to finish — no change-management experience required.
+              Adaptus walks you through rolling out a change from start to finish, no change-management experience required.
             </p>
             <button
               type="button"
@@ -156,7 +156,7 @@ export function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Top guide-me slot — pick up the first in-progress project, or, if
+            {/* Top guide-me slot, pick up the first in-progress project, or, if
                 everything's done, a prompt to start the next one. */}
             {active && nextStage ? (
               <button

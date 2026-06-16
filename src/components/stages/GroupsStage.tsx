@@ -8,15 +8,15 @@ import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
 const IMPACT_LEVELS: LevelOption<Impact>[] = [
-  { value: 'High', label: 'High impact', desc: 'Reshapes their daily work — new tools, new steps, or a changed role. They feel it constantly.' },
+  { value: 'High', label: 'High impact', desc: 'Reshapes their daily work: new tools, new steps, or a changed role. They feel it constantly.' },
   { value: 'Medium', label: 'Medium impact', desc: 'Part of their process changes, but much of their day stays the same.' },
-  { value: 'Low', label: 'Low impact', desc: 'Barely touched — they may notice it, but their day-to-day is essentially unchanged.' },
+  { value: 'Low', label: 'Low impact', desc: 'Barely touched, they may notice it, but their day-to-day is essentially unchanged.' },
 ]
 
 const READINESS_LEVELS: LevelOption<Readiness>[] = [
   { value: 'High', label: 'High readiness', desc: 'Aware it’s coming, on board with the why, and have the time and skills to adapt.' },
-  { value: 'Medium', label: 'Medium readiness', desc: 'Some awareness and willingness, but mixed — a few are hesitant or stretched thin.' },
-  { value: 'Low', label: 'Low readiness', desc: 'Largely unaware, skeptical, or already overloaded — little capacity to take this on right now.' },
+  { value: 'Medium', label: 'Medium readiness', desc: 'Some awareness and willingness, but mixed; a few are hesitant or stretched thin.' },
+  { value: 'Low', label: 'Low readiness', desc: 'Largely unaware, skeptical, or already overloaded; little capacity to take this on right now.' },
 ]
 
 const impactLabelOf = (v: Impact) => IMPACT_LEVELS.find((o) => o.value === v)?.label ?? v
@@ -24,8 +24,8 @@ const readyLabelOf = (v: Readiness) => READINESS_LEVELS.find((o) => o.value === 
 
 /**
  * The "group summary" hub: the home base of the guided groups flow. Lists every
- * group added so far (tap to edit), offers "Add another group", and — via the
- * Workspace complete button below — lets the user continue to the next stage.
+ * group added so far (tap to edit), offers "Add another group", and, via the
+ * Workspace complete button below, lets the user continue to the next stage.
  * Editing or adding a group walks its screens and returns here when finished.
  */
 function GroupsHub({
@@ -65,7 +65,7 @@ function GroupsHub({
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
                         {g.name.trim() || `Group ${i + 1}`}
-                        {g.size.trim() ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}> — {g.size.trim()} people</span> : null}
+                        {g.size.trim() ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}>, {g.size.trim()} people</span> : null}
                       </span>
                       <span style={{ display: 'block', fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '3px' }}>
                         Impact: {g.impact} <span style={{ color: 'rgba(var(--fg),0.3)' }}>|</span> Readiness: {g.readiness}
@@ -115,7 +115,7 @@ export function GroupsStage() {
     const name = g.name.trim() || `Group ${i + 1}`
     const insight = coaching.groups.insight(g)
 
-    // Screen 1 — name (+ rough size). First screen of the item → Back returns to the hub.
+    // Screen 1: name (+ rough size). First screen of the item → Back returns to the hub.
     steps.push({
       id: `${g.id}-name`,
       title: `${name}: name & size`,
@@ -137,7 +137,7 @@ export function GroupsStage() {
       ),
     })
 
-    // Screen 2 — impact
+    // Screen 2: impact
     steps.push({
       id: `${g.id}-impact`,
       title: `${name}: impact`,
@@ -152,7 +152,7 @@ export function GroupsStage() {
       ),
     })
 
-    // Screen 3 — readiness (+ the live insight). Last screen of the item → "Done" returns to the hub.
+    // Screen 3: readiness (+ the live insight). Last screen of the item → "Done" returns to the hub.
     steps.push({
       id: `${g.id}-readiness`,
       title: `${name}: readiness`,

@@ -47,7 +47,7 @@ export function loadProjects(): Project[] {
 }
 
 /**
- * Projects actually stored locally, with NO demo-seed fallback — used when
+ * Projects actually stored locally, with NO demo-seed fallback, used when
  * migrating a user's real local work into a new cloud account.
  */
 export function loadStoredProjects(): Project[] {

@@ -9,7 +9,7 @@ type State = { status: 'loading' } | { status: 'ok'; project: Project } | { stat
 /**
  * The public, no-login destination for a share link (`/?share=<token>`). Fetches
  * the project read-only via the get_shared_project RPC and renders its status
- * brief, with a "build your own" call to action — the expansion loop.
+ * brief, with a "build your own" call to action: the expansion loop.
  */
 export function SharedBriefPage({ token }: { token: string }) {
   const [state, setState] = useState<State>({ status: 'loading' })

@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /*
- * Adaptus design system — ported verbatim from the original vanilla-JS artifact.
+ * Adaptus design system, ported verbatim from the original vanilla-JS artifact.
  * Tailwind (above) coexists with these classes; use Tailwind for new UI, these
  * classes for the existing components so the visual design stays 1:1.
  */
@@ -361,7 +361,7 @@ option {
   color: #B8D0DE;
 }
 .brief-wrap {
-  /* The executive report is a dark "island" in both themes — its content is
+  /* The executive report is a dark "island" in both themes, its content is
      white-text styled and prints on a dark page, so the card stays dark. */
   background: #11141f;
   border: 1px solid rgba(91, 134, 163, 0.2);
