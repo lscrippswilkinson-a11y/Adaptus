@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { ArrowLeft, ArrowRight, Check, Eye, Share2, Users } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { hasSupabase } from '@/lib/supabase'
@@ -65,19 +65,31 @@ export function Workspace({ project }: { project: Project }) {
 
   const [sharing, setSharing] = useState(false)
   const [collab, setCollab] = useState(false)
+  // Advanced (optional, in-depth) steps are hidden from the sidebar until the
+  // user explicitly toggles them on — they do NOT auto-reveal when an advanced
+  // step happens to be the active one.
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const advancedCount = STAGES.filter((s) => s.tier === 'advanced').length
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'
 
   // Section-level Previous/Next. Advancing auto-completes the current step:
   // COMPLETE_STAGE both marks it done and moves on (skipped for viewers, or when
   // the launch dashboard isn't fully prepared, or when it's already complete).
-  const prevStage = state.stageIdx > 0 ? STAGES[state.stageIdx - 1] : null
-  const nextStage = state.stageIdx < STAGES.length - 1 ? STAGES[state.stageIdx + 1] : null
-  const goPrev = () => prevStage && dispatch({ type: 'GO_TO_STAGE', stageIdx: state.stageIdx - 1 })
+  // Next/Previous walk the visible path: when advanced steps are hidden they're
+  // skipped entirely, so the flow stays essential-only until the toggle is on.
+  const isVisible = (i: number) => STAGES[i].tier === 'essential' || showAdvanced
+  let prevIdx = -1
+  for (let i = state.stageIdx - 1; i >= 0; i--) if (isVisible(i)) { prevIdx = i; break }
+  let nextIdx = -1
+  for (let i = state.stageIdx + 1; i < STAGES.length; i++) if (isVisible(i)) { nextIdx = i; break }
+  const prevStage = prevIdx >= 0 ? STAGES[prevIdx] : null
+  const nextStage = nextIdx >= 0 ? STAGES[nextIdx] : null
+  const goPrev = () => prevStage && dispatch({ type: 'GO_TO_STAGE', stageIdx: prevIdx })
   const goNext = () => {
     if (!nextStage) return
-    if (!isViewer && !done && canComplete) dispatch({ type: 'COMPLETE_STAGE' })
-    else dispatch({ type: 'GO_TO_STAGE', stageIdx: state.stageIdx + 1 })
+    if (!isViewer && !done && canComplete) dispatch({ type: 'COMPLETE_STAGE', toIdx: nextIdx })
+    else dispatch({ type: 'GO_TO_STAGE', stageIdx: nextIdx })
   }
 
   // Per-section review feedback (cloud only), kept to power the sidebar open-feedback counts.
@@ -143,7 +155,8 @@ export function Workspace({ project }: { project: Project }) {
         <div style={{ width: '250px', flexShrink: 0, borderRight: '1px solid rgba(var(--fg),0.06)', padding: '14px 0', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           <div style={{ flex: 1 }}>
             {PHASES.map((phase, pi) => {
-              const visible = STAGES.map((s, i) => ({ s, i })).filter(({ s }) => s.phase === phase.id)
+              const visible = STAGES.map((s, i) => ({ s, i }))
+                .filter(({ s }) => s.phase === phase.id && (s.tier === 'essential' || showAdvanced))
               const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
@@ -199,6 +212,50 @@ export function Workspace({ project }: { project: Project }) {
                 </div>
               )
             })}
+          </div>
+
+          {/* Advanced-steps toggle, with hover-revealed help. Advanced steps stay
+              hidden until this is on — they never auto-reveal on navigation. */}
+          <div className="adv-help-wrap" style={{ position: 'relative', margin: '8px 14px 4px' }}>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced((v) => !v)}
+              style={{
+                width: '100%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'linear-gradient(135deg, rgba(91,134,163,0.28), rgba(91,134,163,0.18))',
+                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.6)'}`,
+                borderRadius: '10px',
+                padding: showAdvanced ? '11px 12px' : '13px 14px',
+                color: showAdvanced ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
+                fontSize: showAdvanced ? '12.5px' : '13.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: showAdvanced ? 'none' : '0 3px 14px rgba(91,134,163,0.22)',
+              }}
+            >
+              <Sparkles size={showAdvanced ? 15 : 17} />
+              {showAdvanced ? 'Hide advanced steps' : `Show advanced steps (${advancedCount})`}
+            </button>
+            <div
+              className="adv-help"
+              style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--surface-card)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(var(--fg),0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
+            >
+              Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
+              <div style={{ marginTop: '8px' }}>
+                <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots
+                of people affected, you’re replacing an important system, or a rough rollout would really hurt. They help
+                you win people over, plan for problems, and avoid nasty surprises.
+              </div>
+              <div style={{ marginTop: '6px' }}>
+                <span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
+                changes only a few people touch — the core steps above are plenty.
+              </div>
+            </div>
           </div>
         </div>
 

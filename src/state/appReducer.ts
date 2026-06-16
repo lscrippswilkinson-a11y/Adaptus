@@ -18,7 +18,7 @@ export type AppAction =
   | { type: 'UPDATE_PROJECT'; project: Project }
   | { type: 'DELETE_PROJECT'; id: string }
   | { type: 'SET_PROJECTS'; projects: Project[] }
-  | { type: 'COMPLETE_STAGE' }
+  | { type: 'COMPLETE_STAGE'; toIdx?: number }
 
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
@@ -64,7 +64,9 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       const stage = STAGES[state.stageIdx]
       if (!proj || !stage || proj.completedStages.includes(stage.id)) return state
 
-      const nextIdx = Math.min(state.stageIdx + 1, STAGES.length - 1)
+      // Land on the caller's target step (used to skip hidden advanced steps),
+      // else just the next one in order.
+      const nextIdx = action.toIdx ?? Math.min(state.stageIdx + 1, STAGES.length - 1)
       const updated: Project = {
         ...proj,
         completedStages: [...proj.completedStages, stage.id],

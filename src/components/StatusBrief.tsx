@@ -1,5 +1,9 @@
 import type { Project } from '@/types'
-import { avgRisk, preparedness, riskColor, riskLabel } from '@/lib/format'
+import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+
+// Friendlier labels for a couple of task groups on the exec-facing brief.
+const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks' }
+const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
 
 /**
  * The forwardable artifact: a forward-looking, exec-shaped status brief derived
@@ -41,6 +45,16 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
   // White-label: when on, the brief carries no "Adaptus" mark and no CTA.
   const branded = !sd.executive.hideBranding
 
+  // Outstanding launch tasks, grouped by category (same source the Launch
+  // Preparation dashboard uses), so the brief shows what's still left to do.
+  const openByGroup = collectLaunchTasks(project)
+    .filter((t) => !t.done)
+    .reduce<{ group: string; items: PrepTask[] }[]>((acc, t) => {
+      const g = acc.find((x) => x.group === t.group) ?? (acc.push({ group: t.group, items: [] }), acc[acc.length - 1])
+      g.items.push(t)
+      return acc
+    }, [])
+
   return (
     <div className="brief-wrap">
       <div
@@ -71,7 +85,34 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           </div>
         </div>
 
-        {/* 2: What could go wrong? */}
+        {/* 2: What's still left to do? (mirrors the launch-prep task list) */}
+        <div className="bs">
+          <div className="bst">What’s left before launch</div>
+          {prep.total === 0 ? (
+            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>Launch tasks haven’t been mapped yet.</div>
+          ) : openByGroup.length === 0 ? (
+            <div style={{ fontSize: '13px', color: '#86efac', fontWeight: 600 }}>✓ All {prep.total} tasks complete — ready to launch.</div>
+          ) : (
+            openByGroup.map(({ group, items }) => (
+              <div key={group} style={{ marginBottom: '14px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#B8D0DE', marginBottom: '8px' }}>
+                  {groupLabel(group)} <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>· {items.length} left</span>
+                </div>
+                {items.slice(0, 6).map((t) => (
+                  <div key={t.key} className="bai">
+                    <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1.5px solid rgba(255,255,255,0.4)', flexShrink: 0, marginTop: '2px' }} />
+                    <div style={{ flex: 1 }}>{t.label}</div>
+                  </div>
+                ))}
+                {items.length > 6 && (
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginLeft: '24px', marginTop: '2px' }}>+{items.length - 6} more</div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* 3: What could go wrong? */}
         <div className="bs">
           <div className="bst">Top risks to watch</div>
           {topRisks.length ? (
