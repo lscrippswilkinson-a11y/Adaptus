@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { ArrowLeft, ArrowRight, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { hasSupabase } from '@/lib/supabase'
 import { fetchFeedback } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
@@ -67,8 +68,8 @@ export function Workspace({ project }: { project: Project }) {
   const [collab, setCollab] = useState(false)
   // Advanced (optional, in-depth) steps are hidden from the sidebar until the
   // user explicitly toggles them on — they do NOT auto-reveal when an advanced
-  // step happens to be the active one.
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  // step happens to be the active one. Remembered per project (per browser).
+  const [showAdvanced, setShowAdvanced] = useLocalStorage(`adaptus.showAdvanced.${project.id}`, false)
   const advancedCount = STAGES.filter((s) => s.tier === 'advanced').length
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'

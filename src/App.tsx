@@ -21,7 +21,7 @@ function Root() {
   const { state, ready } = useApp()
   if (!ready) return <Splash />
   const active = state.projects.find((p) => p.id === state.activeId) ?? null
-  return state.view === 'workspace' && active ? <Workspace project={active} /> : <Dashboard />
+  return state.view === 'workspace' && active ? <Workspace key={active.id} project={active} /> : <Dashboard />
 }
 
 function Gate() {
