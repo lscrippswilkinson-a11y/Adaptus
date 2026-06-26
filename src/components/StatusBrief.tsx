@@ -102,12 +102,14 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
                 {items.slice(0, 6).map((t) => (
                   <div key={t.key} className="bai">
                     <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1.5px solid rgba(255,255,255,0.4)', flexShrink: 0, marginTop: '2px' }} />
-                    <div style={{ flex: 1 }}>{t.label}</div>
-                    {(t.owner || t.due) && (
-                      <div style={{ flexShrink: 0, marginLeft: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {t.owner}{t.owner && t.due ? ' · ' : ''}{t.due ? `due ${shortDate(t.due)}` : ''}
-                      </div>
-                    )}
+                    <div style={{ flex: 1 }}>
+                      <div>{t.label}</div>
+                      {(t.owner || t.due) && (
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', marginTop: '3px' }}>
+                          {t.owner ? `Owner: ${t.owner}` : ''}{t.owner && t.due ? '  ·  ' : ''}{t.due ? `Due ${shortDate(t.due)}` : ''}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
                 {items.length > 6 && (
