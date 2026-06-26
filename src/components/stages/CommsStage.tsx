@@ -41,11 +41,13 @@ const fillBtnStyle: React.CSSProperties = {
 function TouchpointCard({
   t,
   channelOptions,
+  audienceSuggestions,
   onChange,
   onDelete,
 }: {
   t: CommsTouchpoint
   channelOptions: string[]
+  audienceSuggestions: string[]
   onChange: (patch: Partial<CommsTouchpoint>) => void
   onDelete: () => void
 }) {
@@ -72,7 +74,7 @@ function TouchpointCard({
     <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
         <TextInput value={t.when} onCommit={(v) => onChange({ when: v })} placeholder="When (e.g., 2 weeks out)" style={{ width: '150px', flexShrink: 0 }} />
-        <TextInput value={t.audience} onCommit={(v) => onChange({ audience: v })} placeholder="Audience" style={{ flex: 1, minWidth: 0 }} />
+        <TextInput value={t.audience} onCommit={(v) => onChange({ audience: v })} placeholder="Audience" suggestions={audienceSuggestions} style={{ flex: 1, minWidth: 0 }} />
         <div style={{ width: '160px', flexShrink: 0 }}>
           <Select value={t.channel} options={channelOptions} onChange={(v) => onChange({ channel: v })} />
         </div>
@@ -137,8 +139,30 @@ function TouchpointCard({
 }
 
 export function CommsStage() {
-  const { data, update } = useStageEditor('comms')
+  const { project, data, update } = useStageEditor('comms')
   const schedule = data.schedule ?? []
+
+  // Pull context from earlier stages so the plan builds on what's already there.
+  const define = project?.stageData.define
+  const groups = project?.stageData.groups.groups ?? []
+  const groupNames = groups.map((g) => g.name.trim()).filter(Boolean)
+  // Identified groups are the natural audiences, plus a few common defaults.
+  const audienceSuggestions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
+
+  // Define answers that are actually filled, shown as a reference + message seed.
+  const defineBits = [
+    { label: 'What’s changing', value: define?.statement?.trim() },
+    { label: 'Why now', value: define?.whyNow?.trim() },
+    { label: 'What success looks like', value: define?.successLooks?.trim() },
+  ].filter((b) => b.value)
+
+  const seedFromDefine = () => {
+    const parts: string[] = []
+    if (define?.statement?.trim()) parts.push(define.statement.trim())
+    if (define?.whyNow?.trim()) parts.push(define.whyNow.trim())
+    if (define?.successLooks?.trim()) parts.push(`What good looks like: ${define.successLooks.trim()}`)
+    update({ keyMessages: parts.join(' ') })
+  }
 
   const toggleChannel = (ch: string) => {
     const cur = new Set(data.channels)
@@ -172,6 +196,25 @@ export function CommsStage() {
           example={coaching.comms.fields.keyMessages.example}
           onUseExample={() => update({ keyMessages: coaching.comms.fields.keyMessages.example })}
         >
+          {defineBits.length > 0 && (
+            <div style={{ background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.22)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '8px' }}>
+                From “Define the Change”
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {defineBits.map((b) => (
+                  <div key={b.label} style={{ fontSize: '12.5px', lineHeight: 1.5, color: 'rgba(var(--fg),0.75)' }}>
+                    <span style={{ fontWeight: 600, color: 'rgba(var(--fg),0.6)' }}>{b.label}:</span> {b.value}
+                  </div>
+                ))}
+              </div>
+              {!data.keyMessages.trim() && (
+                <button type="button" style={{ ...fillBtnStyle, marginTop: '12px' }} onClick={seedFromDefine}>
+                  Start my message from this →
+                </button>
+              )}
+            </div>
+          )}
           <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={3} />
         </FieldCoach>
       ),
@@ -266,6 +309,24 @@ export function CommsStage() {
           {coaching.comms.schedule.why}
         </div>
 
+        {groupNames.length > 0 && (
+          <div style={{ background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.22)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '8px' }}>
+              Audiences to cover (from “Identify Groups”)
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {groupNames.map((name) => (
+                <span key={name} style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.8)', background: 'rgba(91,134,163,0.14)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '999px', padding: '4px 11px' }}>
+                  {name}
+                </span>
+              ))}
+            </div>
+            <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '9px', lineHeight: 1.5 }}>
+              Make sure each of these hears from you. Start typing in a touchpoint’s Audience field to pick one.
+            </div>
+          </div>
+        )}
+
         {data.channels.length === 0 && (
           <InsightCallout tone="info" style={{ marginBottom: '16px' }}>
             Pick your channels above first, each touchpoint’s channel dropdown only offers the channels you’ve chosen.
@@ -285,6 +346,7 @@ export function CommsStage() {
                   key={t.id}
                   t={t}
                   channelOptions={channelOptionsFor(t.channel)}
+                  audienceSuggestions={audienceSuggestions}
                   onChange={(patch) => setTouchpoint(t.id, patch)}
                   onDelete={() => delTouchpoint(t.id)}
                 />
