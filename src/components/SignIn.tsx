@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FlaskConical, Mail, MailCheck } from 'lucide-react'
+import { FlaskConical, Mail, MailCheck, Lock } from 'lucide-react'
 import { useAuth } from '@/state/AuthContext'
 
 /** Full-screen gate shown when Supabase is configured but no one is signed in. */
@@ -50,8 +50,11 @@ export function SignIn() {
               <MailCheck size={40} color="#86efac" />
             </div>
             <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>Check your email</p>
-            <p style={{ margin: '0 0 24px', fontSize: '13.5px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
+            <p style={{ margin: '0 0 14px', fontSize: '13.5px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
               We sent a sign-in link to <strong style={{ color: '#fff' }}>{sentTo}</strong>. Click it to get in, no password needed.
+            </p>
+            <p style={{ margin: '0 0 24px', fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
+              It can take a minute to arrive. If you don't see it, check your spam folder.
             </p>
             <button type="button" onClick={() => { setSentTo(''); setEmail('') }} style={textBtn}>Use a different email</button>
           </>
@@ -93,6 +96,10 @@ export function SignIn() {
             {error && <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#fca5a5' }}>{error}</div>}
             <p style={{ margin: '18px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
               Works with any email, Google not required.
+            </p>
+            <p style={{ margin: '14px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={12} style={{ flexShrink: 0 }} /> Your projects are private to your account and never sold.{' '}
+              <a href="?page=security" style={{ color: '#fff', textDecoration: 'underline', whiteSpace: 'nowrap' }}>How we protect your data</a>
             </p>
           </>
         )}

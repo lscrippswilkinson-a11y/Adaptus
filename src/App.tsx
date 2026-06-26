@@ -8,6 +8,7 @@ import { SignIn } from '@/components/SignIn'
 import { Dashboard } from '@/components/Dashboard'
 import { Workspace } from '@/components/Workspace'
 import { SharedBriefPage } from '@/components/SharedBriefPage'
+import { SecurityPage } from '@/components/SecurityPage'
 
 function Splash() {
   return (
@@ -56,11 +57,22 @@ export default function App() {
 
   // Public, no-login route: a shared status brief (/?share=<token>). Rendered
   // ahead of the auth gate so recipients never hit a sign-in wall.
-  const shareToken = new URLSearchParams(window.location.search).get('share')
+  const params = new URLSearchParams(window.location.search)
+  const shareToken = params.get('share')
   if (shareToken) {
     return (
       <ThemeProvider>
         <SharedBriefPage token={shareToken} />
+      </ThemeProvider>
+    )
+  }
+
+  // Public, no-login route: the Security & Privacy statement (/?page=security),
+  // so a cautious user can read how their data is handled before signing in.
+  if (params.get('page') === 'security') {
+    return (
+      <ThemeProvider>
+        <SecurityPage />
       </ThemeProvider>
     )
   }
