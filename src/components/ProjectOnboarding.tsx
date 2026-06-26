@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 /**
  * A short, calm welcome deck shown once when a user first opens a project,
- * before they reach Stage 1. Three slides: why this exists, the ADKAR
+ * before they reach Stage 1. Three slides: why this exists, the change
  * framework it's built on, and the three phases they'll work through. Purely
  * presentational; the parent decides when it shows and persists "seen".
  */
@@ -76,9 +76,8 @@ function SlideWelcome() {
         people weren’t brought along. This process fixes that.
       </p>
       <BottomLine>
-        It’s built on <strong style={{ color: 'var(--accent-text)' }}>ADKAR</strong>, the most widely used change
-        framework, so you’re following an approach that’s proven, not improvised. You won’t have to learn it; it’s baked
-        into every step.
+        It’s built on a <strong style={{ color: 'var(--accent-text)' }}>proven, widely used change framework</strong>, so
+        you’re following an approach that works, not improvised. You won’t have to learn it; it’s baked into every step.
       </BottomLine>
     </div>
   )

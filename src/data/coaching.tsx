@@ -59,13 +59,7 @@ export const coaching = {
       } satisfies FieldCopy,
       whyNow: {
         label: 'Why does this matter, and why now?',
-        why: (
-          <>
-            People will ask “why are we doing this?”, especially when it’s inconvenient. A clear, honest reason is what
-            gets them to give the change a real chance. (This is the very first thing the ADKAR model says every person
-            needs: <strong style={{ color: 'var(--accent-text)' }}>Awareness</strong> of why the change is happening.)
-          </>
-        ),
+        why: 'People will ask “why are we doing this?”, especially when it’s inconvenient. A clear, honest reason is what gets them to give the change a real chance — it’s the very first thing anyone needs before they’ll get on board.',
         example:
           'Our current software is being shut down by the vendor next year, and chasing time-entry by email costs us roughly $40k a year in lost billable hours. Doing this now avoids a painful scramble later.',
       } satisfies FieldCopy,
