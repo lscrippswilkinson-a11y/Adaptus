@@ -48,13 +48,17 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
   // Outstanding launch tasks, grouped by category (same source the Launch
   // Preparation dashboard uses), so the brief shows what's still left to do.
-  const openByGroup = collectLaunchTasks(project)
-    .filter((t) => !t.done)
-    .reduce<{ group: string; items: PrepTask[] }[]>((acc, t) => {
-      const g = acc.find((x) => x.group === t.group) ?? (acc.push({ group: t.group, items: [] }), acc[acc.length - 1])
-      g.items.push(t)
-      return acc
-    }, [])
+  const openTasks = collectLaunchTasks(project).filter((t) => !t.done)
+  const openByGroup = openTasks.reduce<{ group: string; items: PrepTask[] }[]>((acc, t) => {
+    const g = acc.find((x) => x.group === t.group) ?? (acc.push({ group: t.group, items: [] }), acc[acc.length - 1])
+    g.items.push(t)
+    return acc
+  }, [])
+
+  // Open tasks that have a due date, in chronological order — the launch timeline.
+  const dueByDate = openTasks
+    .filter((t) => t.due)
+    .sort((a, b) => (a.due! < b.due! ? -1 : a.due! > b.due! ? 1 : 0))
 
   return (
     <div className="brief-wrap">
@@ -119,6 +123,25 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
             ))
           )}
         </div>
+
+        {/* 2b: Actions with due dates, in chronological order — the launch timeline. */}
+        {dueByDate.length > 0 && (
+          <div className="bs">
+            <div className="bst">Coming up, by date</div>
+            {dueByDate.slice(0, 8).map((t) => (
+              <div key={t.key} className="bai">
+                <div style={{ width: '52px', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: '#B8D0DE' }}>{shortDate(t.due!)}</div>
+                <div style={{ flex: 1 }}>
+                  {t.label}
+                  {t.owner && <span style={{ color: 'rgba(255,255,255,0.5)' }}> · {t.owner}</span>}
+                </div>
+              </div>
+            ))}
+            {dueByDate.length > 8 && (
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginLeft: '24px', marginTop: '2px' }}>+{dueByDate.length - 8} more</div>
+            )}
+          </div>
+        )}
 
         {/* 3: What could go wrong? */}
         <div className="bs">

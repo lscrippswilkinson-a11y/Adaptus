@@ -11,6 +11,12 @@ import { uid } from '@/lib/id'
 // Green once meaningfully on track (>70%), amber mid, red low, green reads as
 // good progress rather than a warning.
 const prepColor = (p: number) => (p >= 70 ? '#22c55e' : p >= 40 ? '#f59e0b' : '#ef4444')
+const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+/** Today as a local yyyy-mm-dd string, for comparing against task due dates. */
+const todayISO = () => {
+  const n = new Date()
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+}
 const GROUP_ORDER = [
   'Launch readiness',
   'Sponsor commitments',
@@ -94,6 +100,13 @@ export function DashboardStage() {
   const prep = preparedness(project)
   const tasks = collectLaunchTasks(project)
   const sd = project.stageData
+
+  // The next 5 open tasks that have a due date, soonest first (overdue included).
+  const today = todayISO()
+  const upcoming = tasks
+    .filter((t) => !t.done && t.due)
+    .sort((a, b) => (a.due! < b.due! ? -1 : a.due! > b.due! ? 1 : 0))
+    .slice(0, 5)
 
   const goTo = (id: StageId) => {
     const idx = STAGES.findIndex((s) => s.id === id)
@@ -236,6 +249,31 @@ export function DashboardStage() {
             <input type="date" className="cq-input" value={milestones.goLiveDate} onChange={(e) => updateMilestones({ goLiveDate: e.target.value })} />
           </div>
         </div>
+      </div>
+
+      {/* Next up: the soonest-due open tasks, so the team sees what's next at a glance. */}
+      <div className="cq-card">
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Next up</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Your next 5 actions by due date.</div>
+        {upcoming.length === 0 ? (
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.45)', fontStyle: 'italic' }}>
+            Add due dates to your launch tasks below to see what’s coming up next.
+          </div>
+        ) : (
+          upcoming.map((t) => {
+            const overdue = !!t.due && t.due < today
+            return (
+              <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                <div style={{ width: '54px', flexShrink: 0, fontSize: '13px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>{shortDate(t.due!)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.label}</div>
+                  <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{labelFor(t.group)}{t.owner ? ` · ${t.owner}` : ''}</div>
+                </div>
+                {overdue && <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>}
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Preparedness score */}
