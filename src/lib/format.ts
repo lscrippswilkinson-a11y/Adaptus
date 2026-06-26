@@ -54,6 +54,8 @@ export interface PrepTask {
   refId?: number
   /** launch-checklist item text (source === 'checklist'). */
   item?: string
+  /** Owner name assigned on the dashboard, keyed by `key` in milestones.taskOwners. */
+  owner?: string
 }
 
 /**
@@ -78,7 +80,7 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key: `tr:${t.id}`, label: t.title || 'Untitled training', group: 'Training', done: t.done, source: 'training', refId: t.id }),
   )
   m.customTasks.forEach((c) =>
-    tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
+    tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: c.group || 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
   )
 
   // Planning items with no completion field of their own, tracked via the
@@ -110,7 +112,9 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key, label: `Prepare ${g.name}`, group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
   })
 
-  return tasks
+  // Attach the owner assigned on the dashboard (if any) to each task.
+  const owners = m.taskOwners ?? {}
+  return tasks.map((t) => ({ ...t, owner: owners[t.key] }))
 }
 
 /** Launch Preparedness: share of aggregated launch tasks that are done. */

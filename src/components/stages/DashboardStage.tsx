@@ -85,7 +85,6 @@ export function DashboardStage() {
   const { update: updateTesting } = useStageEditor('testing')
   const { update: updateDeps } = useStageEditor('dependencies')
   const { update: updateTraining } = useStageEditor('training')
-  const [draft, setDraft] = useState('')
   // Explicit expand/collapse overrides per group; absent => default (completed
   // sections collapse, others stay open).
   const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({})
@@ -127,12 +126,19 @@ export function DashboardStage() {
     }
   }
 
-  const addCustom = () => {
-    if (!draft.trim()) return
-    updateMilestones({ customTasks: [...milestones.customTasks, { id: uid(), label: draft.trim(), done: false }] })
-    setDraft('')
-  }
+  // Add a blank, user-fillable task to a given section (any group, not just "Your tasks").
+  const addTaskTo = (group: string) =>
+    updateMilestones({ customTasks: [...milestones.customTasks, { id: uid(), label: '', done: false, group }] })
+  const setCustomLabel = (id: number, label: string) =>
+    updateMilestones({ customTasks: milestones.customTasks.map((c) => (c.id === id ? { ...c, label } : c)) })
   const delCustom = (id: number) => updateMilestones({ customTasks: milestones.customTasks.filter((c) => c.id !== id) })
+
+  // Owner name per task, keyed by the task's stable key — works for every source.
+  const taskOwners = milestones.taskOwners ?? {}
+  const setTaskOwner = (key: string, name: string) =>
+    updateMilestones({ taskOwners: { ...taskOwners, [key]: name } })
+  // Raw custom-task labels for inline editing (PrepTask.label bakes in a fallback).
+  const customById = new Map(milestones.customTasks.map((c) => [c.id, c]))
 
   // Workstream owners (kept editable here)
   const setOwner = (id: number, patch: Partial<MilestoneOwner>) =>
@@ -264,32 +270,38 @@ export function DashboardStage() {
 
               {open && (
                 <div style={{ marginTop: '12px', marginLeft: '22px' }}>
-                  {items.map((t) => (
-                    <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
-                      <button
-                        type="button"
-                        onClick={() => toggle(t)}
-                        style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
-                      >
-                        {t.done ? '✓' : ''}
-                      </button>
-                      <span style={{ flex: 1, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
-                      {t.source === 'custom' && <DelButton onClick={() => delCustom(t.refId!)} />}
-                    </div>
-                  ))}
-                  {isCustom && (
-                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                      <input
-                        type="text"
-                        className="cq-input"
-                        value={draft}
-                        placeholder="Add your own launch task…"
-                        onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && addCustom()}
-                      />
-                      <AddButton label="Add" onClick={addCustom} style={{ width: 'auto', flexShrink: 0, padding: '9px 18px' }} />
-                    </div>
-                  )}
+                  {items.map((t) => {
+                    const isCustomRow = t.source === 'custom'
+                    return (
+                      <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggle(t)}
+                          style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
+                        >
+                          {t.done ? '✓' : ''}
+                        </button>
+                        {isCustomRow ? (
+                          <TextInput
+                            value={customById.get(t.refId!)?.label ?? ''}
+                            onCommit={(v) => setCustomLabel(t.refId!, v)}
+                            placeholder="Describe this task…"
+                            style={{ flex: 1, minWidth: 0 }}
+                          />
+                        ) : (
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                        )}
+                        <TextInput
+                          value={taskOwners[t.key] ?? ''}
+                          onCommit={(v) => setTaskOwner(t.key, v)}
+                          placeholder="Owner"
+                          style={{ width: '150px', flexShrink: 0 }}
+                        />
+                        {isCustomRow && <DelButton onClick={() => delCustom(t.refId!)} />}
+                      </div>
+                    )
+                  })}
+                  <AddButton label="Add task" onClick={() => addTaskTo(group)} style={{ marginTop: '4px' }} />
                 </div>
               )}
             </div>

@@ -161,6 +161,8 @@ export interface LaunchTask {
   id: number
   label: string
   done: boolean
+  /** Which dashboard section it sits in (e.g. "Launch readiness"); defaults to "Your tasks". */
+  group?: string
 }
 export interface MilestonesData {
   owners: MilestoneOwner[]
@@ -174,6 +176,8 @@ export interface MilestonesData {
    * risks, resistance, groups). Keyed by the task's stable key.
    */
   checkoff: Record<string, boolean>
+  /** Owner name per launch task, keyed by the task's stable key (see collectLaunchTasks). */
+  taskOwners: Record<string, string>
 }
 
 /* ---- Testing & Validation (Planning) ---- */
