@@ -23,7 +23,7 @@ export function migrateProject(p: Project): Project {
   // richer { id, text, done, notes } shape so the action plan can hold notes.
   merged.sponsor.sponsorActions = (merged.sponsor.sponsorActions ?? []).map(
     (a: SponsorAction | string): SponsorAction =>
-      typeof a === 'string' ? { id: uid(), text: a, done: false, notes: '' } : a,
+      typeof a === 'string' ? { id: uid(), text: a, done: false } : a,
   )
 
   const validIds = new Set(STAGES.map((s) => s.id))

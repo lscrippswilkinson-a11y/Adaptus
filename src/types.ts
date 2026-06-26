@@ -78,13 +78,12 @@ export interface EscalationRule {
   responseTime: string
 }
 
-/** One commitment in the sponsor's action plan, tracked as a shared roadmap checklist. */
+/** One commitment in the sponsor's action plan; surfaces as a Launch dashboard checklist item. */
 export interface SponsorAction {
   id: number
   text: string
+  /** Completion is tracked on the Launch Preparation dashboard, not in the sponsor stage. */
   done: boolean
-  /** Shared progress/update notes — both the project owner and the sponsor add here. */
-  notes: string
 }
 export interface SponsorData {
   name: string

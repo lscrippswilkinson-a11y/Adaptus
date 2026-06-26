@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
-import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, SectionTitle, TextArea, TextInput } from '@/components/ui'
+import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, SectionTitle, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -26,7 +26,7 @@ export function SponsorStage() {
     if (!t) return
     // Skip exact duplicates so re-clicking a suggestion is a no-op.
     if (actions.some((a) => a.text.toLowerCase() === t.toLowerCase())) return
-    update({ sponsorActions: [...actions, { id: uid(), text: t, done: false, notes: '' }] })
+    update({ sponsorActions: [...actions, { id: uid(), text: t, done: false }] })
   }
   const submitDraft = () => {
     addAction(draft)
@@ -34,10 +34,6 @@ export function SponsorStage() {
   }
   const setActionText = (id: number, text: string) =>
     update({ sponsorActions: actions.map((a) => (a.id === id ? { ...a, text } : a)) })
-  const setActionNotes = (id: number, notes: string) =>
-    update({ sponsorActions: actions.map((a) => (a.id === id ? { ...a, notes } : a)) })
-  const toggleActionDone = (id: number) =>
-    update({ sponsorActions: actions.map((a) => (a.id === id ? { ...a, done: !a.done } : a)) })
   const delAction = (id: number) => update({ sponsorActions: actions.filter((a) => a.id !== id) })
 
   // Pre-set actions become quick-add suggestions; hide ones already on the list.
@@ -112,8 +108,8 @@ export function SponsorStage() {
       <Card>
         <SectionTitle>Sponsor Action Plan</SectionTitle>
         <p style={{ fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.6, margin: '4px 0 0' }}>
-          Build this <strong>with your sponsor</strong>, not just for them. Each action is a shared commitment, and the
-          plan below is your living roadmap, check items off and log progress as the change rolls out.
+          Build this <strong>with your sponsor</strong>, not just for them. Each action you add becomes a checklist item
+          on your Launch Preparation dashboard, where you can give it an owner and a due date and check it off as it’s done.
         </p>
 
         <InsightCallout tone="info" style={{ margin: '14px 0' }}>
@@ -154,27 +150,9 @@ export function SponsorStage() {
         {actions.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
             {actions.map((a) => (
-              <div key={a.id} style={{ background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '10px', padding: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <button
-                    type="button"
-                    onClick={() => toggleActionDone(a.id)}
-                    aria-label={a.done ? 'Mark not done' : 'Mark done'}
-                    style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--on-accent)', background: a.done ? '#5B86A3' : 'transparent', borderColor: a.done ? '#5B86A3' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
-                  >
-                    {a.done ? '✓' : ''}
-                  </button>
-                  <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder="Describe this action…" style={{ flex: 1, minWidth: 0 }} />
-                  <DelButton onClick={() => delAction(a.id)} />
-                </div>
-                <div style={{ marginTop: '8px' }}>
-                  <TextArea
-                    value={a.notes}
-                    onCommit={(v) => setActionNotes(a.id, v)}
-                    placeholder="Progress & updates — for both you and your sponsor to add as this moves"
-                    rows={2}
-                  />
-                </div>
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder="Describe this action…" style={{ flex: 1, minWidth: 0 }} />
+                <DelButton onClick={() => delAction(a.id)} />
               </div>
             ))}
           </div>
