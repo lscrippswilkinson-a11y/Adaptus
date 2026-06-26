@@ -178,6 +178,8 @@ export interface MilestonesData {
   checkoff: Record<string, boolean>
   /** Owner name per launch task, keyed by the task's stable key (see collectLaunchTasks). */
   taskOwners: Record<string, string>
+  /** Keys of auto-derived tasks the user removed from the dashboard view (planning data is untouched). */
+  hiddenTasks: string[]
 }
 
 /* ---- Testing & Validation (Planning) ---- */

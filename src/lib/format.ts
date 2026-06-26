@@ -112,9 +112,10 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key, label: `Prepare ${g.name}`, group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
   })
 
-  // Attach the owner assigned on the dashboard (if any) to each task.
+  // Drop tasks the user removed from the dashboard, then attach any assigned owner.
+  const hidden = new Set(m.hiddenTasks ?? [])
   const owners = m.taskOwners ?? {}
-  return tasks.map((t) => ({ ...t, owner: owners[t.key] }))
+  return tasks.filter((t) => !hidden.has(t.key)).map((t) => ({ ...t, owner: owners[t.key] }))
 }
 
 /** Launch Preparedness: share of aggregated launch tasks that are done. */

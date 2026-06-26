@@ -133,6 +133,14 @@ export function DashboardStage() {
     updateMilestones({ customTasks: milestones.customTasks.map((c) => (c.id === id ? { ...c, label } : c)) })
   const delCustom = (id: number) => updateMilestones({ customTasks: milestones.customTasks.filter((c) => c.id !== id) })
 
+  // Remove an auto-derived task from the dashboard view only (its planning data is untouched).
+  const hiddenTasks = milestones.hiddenTasks ?? []
+  const hideTask = (key: string) =>
+    updateMilestones({ hiddenTasks: hiddenTasks.includes(key) ? hiddenTasks : [...hiddenTasks, key] })
+  const restoreHidden = () => updateMilestones({ hiddenTasks: [] })
+  // A row's remove button: truly delete user-added tasks, just hide derived ones.
+  const removeTask = (t: PrepTask) => (t.source === 'custom' ? delCustom(t.refId!) : hideTask(t.key))
+
   // Owner name per task, keyed by the task's stable key — works for every source.
   const taskOwners = milestones.taskOwners ?? {}
   const setTaskOwner = (key: string, name: string) =>
@@ -231,8 +239,15 @@ export function DashboardStage() {
 
       {/* Aggregated task list */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section, your score updates either way.</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
+          {hiddenTasks.length > 0 && (
+            <button type="button" onClick={restoreHidden} style={{ flexShrink: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
+              ↩ Restore {hiddenTasks.length} removed
+            </button>
+          )}
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section, your score updates either way. Removing a task here hides it from this list, your plan stays intact.</div>
 
         {GROUP_ORDER.map((group, gi) => {
           const items = tasks.filter((t) => t.group === group)
@@ -297,7 +312,7 @@ export function DashboardStage() {
                           placeholder="Owner"
                           style={{ width: '150px', flexShrink: 0 }}
                         />
-                        {isCustomRow && <DelButton onClick={() => delCustom(t.refId!)} />}
+                        <DelButton onClick={() => removeTask(t)} />
                       </div>
                     )
                   })}
