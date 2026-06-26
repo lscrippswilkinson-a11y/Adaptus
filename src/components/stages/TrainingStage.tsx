@@ -17,7 +17,7 @@ export function TrainingStage() {
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
-  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: 'Workshop', duration: '', owner: '', done: false }] })
+  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: 'Workshop', owner: '', done: false }] })
 
   const steps: WizardStep[] = []
 
@@ -68,7 +68,7 @@ export function TrainingStage() {
       summary: t.audience || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who is it for?</h2>
+          <h2 style={headline}>{w.audience.label}</h2>
           <div style={whyStyle}>{w.audience.why}</div>
           <Label>Audience</Label>
           <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder="e.g., All timekeepers" />
@@ -84,31 +84,15 @@ export function TrainingStage() {
       summary: t.format || undefined,
       node: (
         <div>
-          <h2 style={headline}>In what format?</h2>
-          <div style={whyStyle}>{w.audience.why}</div>
+          <h2 style={headline}>{w.format.label}</h2>
+          <div style={whyStyle}>{w.format.why}</div>
           <GuidedLabel>Format</GuidedLabel>
           <ChipPicker value={t.format} options={TRAINING_FORMATS} onChange={(v) => setItem(t.id, { format: v })} />
         </div>
       ),
     })
 
-    // Screen 4: duration
-    steps.push({
-      id: `${t.id}-duration`,
-      title: `${what}: duration`,
-      isFilled: !!t.title.trim(),
-      summary: t.duration || undefined,
-      node: (
-        <div>
-          <h2 style={headline}>How long is it?</h2>
-          <div style={whyStyle}>{w.logistics.why}</div>
-          <Label>Duration</Label>
-          <TextInput value={t.duration} onCommit={(v) => setItem(t.id, { duration: v })} placeholder="e.g., 45 min" />
-        </div>
-      ),
-    })
-
-    // Screen 5: owner (last screen of the item)
+    // Screen 4: owner (last screen of the item)
     steps.push({
       id: `${t.id}-owner`,
       title: `${what}: owner`,
@@ -116,8 +100,8 @@ export function TrainingStage() {
       summary: t.owner ? `led by ${t.owner}` : undefined,
       node: (
         <div>
-          <h2 style={headline}>Who runs it?</h2>
-          <div style={whyStyle}>{w.logistics.why}</div>
+          <h2 style={headline}>{w.owner.label}</h2>
+          <div style={whyStyle}>{w.owner.why}</div>
           <Label>Owner</Label>
           <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
           {isLast && <AddAnotherButton label="Add another training activity" onAdd={addItem} />}

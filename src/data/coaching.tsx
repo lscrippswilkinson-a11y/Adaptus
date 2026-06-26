@@ -358,12 +358,16 @@ export const coaching = {
         why: 'Telling people about a change isn’t the same as teaching them to do it. Name one activity, a hands-on workshop, a short video, a quick job aid, that builds the skill or confidence a group actually needs.',
       },
       audience: {
-        label: 'Who is it for, and in what format?',
-        why: 'Match the format to the need: a short video is fine for “here’s what’s coming,” but learning a brand-new tool takes hands-on practice. And name the audience: different groups need different depth.',
+        label: 'Who is it for?',
+        why: 'Name the audience this activity is for: different groups need different depth. A brand-new hire and a 10-year veteran don’t need the same session.',
       },
-      logistics: {
-        label: 'How long is it, and who runs it?',
-        why: 'Give it a rough duration and an owner. A training with no one accountable for delivering it tends not to happen; naming the owner is what turns a good intention into a session that’s actually booked.',
+      format: {
+        label: 'In what format?',
+        why: 'Match the format to the need: a short video is fine for “here’s what’s coming,” but learning a brand-new tool takes hands-on practice.',
+      },
+      owner: {
+        label: 'Who runs it?',
+        why: 'Give it an owner. A training with no one accountable for delivering it tends not to happen; naming the owner is what turns a good intention into a session that’s actually booked.',
       },
     },
     managersFirst: {

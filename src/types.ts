@@ -143,7 +143,6 @@ export interface TrainingItem {
   title: string
   audience: string
   format: string
-  duration: string
   owner: string
   done: boolean
 }
