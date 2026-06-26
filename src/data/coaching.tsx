@@ -258,9 +258,8 @@ export const coaching = {
     icon: '📣',
     intro: (
       <>
-        {strong('Say it more often than feels necessary.')} People need to hear about a change five to seven times
-        before it sinks in, and when leaders stay quiet, the rumor mill fills the silence. Decide what you’re saying,
-        where, and how often.
+        {strong('Keep your teams and their leaders talking.')} Clear, steady communication between each group and the
+        leaders guiding them is what keeps everyone aligned through a change.
       </>
     ),
     fields: {
@@ -279,7 +278,7 @@ export const coaching = {
           A schedule isn’t “send some updates”; it’s a planned sequence of touchpoints. Lay out <em>who</em> hears{' '}
           <em>what</em>, through <em>which channel</em>, and <em>when</em>, across the three phases below. Front-load it:
           people need to hear a change several times before it sticks, so plan plenty of contact early and ease off as
-          confidence grows. A blank phase is a gap where the rumor mill takes over.
+          confidence grows.
         </>
       ),
       phases: {
