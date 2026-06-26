@@ -85,6 +85,7 @@ export function DashboardStage() {
   const { update: updateTesting } = useStageEditor('testing')
   const { update: updateDeps } = useStageEditor('dependencies')
   const { update: updateTraining } = useStageEditor('training')
+  const { update: updateSponsor } = useStageEditor('sponsor')
   // Explicit expand/collapse overrides per group; absent => default (completed
   // sections collapse, others stay open).
   const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({})
@@ -119,6 +120,9 @@ export function DashboardStage() {
         break
       case 'dependencies':
         updateDeps({ items: sd.dependencies.items.map((i) => (i.id === t.refId ? { ...i, status: i.status === 'Ready' ? 'Not started' : 'Ready' } : i)) })
+        break
+      case 'sponsor':
+        updateSponsor({ sponsorActions: sd.sponsor.sponsorActions.map((a) => (a.id === t.refId ? { ...a, done: !a.done } : a)) })
         break
       case 'checkoff':
         updateMilestones({ checkoff: { ...(milestones.checkoff ?? {}), [t.key]: !t.done } })

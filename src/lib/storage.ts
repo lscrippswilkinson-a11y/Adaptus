@@ -1,6 +1,7 @@
-import type { Project, StageData } from '@/types'
+import type { Project, SponsorAction, StageData } from '@/types'
 import { emptyProject } from '@/data/seed'
 import { STAGES } from '@/data/stages'
+import { uid } from '@/lib/id'
 
 export const STORAGE_KEY = 'adaptus.projects.v1'
 
@@ -17,6 +18,13 @@ export function migrateProject(p: Project): Project {
   const merged = Object.fromEntries(
     Object.keys(baseData).map((k) => [k, { ...baseData[k], ...(savedData[k] ?? {}) }]),
   ) as unknown as StageData
+
+  // Sponsor actions used to be plain strings; lift any legacy entries to the
+  // richer { id, text, done, notes } shape so the action plan can hold notes.
+  merged.sponsor.sponsorActions = (merged.sponsor.sponsorActions ?? []).map(
+    (a: SponsorAction | string): SponsorAction =>
+      typeof a === 'string' ? { id: uid(), text: a, done: false, notes: '' } : a,
+  )
 
   const validIds = new Set(STAGES.map((s) => s.id))
   const completedStages = (p.completedStages ?? []).filter((id) => validIds.has(id))

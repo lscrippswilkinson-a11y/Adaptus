@@ -78,10 +78,18 @@ export interface EscalationRule {
   responseTime: string
 }
 
+/** One commitment in the sponsor's action plan, tracked as a shared roadmap checklist. */
+export interface SponsorAction {
+  id: number
+  text: string
+  done: boolean
+  /** Shared progress/update notes — both the project owner and the sponsor add here. */
+  notes: string
+}
 export interface SponsorData {
   name: string
   role: string
-  sponsorActions: string[]
+  sponsorActions: SponsorAction[]
   commitments: string
   escalationRules: EscalationRule[]
   /** User has explicitly declared there's no executive sponsor — flagged as a risk. */

@@ -41,7 +41,7 @@ export function totalXp(projects: Project[]): number {
 
 /* ---- Launch preparedness (Stage 2 dashboard) ---- */
 
-export type TaskSource = 'checklist' | 'testing' | 'dependencies' | 'training' | 'custom' | 'checkoff'
+export type TaskSource = 'checklist' | 'testing' | 'dependencies' | 'training' | 'custom' | 'checkoff' | 'sponsor'
 
 /** A single launch-readiness task aggregated from across the planning sections. */
 export interface PrepTask {
@@ -87,7 +87,7 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   // dashboard's checkoff map, so checking them here doesn't alter the plan.
   const ck = m.checkoff ?? {}
   p.stageData.sponsor.sponsorActions.forEach((a) =>
-    tasks.push({ key: `sp:${a}`, label: a, group: 'Sponsor commitments', done: !!ck[`sp:${a}`], source: 'checkoff' }),
+    tasks.push({ key: `sp:${a.id}`, label: a.text || 'Sponsor action', group: 'Sponsor commitments', done: a.done, source: 'sponsor', refId: a.id }),
   )
   p.stageData.stakeholders.rows.forEach((r) => {
     if (!r.name.trim()) return

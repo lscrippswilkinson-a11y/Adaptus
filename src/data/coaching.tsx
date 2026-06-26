@@ -113,17 +113,7 @@ export const coaching = {
       <>
         {strong('Who’s the senior person visibly backing this?')} A sponsor’s active, visible support is the single
         biggest predictor of whether a change sticks, more than budget or the tools you pick, because people watch what
-        leaders <em>do</em>. Name yours below, and pin down what they’ll actually do.
-      </>
-    ),
-    /** Plain-language description of exactly who qualifies as an executive sponsor. */
-    whoIs: (
-      <>
-        Your executive sponsor is the <strong>most senior leader who owns this change</strong> — typically a director,
-        VP, partner, or C-level exec. They have the authority to free up budget and people, the clout to unblock things
-        no one else can, and when <em>they</em> are visibly behind it, everyone else takes it seriously. It is{' '}
-        <strong>not</strong> the project manager or change lead (that’s you) — it’s the leader you escalate to. One
-        specific person, not a committee.
+        leaders <em>do</em>. In this step, we will identify the project sponsor and their commitments.
       </>
     ),
     /** Shown when the user declares there's no sponsor. */
@@ -132,7 +122,13 @@ export const coaching = {
     fields: {
       name: {
         label: 'Who is your executive sponsor?',
-        why: 'Name one specific senior person who will publicly own this change. Not a committee, one human everyone recognizes. If you can’t name them, that’s the first problem to solve, because a change with no visible owner drifts.',
+        why: (
+          <>
+            <p style={{ margin: '0 0 10px' }}>We recommend you identify your project sponsor at this point and work through the next steps together.</p>
+            <p style={{ margin: '0 0 10px' }}>Name one specific senior person who will publicly own this change. Not a committee, one human everyone recognizes. If you can’t name them, that’s the first problem to solve, because a change with no visible owner drifts.</p>
+            <p style={{ margin: 0 }}>If you are the senior person who is sponsoring this project, you can name yourself here.</p>
+          </>
+        ),
         example: 'Elena Torres',
       } satisfies FieldCopy,
       role: {
