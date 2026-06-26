@@ -41,13 +41,13 @@ const fillBtnStyle: React.CSSProperties = {
 function TouchpointCard({
   t,
   channelOptions,
-  audienceSuggestions,
+  audienceOptions,
   onChange,
   onDelete,
 }: {
   t: CommsTouchpoint
   channelOptions: string[]
-  audienceSuggestions: string[]
+  audienceOptions: string[]
   onChange: (patch: Partial<CommsTouchpoint>) => void
   onDelete: () => void
 }) {
@@ -73,8 +73,24 @@ function TouchpointCard({
   return (
     <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-        <TextInput value={t.when} onCommit={(v) => onChange({ when: v })} placeholder="When (e.g., 2 weeks out)" style={{ width: '150px', flexShrink: 0 }} />
-        <TextInput value={t.audience} onCommit={(v) => onChange({ audience: v })} placeholder="Audience" suggestions={audienceSuggestions} style={{ flex: 1, minWidth: 0 }} />
+        <input
+          type="date"
+          className="cq-input"
+          value={t.when}
+          onChange={(e) => onChange({ when: e.target.value })}
+          aria-label="When"
+          style={{ width: '160px', flexShrink: 0 }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {/* Audience options come from "Identify Groups"; keep any legacy free-text value selectable. */}
+          <Select
+            value={t.audience}
+            options={t.audience && !audienceOptions.includes(t.audience) ? [t.audience, ...audienceOptions] : audienceOptions}
+            onChange={(v) => onChange({ audience: v })}
+            placeholder="Audience"
+            style={{ width: '100%' }}
+          />
+        </div>
         <div style={{ width: '160px', flexShrink: 0 }}>
           <Select value={t.channel} options={channelOptions} onChange={(v) => onChange({ channel: v })} />
         </div>
@@ -146,8 +162,9 @@ export function CommsStage() {
   const define = project?.stageData.define
   const groups = project?.stageData.groups.groups ?? []
   const groupNames = groups.map((g) => g.name.trim()).filter(Boolean)
-  // Identified groups are the natural audiences, plus a few common defaults.
-  const audienceSuggestions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
+  // Audience dropdown options: the groups identified in "Identify Groups" first,
+  // then a few common cross-cutting audiences that aren't usually listed as groups.
+  const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
 
   // Define answers that are actually filled, shown as a reference + message seed.
   const defineBits = [
@@ -322,7 +339,7 @@ export function CommsStage() {
               ))}
             </div>
             <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '9px', lineHeight: 1.5 }}>
-              Make sure each of these hears from you. Start typing in a touchpoint’s Audience field to pick one.
+              Make sure each of these hears from you. Pick them from the Audience dropdown on each touchpoint below.
             </div>
           </div>
         )}
@@ -346,7 +363,7 @@ export function CommsStage() {
                   key={t.id}
                   t={t}
                   channelOptions={channelOptionsFor(t.channel)}
-                  audienceSuggestions={audienceSuggestions}
+                  audienceOptions={audienceOptions}
                   onChange={(patch) => setTouchpoint(t.id, patch)}
                   onDelete={() => delTouchpoint(t.id)}
                 />

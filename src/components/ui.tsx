@@ -2,7 +2,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useId,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -74,8 +73,6 @@ interface TextInputProps {
   onCommit: (v: string) => void
   placeholder?: string
   style?: CSSProperties
-  /** Optional autocomplete suggestions, rendered as a native <datalist>. */
-  suggestions?: string[]
 }
 
 /**
@@ -83,31 +80,19 @@ interface TextInputProps {
  * typing and committed on blur, so the global store isn't churned per
  * keystroke. Re-syncs if the upstream value changes (e.g. switching projects).
  */
-export function TextInput({ value, onCommit, placeholder, style, suggestions }: TextInputProps) {
+export function TextInput({ value, onCommit, placeholder, style }: TextInputProps) {
   const [local, setLocal] = useState(value)
-  const listId = useId()
-  const hasList = !!suggestions?.length
   useEffect(() => setLocal(value), [value])
   return (
-    <>
-      <input
-        type="text"
-        className="cq-input"
-        value={local}
-        placeholder={placeholder}
-        style={style}
-        list={hasList ? listId : undefined}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => local !== value && onCommit(local)}
-      />
-      {hasList && (
-        <datalist id={listId}>
-          {suggestions!.map((s) => (
-            <option key={s} value={s} />
-          ))}
-        </datalist>
-      )}
-    </>
+    <input
+      type="text"
+      className="cq-input"
+      value={local}
+      placeholder={placeholder}
+      style={style}
+      onChange={(e) => setLocal(e.target.value)}
+      onBlur={() => local !== value && onCommit(local)}
+    />
   )
 }
 
@@ -136,9 +121,11 @@ interface SelectProps {
   options: readonly string[]
   onChange: (v: string) => void
   style?: CSSProperties
+  /** Shown as a disabled first option when the value is empty (e.g. "Audience"). */
+  placeholder?: string
 }
 
-export function Select({ value, options, onChange, style }: SelectProps) {
+export function Select({ value, options, onChange, style, placeholder }: SelectProps) {
   return (
     <select
       className="cq-select"
@@ -146,6 +133,11 @@ export function Select({ value, options, onChange, style }: SelectProps) {
       style={style}
       onChange={(e) => onChange(e.target.value)}
     >
+      {placeholder && (
+        <option value="" disabled>
+          {placeholder}
+        </option>
+      )}
       {options.map((o) => (
         <option key={o} value={o}>
           {o}
