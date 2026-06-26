@@ -135,20 +135,33 @@ export function DashboardStage() {
     updateMilestones({ customTasks: [...milestones.customTasks, { id: uid(), label: '', done: false, group }] })
   const setCustomLabel = (id: number, label: string) =>
     updateMilestones({ customTasks: milestones.customTasks.map((c) => (c.id === id ? { ...c, label } : c)) })
-  const delCustom = (id: number) => updateMilestones({ customTasks: milestones.customTasks.filter((c) => c.id !== id) })
 
-  // Remove an auto-derived task from the dashboard view only (its planning data is untouched).
   const hiddenTasks = milestones.hiddenTasks ?? []
-  const hideTask = (key: string) =>
-    updateMilestones({ hiddenTasks: hiddenTasks.includes(key) ? hiddenTasks : [...hiddenTasks, key] })
   const restoreHidden = () => updateMilestones({ hiddenTasks: [] })
-  // A row's remove button: truly delete user-added tasks, just hide derived ones.
-  const removeTask = (t: PrepTask) => (t.source === 'custom' ? delCustom(t.refId!) : hideTask(t.key))
+  // A row's remove button: truly delete user-added tasks, just hide derived ones
+  // (their planning data is untouched). Done atomically so removing the last item
+  // and re-seeding a blank field don't race on stale state.
+  const removeTask = (t: PrepTask) => {
+    // Removing the last item would collapse the section; keep one blank field
+    // so the section stays open and usable.
+    const remaining = tasks.filter((x) => x.group === t.group && x.key !== t.key).length
+    const keepOpen = remaining === 0 && t.group !== 'Your tasks'
+    let customTasks = milestones.customTasks
+    let hidden = hiddenTasks
+    if (t.source === 'custom') customTasks = customTasks.filter((c) => c.id !== t.refId)
+    else hidden = hidden.includes(t.key) ? hidden : [...hidden, t.key]
+    if (keepOpen) customTasks = [...customTasks, { id: uid(), label: '', done: false, group: t.group }]
+    updateMilestones({ customTasks, hiddenTasks: hidden })
+  }
 
   // Owner name per task, keyed by the task's stable key — works for every source.
   const taskOwners = milestones.taskOwners ?? {}
   const setTaskOwner = (key: string, name: string) =>
     updateMilestones({ taskOwners: { ...taskOwners, [key]: name } })
+  // Due date (ISO) per task, same keying as owners.
+  const taskDueDates = milestones.taskDueDates ?? {}
+  const setTaskDue = (key: string, due: string) =>
+    updateMilestones({ taskDueDates: { ...taskDueDates, [key]: due } })
   // Raw custom-task labels for inline editing (PrepTask.label bakes in a fallback).
   const customById = new Map(milestones.customTasks.map((c) => [c.id, c]))
 
@@ -314,6 +327,14 @@ export function DashboardStage() {
                           value={taskOwners[t.key] ?? ''}
                           onCommit={(v) => setTaskOwner(t.key, v)}
                           placeholder="Owner"
+                          style={{ width: '130px', flexShrink: 0 }}
+                        />
+                        <input
+                          type="date"
+                          className="cq-input"
+                          value={taskDueDates[t.key] ?? ''}
+                          onChange={(e) => setTaskDue(t.key, e.target.value)}
+                          aria-label="Due date"
                           style={{ width: '150px', flexShrink: 0 }}
                         />
                         <DelButton onClick={() => removeTask(t)} />

@@ -56,6 +56,8 @@ export interface PrepTask {
   item?: string
   /** Owner name assigned on the dashboard, keyed by `key` in milestones.taskOwners. */
   owner?: string
+  /** Due date (ISO yyyy-mm-dd) assigned on the dashboard, keyed by `key` in milestones.taskDueDates. */
+  due?: string
 }
 
 /**
@@ -112,10 +114,11 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key, label: `Prepare ${g.name}`, group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
   })
 
-  // Drop tasks the user removed from the dashboard, then attach any assigned owner.
+  // Drop tasks the user removed from the dashboard, then attach owner + due date.
   const hidden = new Set(m.hiddenTasks ?? [])
   const owners = m.taskOwners ?? {}
-  return tasks.filter((t) => !hidden.has(t.key)).map((t) => ({ ...t, owner: owners[t.key] }))
+  const dues = m.taskDueDates ?? {}
+  return tasks.filter((t) => !hidden.has(t.key)).map((t) => ({ ...t, owner: owners[t.key], due: dues[t.key] }))
 }
 
 /** Launch Preparedness: share of aggregated launch tasks that are done. */

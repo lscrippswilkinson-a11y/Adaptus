@@ -23,7 +23,7 @@ export function emptyProject(): Project {
       training: { items: [] },
       testing: { items: [] },
       dependencies: { items: [] },
-      milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {}, taskOwners: {}, hiddenTasks: [] },
+      milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {}, taskOwners: {}, taskDueDates: {}, hiddenTasks: [] },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
       executive: { generated: false, ask: '', hideBranding: false },

@@ -14,6 +14,7 @@ const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
  */
 
 const longDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 const prepColor = (p: number) => (p >= 80 ? '#22c55e' : p >= 50 ? '#f59e0b' : '#ef4444')
 const statusWord = (p: number) => (p >= 80 ? 'On track' : p >= 50 ? 'At risk' : 'Needs attention')
 
@@ -102,6 +103,11 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
                   <div key={t.key} className="bai">
                     <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1.5px solid rgba(255,255,255,0.4)', flexShrink: 0, marginTop: '2px' }} />
                     <div style={{ flex: 1 }}>{t.label}</div>
+                    {(t.owner || t.due) && (
+                      <div style={{ flexShrink: 0, marginLeft: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.5)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {t.owner}{t.owner && t.due ? ' · ' : ''}{t.due ? `due ${shortDate(t.due)}` : ''}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {items.length > 6 && (
