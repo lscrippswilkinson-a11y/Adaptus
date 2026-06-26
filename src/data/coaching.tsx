@@ -30,9 +30,8 @@ export const coaching = {
     icon: '🧭',
     intro: (
       <>
-        {strong('First, get crystal clear on what’s changing.')} Before you can bring anyone on board, you need to
-        explain, in plain English, what’s different, who it touches, and why it’s worth the disruption. Everything you
-        build later leans on these answers.
+        {strong('To get your project started,')} we first need to identify the change, what is changing, and who is
+        affected, as simply as possible.
       </>
     ),
     fields: {
