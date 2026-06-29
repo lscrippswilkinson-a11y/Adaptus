@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ArrowRight, ChevronDown, ChevronRight, Share2, type LucideIcon } from 'lucide-react'
-import { useApp, useStageEditor } from '@/state/AppContext'
+import { ArrowRight, ChevronDown, ChevronRight, Share2 } from 'lucide-react'
+import { useStageEditor } from '@/state/AppContext'
 import { useShare } from '@/state/ShareContext'
-import type { MilestoneOwner, StageId } from '@/types'
 import { AddButton, DelButton, TextInput } from '@/components/ui'
-import { STAGES } from '@/data/stages'
-import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+import { collectLaunchTasks, preparedness, type PrepTask } from '@/lib/format'
 import { uid } from '@/lib/id'
 
 // Green once meaningfully on track (>70%), amber mid, red low, green reads as
@@ -37,6 +35,16 @@ const GROUP_LABELS: Record<string, string> = {
   'Your tasks': 'Additional tasks',
 }
 const labelFor = (g: string) => GROUP_LABELS[g] ?? g
+
+/** One dot on the launch timeline: a dated task, or the go-live milestone. */
+interface TimelineEntry {
+  date: string
+  label: string
+  group: string
+  owner: string
+  done: boolean
+  milestone: boolean
+}
 
 /** Live ticking countdown to the go-live date (handles today / past gracefully). */
 function GoLiveCountdown({ date }: { date: string }) {
@@ -85,7 +93,6 @@ function GoLiveCountdown({ date }: { date: string }) {
 }
 
 export function DashboardStage() {
-  const { dispatch } = useApp()
   const openShare = useShare()
   const { project, data: milestones, update: updateMilestones } = useStageEditor('milestones')
   const { update: updateTesting } = useStageEditor('testing')
@@ -110,11 +117,6 @@ export function DashboardStage() {
     .filter((t) => !t.done && t.due)
     .sort((a, b) => (a.due! < b.due! ? -1 : a.due! > b.due! ? 1 : 0))
     .slice(0, 5)
-
-  const goTo = (id: StageId) => {
-    const idx = STAGES.findIndex((s) => s.id === id)
-    if (idx >= 0) dispatch({ type: 'GO_TO_STAGE', stageIdx: idx })
-  }
 
   const toggle = (t: PrepTask) => {
     switch (t.source) {
@@ -181,26 +183,20 @@ export function DashboardStage() {
   // Raw custom-task labels for inline editing (PrepTask.label bakes in a fallback).
   const customById = new Map(milestones.customTasks.map((c) => [c.id, c]))
 
-  // Workstream owners (kept editable here)
-  const setOwner = (id: number, patch: Partial<MilestoneOwner>) =>
-    updateMilestones({ owners: milestones.owners.map((o) => (o.id === id ? { ...o, ...patch } : o)) })
-  const addOwner = () => updateMilestones({ owners: [...milestones.owners, { id: uid(), name: '', workstream: '', email: '' }] })
-  const delOwner = (id: number) => updateMilestones({ owners: milestones.owners.filter((o) => o.id !== id) })
-
-  const avg = avgRisk(sd.risk.items)
-  const adv = sd.stakeholders.rows.filter((r) => r.support === 'Advocate').length
-  const res = sd.stakeholders.rows.filter((r) => r.support === 'Resistant').length
-
-  const groupsCount = sd.groups.groups.length
-  const sponsorVal = sd.sponsor.name ? (sd.sponsor.role ? `${sd.sponsor.name} · ${sd.sponsor.role}` : sd.sponsor.name) : ''
-  const iconFor = (id: StageId) => STAGES.find((s) => s.id === id)!.icon
-  const summary: { icon: LucideIcon; label: string; value: string; empty: string; jump: StageId; color?: string }[] = [
-    { icon: iconFor('define'), label: 'The change', value: sd.define.statement, empty: 'Define what’s changing', jump: 'define' },
-    { icon: iconFor('groups'), label: 'Impacted groups', value: groupsCount ? `${groupsCount} group${groupsCount === 1 ? '' : 's'} mapped` : '', empty: 'List who’s affected', jump: 'groups' },
-    { icon: iconFor('sponsor'), label: 'Sponsor', value: sd.sponsor.noSponsor ? 'No sponsor — flagged as a risk' : sponsorVal, empty: 'Name your sponsor', jump: 'sponsor', color: sd.sponsor.noSponsor ? '#fca5a5' : undefined },
-    { icon: iconFor('risk'), label: 'Overall risk', value: avg !== null ? `${riskLabel(avg)} · ${avg}/10` : '', empty: 'Log your risks', jump: 'risk', color: avg !== null ? riskColor(avg) : undefined },
-    { icon: iconFor('stakeholders'), label: 'Coalition', value: sd.stakeholders.rows.length ? `${adv} advocate${adv === 1 ? '' : 's'} · ${res} resistant` : '', empty: 'Map stakeholders', jump: 'stakeholders' },
-  ]
+  // Timeline: every dated task (plus the go-live milestone) in date order,
+  // grouped by date so items sharing a day sit under one marker.
+  const timelineItems: TimelineEntry[] = [
+    ...tasks
+      .filter((t) => !!t.due)
+      .map((t) => ({ date: t.due!, label: t.label, group: labelFor(t.group), owner: t.owner ?? '', done: t.done, milestone: false })),
+    ...(goLiveDate ? [{ date: goLiveDate, label: 'Go-live', group: '', owner: '', done: false, milestone: true }] : []),
+  ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  const timeline: { date: string; items: TimelineEntry[] }[] = []
+  for (const it of timelineItems) {
+    const last = timeline[timeline.length - 1]
+    if (last && last.date === it.date) last.items.push(it)
+    else timeline.push({ date: it.date, items: [it] })
+  }
 
   return (
     <div>
@@ -409,41 +405,49 @@ export function DashboardStage() {
         })}
       </div>
 
-      {/* Planning summary */}
+      {/* Timeline: everything dated, in order */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>From your plan</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>A snapshot of what you decided earlier. Tap any card to jump back and edit it.</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
-          {summary.map((s) => {
-            const filled = !!s.value
-            return (
-              <button key={s.label} type="button" className="summary-card" onClick={() => goTo(s.jump)}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <s.icon size={16} color="#8FB3C7" />
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(var(--fg),0.85)' }}>{s.label}</span>
-                </div>
-                <div style={{ fontSize: '13px', lineHeight: 1.45, color: filled ? (s.color ?? 'rgba(var(--fg),0.72)') : 'rgba(var(--fg),0.35)', fontStyle: filled ? 'normal' : 'italic', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                  {filled ? s.value : s.empty}
-                </div>
-                <div style={{ marginTop: '8px', fontSize: '11px', fontWeight: 600, color: filled ? 'var(--accent-text)' : '#fcd34d' }}>{filled ? 'Edit →' : 'Add →'}</div>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Workstream owners */}
-      <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '12px' }}>Workstream owners</div>
-        {milestones.owners.map((o) => (
-          <div key={o.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-            <TextInput value={o.name} onCommit={(v) => setOwner(o.id, { name: v })} placeholder="Name" style={{ flex: 1 }} />
-            <TextInput value={o.workstream} onCommit={(v) => setOwner(o.id, { workstream: v })} placeholder="Workstream" style={{ flex: 1 }} />
-            <TextInput value={o.email} onCommit={(v) => setOwner(o.id, { email: v })} placeholder="Email" style={{ flex: 1 }} />
-            <DelButton onClick={() => delOwner(o.id)} />
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Timeline</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '16px' }}>Every launch item with a date, in order, plus your go-live.</div>
+        {timeline.length === 0 ? (
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.45)', fontStyle: 'italic' }}>
+            No dated items yet, set due dates on your launch tasks above to build the timeline.
           </div>
-        ))}
-        <AddButton label="+ Add Owner" onClick={addOwner} />
+        ) : (
+          <div style={{ position: 'relative' }}>
+            {/* Continuous rail behind the date markers. */}
+            <div style={{ position: 'absolute', left: '63px', top: '6px', bottom: '6px', width: '2px', background: 'rgba(var(--fg),0.12)' }} />
+            {timeline.map((grp) => {
+              const overdue = grp.date < today
+              return (
+                <div key={grp.date} style={{ position: 'relative', display: 'flex', marginBottom: '16px' }}>
+                  <div style={{ width: '56px', flexShrink: 0, textAlign: 'right', paddingTop: '2px', fontSize: '12px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>
+                    {shortDate(grp.date)}
+                  </div>
+                  <div style={{ position: 'absolute', left: '57px', top: '3px', width: '14px', height: '14px', borderRadius: '50%', border: '2px solid var(--surface-card)', background: overdue ? '#ef4444' : 'var(--accent-text)' }} />
+                  <div style={{ flex: 1, minWidth: 0, marginLeft: '30px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {grp.items.map((it, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 12px', background: it.milestone ? 'rgba(91,134,163,0.1)' : 'rgba(var(--fg),0.02)', border: `1px solid ${it.milestone ? 'rgba(91,134,163,0.3)' : 'rgba(var(--fg),0.06)'}`, borderRadius: '8px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', fontWeight: it.milestone ? 700 : 400, color: it.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: it.done ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {it.milestone ? '🚀 ' : ''}{it.label}
+                          </div>
+                          {!it.milestone && (
+                            <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{it.group}{it.owner ? ` · ${it.owner}` : ''}</div>
+                          )}
+                        </div>
+                        {it.done && <span style={{ flexShrink: 0, fontSize: '11px', color: '#86efac', fontWeight: 700 }}>✓ Done</span>}
+                        {!it.done && overdue && !it.milestone && (
+                          <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
