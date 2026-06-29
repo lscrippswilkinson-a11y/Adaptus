@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Check, Copy, FileDown, Link2, Trash2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { Check, Copy, FileDown, Link2, Loader2, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
@@ -15,6 +15,8 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const briefRef = useRef<HTMLDivElement>(null)
 
   const token = project.shareToken ?? null
   const shareUrl = token ? `${window.location.origin}/?share=${token}` : ''
@@ -46,10 +48,47 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
 
   // Top-left option: create the link (or copy it if one already exists).
   const shareLinkAction = () => (token ? copy() : createLink())
-  // Top-right option: print just the brief, which the browser can save as PDF.
-  const downloadPdf = () => {
+  // Top-right option: render the brief to a one-click PDF download.
+  const downloadPdf = async () => {
+    const el = briefRef.current
+    if (!el || pdfBusy) return
     commitAsk()
-    window.print()
+    setPdfBusy(true)
+    try {
+      // Load the (heavy) PDF libs only on demand, so they stay out of first paint.
+      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas-pro')])
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#11141f', useCORS: true })
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+      const imgW = pageW
+      const imgH = (canvas.height * imgW) / canvas.width
+      const imgData = canvas.toDataURL('image/png')
+      // Paint the dark page background, then lay the (possibly tall) brief
+      // across as many pages as it needs by shifting it up one page each time.
+      let heightLeft = imgH
+      let position = 0
+      const fillPage = () => {
+        pdf.setFillColor(17, 20, 31) // #11141f, matches the brief
+        pdf.rect(0, 0, pageW, pageH, 'F')
+      }
+      fillPage()
+      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
+      heightLeft -= pageH
+      while (heightLeft > 0) {
+        position -= pageH
+        pdf.addPage()
+        fillPage()
+        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
+        heightLeft -= pageH
+      }
+      const safeName = (project.name || 'status-brief').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'status-brief'
+      pdf.save(`${safeName}-status-brief.pdf`)
+    } catch (err) {
+      console.error('[adaptus] PDF generation failed', err)
+    } finally {
+      setPdfBusy(false)
+    }
   }
 
   const copy = async () => {
@@ -87,10 +126,10 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 <span className="share-option-title">{token ? 'Copy share link' : 'Shareable link'}</span>
                 <span className="share-option-sub">A no-login web link to forward.</span>
               </button>
-              <button type="button" onClick={downloadPdf} className="share-option">
-                <FileDown size={20} color="#5B86A3" />
+              <button type="button" onClick={downloadPdf} disabled={pdfBusy} className="share-option" style={{ opacity: pdfBusy ? 0.7 : 1 }}>
+                {pdfBusy ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <FileDown size={20} color="#5B86A3" />}
                 <span className="share-option-title">Downloadable PDF</span>
-                <span className="share-option-sub">Save or print the brief as a PDF.</span>
+                <span className="share-option-sub">{pdfBusy ? 'Building your PDF…' : 'Download the brief as a PDF.'}</span>
               </button>
             </div>
 
@@ -151,7 +190,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             {/* Live preview of exactly what recipients see. The id scopes the
                 print stylesheet so "Download PDF" prints only the brief. */}
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>Preview</div>
-            <div id="brief-print">
+            <div id="brief-print" ref={briefRef}>
               <StatusBrief project={previewProject} />
             </div>
           </>

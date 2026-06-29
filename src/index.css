@@ -588,13 +588,10 @@ option {
     visibility: hidden;
   }
   .print-area,
-  .print-area *,
-  #brief-print,
-  #brief-print * {
+  .print-area * {
     visibility: visible;
   }
-  .print-area,
-  #brief-print {
+  .print-area {
     position: absolute;
     left: 0;
     top: 0;
@@ -603,6 +600,15 @@ option {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.9s linear infinite;
 }
 
 /* The two share options (link / PDF) at the top of the share modal. */
