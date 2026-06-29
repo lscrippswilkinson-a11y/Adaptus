@@ -48,8 +48,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           <X size={18} />
         </button>
 
-        <h2 style={{ margin: '0 0 4px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Name your change initiative</h2>
-        <p style={{ margin: '0 0 22px', color: 'rgba(var(--fg),0.4)', fontSize: '14px' }}>Give it an identity.</p>
+        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Name your change initiative</h2>
 
         <div className="cq-lbl">Project name</div>
         <input
