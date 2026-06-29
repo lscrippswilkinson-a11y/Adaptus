@@ -130,10 +130,14 @@ export interface CommsTouchpoint {
   channel: string
   /** The one-line core message / headline for this touchpoint. */
   message: string
+  /** Warm opener with appreciation for the audience. */
+  greeting?: string
   /** Why this, why now: background that makes the message land. */
   context?: string
   /** The single specific action this audience should take next. */
   cta?: string
+  /** Sign-off: a small thank-you and a positive look ahead. */
+  closer?: string
   /** The assembled, editable communication ready to send/say. */
   draft?: string
   /** How often this touchpoint repeats from its date. Defaults to a one-off. */

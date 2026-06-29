@@ -25,6 +25,13 @@ const linkBtnStyle: React.CSSProperties = {
   fontFamily: 'inherit',
 }
 
+const hintStyle: React.CSSProperties = {
+  fontSize: '11.5px',
+  color: 'rgba(var(--fg),0.5)',
+  lineHeight: 1.5,
+  margin: '2px 0 6px',
+}
+
 const fillBtnStyle: React.CSSProperties = {
   background: 'rgba(91,134,163,0.15)',
   border: '1px solid rgba(91,134,163,0.35)',
@@ -57,11 +64,13 @@ function TouchpointCard({
 }) {
   const d = coaching.comms.draft
   // Open by default if the user has already started drafting this one.
-  const [open, setOpen] = useState(!!(t.context || t.cta || t.draft))
+  const [open, setOpen] = useState(!!(t.greeting || t.context || t.cta || t.closer || t.draft))
   const [copied, setCopied] = useState(false)
 
   const buildDraft = () =>
-    onChange({ draft: d.assemble({ audience: t.audience, context: t.context, message: t.message, cta: t.cta }) })
+    onChange({
+      draft: d.assemble({ audience: t.audience, greeting: t.greeting, context: t.context, message: t.message, cta: t.cta, closer: t.closer }),
+    })
 
   const copyDraft = async () => {
     if (!t.draft) return
@@ -129,6 +138,11 @@ function TouchpointCard({
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
+              <Label>{d.greetingLabel}</Label>
+              <div style={hintStyle}>{d.greetingHint}</div>
+              <TextArea value={t.greeting ?? ''} onCommit={(v) => onChange({ greeting: v })} placeholder={d.greetingPlaceholder} rows={2} />
+            </div>
+            <div>
               <Label>{d.contextLabel}</Label>
               <TextArea value={t.context ?? ''} onCommit={(v) => onChange({ context: v })} placeholder={d.contextPlaceholder} rows={2} />
             </div>
@@ -139,6 +153,11 @@ function TouchpointCard({
             <div>
               <Label>{d.ctaLabel}</Label>
               <TextArea value={t.cta ?? ''} onCommit={(v) => onChange({ cta: v })} placeholder={d.ctaPlaceholder} rows={2} />
+            </div>
+            <div>
+              <Label>{d.closerLabel}</Label>
+              <div style={hintStyle}>{d.closerHint}</div>
+              <TextArea value={t.closer ?? ''} onCommit={(v) => onChange({ closer: v })} placeholder={d.closerPlaceholder} rows={2} />
             </div>
           </div>
 

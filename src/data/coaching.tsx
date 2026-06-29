@@ -286,26 +286,34 @@ export const coaching = {
     },
     /** The per-touchpoint communication drafter: style guidance + prompts. */
     draft: {
-      label: 'Draft this communication',
+      label: 'Help me draft this communication',
       why: 'Planning the touchpoint is half the job; the other half is the actual words. Work through the prompts below and the program will assemble a draft you can fine-tune and copy out.',
+      greetingLabel: 'Greeting and appreciation',
+      greetingHint: 'People are more receptive to a warm email that opens with thanks for their time and their part in the change.',
+      greetingPlaceholder: 'e.g., Hi team, thank you for the care you’ve put into billing this year, it really doesn’t go unnoticed.',
       contextLabel: 'Relevant context: why this, why now',
       contextPlaceholder: 'e.g., Our old billing system is being retired at the end of May, so we’re all moving to Clio.',
       messageLabel: 'Core message: the one thing they must take away',
       messagePlaceholder: 'e.g., From June 1 you enter your own time directly in Clio.',
       ctaLabel: 'Call to action: the one thing to do next, with a deadline',
       ctaPlaceholder: 'e.g., Complete the 20-minute Clio training before May 30, book your slot via the link.',
+      closerLabel: 'Closer: a small thank-you and a look ahead',
+      closerHint: 'End with a lighter show of appreciation and a positive statement about where this takes you.',
+      closerPlaceholder: 'e.g., Thanks again for rolling with this, it’s going to make month-end far smoother for all of us.',
       build: 'Build a draft from these →',
       rebuild: 'Rebuild draft from prompts',
       draftLabel: 'Your draft, edit freely, then copy',
       copy: 'Copy',
       copied: 'Copied ✓',
       /** Assembles the structured prompts into an editable starting draft. */
-      assemble(t: { audience?: string; context?: string; message?: string; cta?: string }): string {
+      assemble(t: { audience?: string; greeting?: string; context?: string; message?: string; cta?: string; closer?: string }): string {
         const lines: string[] = []
-        if (t.audience?.trim()) lines.push(`Hi ${t.audience.trim()},`, '')
+        if (t.greeting?.trim()) lines.push(t.greeting.trim(), '')
+        else if (t.audience?.trim()) lines.push(`Hi ${t.audience.trim()},`, '')
         if (t.context?.trim()) lines.push(t.context.trim(), '')
         if (t.message?.trim()) lines.push(t.message.trim(), '')
         if (t.cta?.trim()) lines.push(`👉 ${t.cta.trim()}`, '')
+        if (t.closer?.trim()) lines.push(t.closer.trim(), '')
         lines.push('Questions? [where to get help].')
         return lines.join('\n')
       },
