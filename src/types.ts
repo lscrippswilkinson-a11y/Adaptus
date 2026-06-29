@@ -136,6 +136,8 @@ export interface CommsTouchpoint {
   cta?: string
   /** The assembled, editable communication ready to send/say. */
   draft?: string
+  /** How often this touchpoint repeats from its date. Defaults to a one-off. */
+  repeat?: 'once' | 'daily' | 'weekly' | 'monthly'
 }
 
 export interface CommsData {

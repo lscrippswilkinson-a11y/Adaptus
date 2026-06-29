@@ -1,14 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
-import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
+import { AddButton, Card, DelButton, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { CHANNELS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
 const PHASES: CommsPhase[] = ['before', 'launch', 'after']
+
+type Repeat = NonNullable<CommsTouchpoint['repeat']>
+const REPEAT_LABELS: Record<Repeat, string> = { once: 'Does not repeat', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }
+const REPEAT_FROM_LABEL = Object.fromEntries(Object.entries(REPEAT_LABELS).map(([k, v]) => [v, k])) as Record<string, Repeat>
 
 const linkBtnStyle: React.CSSProperties = {
   background: 'none',
@@ -96,6 +100,18 @@ function TouchpointCard({
         </div>
         <DelButton onClick={onDelete} />
       </div>
+      {t.when && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', flexShrink: 0 }}>Repeat</span>
+          <div style={{ width: '180px' }}>
+            <Select
+              value={REPEAT_LABELS[t.repeat ?? 'once']}
+              options={Object.values(REPEAT_LABELS)}
+              onChange={(v) => onChange({ repeat: REPEAT_FROM_LABEL[v] })}
+            />
+          </div>
+        </div>
+      )}
       <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message: what this audience needs to know" />
 
       <div style={{ marginTop: '10px' }}>
@@ -158,20 +174,23 @@ export function CommsStage() {
   // then a few common cross-cutting audiences that aren't usually listed as groups.
   const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
 
-  // Define answers that are actually filled, shown as a reference + message seed.
-  const defineBits = [
-    { label: 'What’s changing', value: define?.statement?.trim() },
-    { label: 'Why now', value: define?.whyNow?.trim() },
-    { label: 'What success looks like', value: define?.successLooks?.trim() },
-  ].filter((b) => b.value)
-
-  const seedFromDefine = () => {
+  // A starting message pre-generated from the user's "Define the Change" answers.
+  const defineSeed = (() => {
     const parts: string[] = []
     if (define?.statement?.trim()) parts.push(define.statement.trim())
     if (define?.whyNow?.trim()) parts.push(define.whyNow.trim())
     if (define?.successLooks?.trim()) parts.push(`What good looks like: ${define.successLooks.trim()}`)
-    update({ keyMessages: parts.join(' ') })
-  }
+    return parts.join(' ')
+  })()
+
+  // Default the core message to that pre-generated draft, once, if it's still empty.
+  const seededRef = useRef(false)
+  useEffect(() => {
+    if (!seededRef.current && !data.keyMessages.trim() && defineSeed) {
+      seededRef.current = true
+      update({ keyMessages: defineSeed })
+    }
+  }, [data.keyMessages, defineSeed, update])
 
   const toggleChannel = (ch: string) => {
     const cur = new Set(data.channels)
@@ -199,33 +218,15 @@ export function CommsStage() {
       isFilled: !!data.keyMessages.trim(),
       summary: data.keyMessages,
       node: (
-        <FieldCoach
-          label={coaching.comms.fields.keyMessages.label}
-          why={coaching.comms.fields.keyMessages.why}
-          example={coaching.comms.fields.keyMessages.example}
-          onUseExample={() => update({ keyMessages: coaching.comms.fields.keyMessages.example })}
-        >
-          {defineBits.length > 0 && (
-            <div style={{ background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.22)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '8px' }}>
-                From “Define the Change”
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {defineBits.map((b) => (
-                  <div key={b.label} style={{ fontSize: '12.5px', lineHeight: 1.5, color: 'rgba(var(--fg),0.75)' }}>
-                    <span style={{ fontWeight: 600, color: 'rgba(var(--fg),0.6)' }}>{b.label}:</span> {b.value}
-                  </div>
-                ))}
-              </div>
-              {!data.keyMessages.trim() && (
-                <button type="button" style={{ ...fillBtnStyle, marginTop: '12px' }} onClick={seedFromDefine}>
-                  Start my message from this →
-                </button>
-              )}
-            </div>
-          )}
-          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={3} />
-        </FieldCoach>
+        <Card>
+          <Label>{coaching.comms.fields.keyMessages.label}</Label>
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
+            {defineSeed
+              ? 'We’ve drafted a starting message from your “Define the Change” answers. Read it over, make it sound like you, and edit anything that’s off before you move ahead.'
+              : 'Write the one message everyone needs to walk away with. Keep it plain and short enough to repeat, then review it before you move ahead.'}
+          </div>
+          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={4} />
+        </Card>
       ),
     },
     {
