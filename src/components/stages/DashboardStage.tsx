@@ -100,6 +100,9 @@ export function DashboardStage() {
   const prep = preparedness(project)
   const tasks = collectLaunchTasks(project)
   const sd = project.stageData
+  // The countdown falls back to the target date entered at project creation
+  // when no explicit go-live date has been set here (matches the brief/report).
+  const goLiveDate = milestones.goLiveDate || project.targetDate
 
   // The next 5 open tasks that have a due date, soonest first (overdue included).
   const today = todayISO()
@@ -242,11 +245,11 @@ export function DashboardStage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
           <div>
             <div className="cq-lbl">Go-live countdown</div>
-            <GoLiveCountdown date={milestones.goLiveDate} />
+            <GoLiveCountdown date={goLiveDate} />
           </div>
           <div style={{ width: '180px', flexShrink: 0 }}>
             <div className="cq-lbl">Target date</div>
-            <input type="date" className="cq-input" value={milestones.goLiveDate} onChange={(e) => updateMilestones({ goLiveDate: e.target.value })} />
+            <input type="date" className="cq-input" value={goLiveDate} onChange={(e) => updateMilestones({ goLiveDate: e.target.value })} />
           </div>
         </div>
       </div>
