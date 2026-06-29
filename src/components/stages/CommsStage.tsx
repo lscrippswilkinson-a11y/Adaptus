@@ -187,7 +187,6 @@ function TouchpointCard({
 export function CommsStage() {
   const { project, data, update } = useStageEditor('comms')
   const schedule = data.schedule ?? []
-  const [msgExpanded, setMsgExpanded] = useState(false)
 
   // Pull context from earlier stages so the plan builds on what's already there.
   const define = project?.stageData.define
@@ -242,18 +241,13 @@ export function CommsStage() {
       summary: data.keyMessages,
       node: (
         <Card>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-            <Label>{coaching.comms.fields.keyMessages.label}</Label>
-            <button type="button" style={{ ...linkBtnStyle, flexShrink: 0 }} onClick={() => setMsgExpanded((s) => !s)}>
-              {msgExpanded ? '▾ Collapse' : '⤢ Expand'}
-            </button>
-          </div>
+          <Label>{coaching.comms.fields.keyMessages.label}</Label>
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
             {defineSeed
               ? 'We’ve drafted a starting message from your “Define the Change” answers. Read it over, make it sound like you, and edit anything that’s off before you move ahead.'
               : 'Write the one message everyone needs to walk away with. Keep it plain and short enough to repeat, then review it before you move ahead.'}
           </div>
-          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={msgExpanded ? 16 : 4} />
+          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={16} />
         </Card>
       ),
     },
@@ -406,5 +400,5 @@ export function CommsStage() {
     },
   ]
 
-  return <StageFlow stageId="comms" icon={coaching.comms.icon} blurb={coaching.comms.intro} steps={steps} />
+  return <StageFlow stageId="comms" icon={coaching.comms.icon} blurb={coaching.comms.intro} steps={steps} guidance={false} />
 }

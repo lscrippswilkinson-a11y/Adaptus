@@ -1,12 +1,99 @@
+import { ChevronRight, Trash2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { TrainingItem } from '@/types'
 import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { useWizardMode } from '@/state/WizardModeContext'
-import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
+import { AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
 import { TRAINING_FORMATS } from '@/data/constants'
-import { coaching } from '@/data/coaching'
+import { coaching, type Insight } from '@/data/coaching'
 import { uid } from '@/lib/id'
+
+/**
+ * The "training summary" hub: the home base of the guided training flow. Lists
+ * every activity added so far as a single card (tap to edit), offers "Add
+ * another training activity", and, via the Workspace complete button below,
+ * continues to the next stage. Editing or adding an activity walks its screens
+ * and returns here when finished.
+ */
+function TrainingHub({
+  items,
+  editItem,
+  onAdd,
+  onRemove,
+  note,
+  showNote,
+}: {
+  items: TrainingItem[]
+  editItem: (stepIndex: number) => void
+  onAdd: () => void
+  onRemove: (id: number) => void
+  note: Insight
+  showNote: boolean
+}) {
+  return (
+    <div>
+      <h2 style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 800, color: 'var(--text)' }}>
+        {items.length ? 'Your training activities' : 'Add your first activity'}
+      </h2>
+      <p style={{ margin: '0 0 18px', fontSize: '14px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
+        {items.length
+          ? 'These are the training activities for this change. Tap one to edit it, add another below, or mark this step complete to continue.'
+          : coaching.training.wizard.title.why}
+      </p>
+
+      {showNote && <InsightCallout tone={note.tone} style={{ marginBottom: '18px' }}>{note.text}</InsightCallout>}
+
+      {items.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {items.map((t, i) => {
+            // One line summarising the whole activity: audience, format, owner.
+            const detail = [t.audience.trim() && `For ${t.audience.trim()}`, t.format, t.owner.trim() && `led by ${t.owner.trim()}`]
+              .filter(Boolean)
+              .join('  ·  ')
+            return (
+              <div key={t.id} style={{ border: '1px solid rgba(var(--fg),0.1)', borderRadius: '14px', padding: '14px 16px', background: 'rgba(var(--fg),0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <button
+                    type="button"
+                    onClick={() => editItem(i * 4)}
+                    style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                  >
+                    <span style={{ minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
+                        {t.title.trim() || `Activity ${i + 1}`}
+                      </span>
+                      {detail && (
+                        <span style={{ display: 'block', fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '3px' }}>{detail}</span>
+                      )}
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
+                      Edit <ChevronRight size={14} />
+                    </span>
+                  </button>
+                  {items.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => onRemove(t.id)}
+                      aria-label="Remove training activity"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.35)', padding: '2px', flexShrink: 0, display: 'inline-flex' }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ marginTop: items.length ? '16px' : 0 }}>
+        <AddItemButton label={items.length ? 'Add another training activity' : 'Add your first training activity'} onClick={onAdd} />
+      </div>
+    </div>
+  )
+}
 
 export function TrainingStage() {
   const { data, update } = useStageEditor('training')
@@ -21,38 +108,20 @@ export function TrainingStage() {
 
   const steps: WizardStep[] = []
 
-  if (data.items.length === 0) {
-    steps.push({
-      id: 'start',
-      title: 'Add your first activity',
-      isFilled: false,
-      node: (
-        <div>
-          <h2 style={headline}>{w.title.label}</h2>
-          <div style={whyStyle}>{w.title.why}</div>
-          {mode === 'guided' && <InsightCallout tone={note.tone} style={{ marginBottom: '18px' }}>{note.text}</InsightCallout>}
-          <AddItemButton label="Add your first training activity" onClick={addItem} />
-        </div>
-      ),
-    })
-  }
-
   data.items.forEach((t, i) => {
     const what = t.title.trim() || `Activity ${i + 1}`
-    const isFirst = i === 0
-    const isLast = i === data.items.length - 1
 
-    // Screen 1: title (+ managers-first note on the first)
+    // Screen 1: title. First screen of the item → Back returns to the hub.
     steps.push({
       id: `${t.id}-title`,
       title: `${what}: what`,
       isFilled: !!t.title.trim(),
       summary: t.title || undefined,
+      itemFirst: true,
       node: (
         <div>
           <h2 style={headline}>{w.title.label}</h2>
           <div style={whyStyle}>{w.title.why}</div>
-          {mode === 'guided' && isFirst && <InsightCallout tone={note.tone} style={{ marginBottom: '18px' }}>{note.text}</InsightCallout>}
           <Label>Training title</Label>
           <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder="e.g., Hands-on Clio time-entry workshop" />
           {data.items.length > 1 && <RemoveItemButton label="Remove this activity" onClick={() => delItem(t.id)} />}
@@ -92,19 +161,19 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 4: owner (last screen of the item)
+    // Screen 4: owner. Last screen of the item → "Done" returns to the hub.
     steps.push({
       id: `${t.id}-owner`,
       title: `${what}: owner`,
       isFilled: !!t.title.trim(),
       summary: t.owner ? `led by ${t.owner}` : undefined,
+      itemLast: true,
       node: (
         <div>
           <h2 style={headline}>{w.owner.label}</h2>
           <div style={whyStyle}>{w.owner.why}</div>
           <Label>Owner</Label>
           <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
-          {isLast && <AddAnotherButton label="Add another training activity" onAdd={addItem} />}
         </div>
       ),
     })
@@ -117,6 +186,9 @@ export function TrainingStage() {
       blurb={coaching.training.intro}
       extra={<InsightCallout tone={note.tone} style={{ marginBottom: '14px' }}>{note.text}</InsightCallout>}
       steps={steps}
+      hub={({ editItem }) => (
+        <TrainingHub items={data.items} editItem={editItem} onAdd={addItem} onRemove={delItem} note={note} showNote={mode === 'guided'} />
+      )}
     />
   )
 }
