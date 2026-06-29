@@ -308,7 +308,20 @@ export function DashboardStage() {
         <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section, your score updates either way. Removing a task here hides it from this list, your plan stays intact.</div>
 
         {GROUP_ORDER.map((group, gi) => {
-          const items = tasks.filter((t) => t.group === group)
+          // Order each group by due date (soonest first); undated tasks keep
+          // their natural order at the end, so entering a date re-sorts the row.
+          const items = tasks
+            .filter((t) => t.group === group)
+            .map((t, i) => ({ t, i }))
+            .sort((a, b) => {
+              const da = taskDueDates[a.t.key] ?? ''
+              const db = taskDueDates[b.t.key] ?? ''
+              if (da && db) return da < db ? -1 : da > db ? 1 : a.i - b.i
+              if (da) return -1
+              if (db) return 1
+              return a.i - b.i
+            })
+            .map((x) => x.t)
           const isCustom = group === 'Your tasks'
           if (items.length === 0 && !isCustom) return null
 
