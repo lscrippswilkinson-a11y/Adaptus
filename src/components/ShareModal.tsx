@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Copy, Link2, Trash2 } from 'lucide-react'
+import { Check, Copy, FileDown, Link2, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
@@ -44,6 +44,14 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
 
   const revoke = () => onUpdate({ ...project, shareToken: null })
 
+  // Top-left option: create the link (or copy it if one already exists).
+  const shareLinkAction = () => (token ? copy() : createLink())
+  // Top-right option: print just the brief, which the browser can save as PDF.
+  const downloadPdf = () => {
+    commitAsk()
+    window.print()
+  }
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl)
@@ -72,6 +80,20 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
           </div>
         ) : (
           <>
+            {/* Two ways to share, side by side, at the top. */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
+              <button type="button" onClick={shareLinkAction} className="share-option">
+                <Link2 size={20} color="#5B86A3" />
+                <span className="share-option-title">{token ? 'Copy share link' : 'Shareable link'}</span>
+                <span className="share-option-sub">A no-login web link to forward.</span>
+              </button>
+              <button type="button" onClick={downloadPdf} className="share-option">
+                <FileDown size={20} color="#5B86A3" />
+                <span className="share-option-title">Downloadable PDF</span>
+                <span className="share-option-sub">Save or print the brief as a PDF.</span>
+              </button>
+            </div>
+
             {/* The "what I need from you" ask */}
             <div className="cq-lbl">What I need from leadership</div>
             <textarea
@@ -84,8 +106,8 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               onBlur={commitAsk}
             />
 
-            {/* Link controls */}
-            {token ? (
+            {/* Link controls (shown once a link exists) */}
+            {token && (
               <>
                 <div className="cq-lbl">Share link</div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
@@ -106,14 +128,6 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                   <Trash2 size={13} /> Revoke link
                 </button>
               </>
-            ) : (
-              <button
-                type="button"
-                onClick={createLink}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '12px 22px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '24px' }}
-              >
-                <Link2 size={16} /> Create share link
-              </button>
             )}
 
             {/* White-label toggle: make the brief look fully the user's own. */}
@@ -134,9 +148,12 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               </span>
             </label>
 
-            {/* Live preview of exactly what recipients see */}
+            {/* Live preview of exactly what recipients see. The id scopes the
+                print stylesheet so "Download PDF" prints only the brief. */}
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>Preview</div>
-            <StatusBrief project={previewProject} />
+            <div id="brief-print">
+              <StatusBrief project={previewProject} />
+            </div>
           </>
         )}
 
