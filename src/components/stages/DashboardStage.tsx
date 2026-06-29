@@ -26,7 +26,6 @@ const GROUP_ORDER = [
   'Risks',
   'Resistance',
   'Impacted groups',
-  'Your tasks',
 ]
 
 /** Display labels for task groups (keys above stay stable for the data layer). */
