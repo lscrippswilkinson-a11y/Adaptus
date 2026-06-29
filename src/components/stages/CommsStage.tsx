@@ -114,13 +114,16 @@ function TouchpointCard({
       )}
       <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message: what this audience needs to know" />
 
-      <div style={{ marginTop: '10px' }}>
-        <button type="button" style={linkBtnStyle} onClick={() => setOpen((s) => !s)}>
-          {open ? '▾ Hide drafting help' : `✍️ ${d.label}`}
-        </button>
-      </div>
+      {/* The full drafting helper only makes sense for written email; other channels are spoken/cascaded. */}
+      {t.channel === 'Email Blast' && (
+        <div style={{ marginTop: '10px' }}>
+          <button type="button" style={linkBtnStyle} onClick={() => setOpen((s) => !s)}>
+            {open ? '▾ Hide drafting help' : `✍️ ${d.label}`}
+          </button>
+        </div>
+      )}
 
-      {open && (
+      {t.channel === 'Email Blast' && open && (
         <div style={{ marginTop: '10px', background: 'rgba(91,134,163,0.06)', border: '1px solid rgba(91,134,163,0.18)', borderRadius: '8px', padding: '14px' }}>
           <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6, marginBottom: '12px' }}>{d.why}</div>
 
@@ -165,6 +168,7 @@ function TouchpointCard({
 export function CommsStage() {
   const { project, data, update } = useStageEditor('comms')
   const schedule = data.schedule ?? []
+  const [msgExpanded, setMsgExpanded] = useState(false)
 
   // Pull context from earlier stages so the plan builds on what's already there.
   const define = project?.stageData.define
@@ -219,13 +223,18 @@ export function CommsStage() {
       summary: data.keyMessages,
       node: (
         <Card>
-          <Label>{coaching.comms.fields.keyMessages.label}</Label>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <Label>{coaching.comms.fields.keyMessages.label}</Label>
+            <button type="button" style={{ ...linkBtnStyle, flexShrink: 0 }} onClick={() => setMsgExpanded((s) => !s)}>
+              {msgExpanded ? '▾ Collapse' : '⤢ Expand'}
+            </button>
+          </div>
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
             {defineSeed
               ? 'We’ve drafted a starting message from your “Define the Change” answers. Read it over, make it sound like you, and edit anything that’s off before you move ahead.'
               : 'Write the one message everyone needs to walk away with. Keep it plain and short enough to repeat, then review it before you move ahead.'}
           </div>
-          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={4} />
+          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={msgExpanded ? 16 : 4} />
         </Card>
       ),
     },
