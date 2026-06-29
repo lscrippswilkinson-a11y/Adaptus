@@ -259,19 +259,21 @@ export function DashboardStage() {
             Add due dates to your launch tasks below to see what’s coming up next.
           </div>
         ) : (
-          upcoming.map((t) => {
-            const overdue = !!t.due && t.due < today
-            return (
-              <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
-                <div style={{ width: '54px', flexShrink: 0, fontSize: '13px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>{shortDate(t.due!)}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.label}</div>
-                  <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{labelFor(t.group)}{t.owner ? ` · ${t.owner}` : ''}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
+            {upcoming.map((t) => {
+              const overdue = !!t.due && t.due < today
+              return (
+                <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px' }}>
+                  <div style={{ width: '54px', flexShrink: 0, fontSize: '13px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>{shortDate(t.due!)}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.label}</div>
+                    <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{labelFor(t.group)}{t.owner ? ` · ${t.owner}` : ''}</div>
+                  </div>
+                  {overdue && <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>}
                 </div>
-                {overdue && <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>}
-              </div>
-            )
-          })
+              )
+            })}
+          </div>
         )}
       </div>
 
@@ -352,52 +354,46 @@ export function DashboardStage() {
 
               {open && (
                 <div style={{ marginTop: '12px', marginLeft: '22px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '8px', alignItems: 'start' }}>
-                    {items.map((t) => {
-                      const isCustomRow = t.source === 'custom'
-                      return (
-                        <div key={t.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <button
-                              type="button"
-                              onClick={() => toggle(t)}
-                              style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
-                            >
-                              {t.done ? '✓' : ''}
-                            </button>
-                            {isCustomRow ? (
-                              <TextInput
-                                value={customById.get(t.refId!)?.label ?? ''}
-                                onCommit={(v) => setCustomLabel(t.refId!, v)}
-                                placeholder="Describe this task…"
-                                style={{ flex: 1, minWidth: 0 }}
-                              />
-                            ) : (
-                              <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
-                            )}
-                            <DelButton onClick={() => removeTask(t)} />
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <TextInput
-                              value={taskOwners[t.key] ?? ''}
-                              onCommit={(v) => setTaskOwner(t.key, v)}
-                              placeholder="Owner"
-                              style={{ flex: 1, minWidth: 0 }}
-                            />
-                            <input
-                              type="date"
-                              className="cq-input"
-                              value={taskDueDates[t.key] ?? ''}
-                              onChange={(e) => setTaskDue(t.key, e.target.value)}
-                              aria-label="Due date"
-                              style={{ width: '150px', flexShrink: 0 }}
-                            />
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  <AddButton label="Add task" onClick={() => addTaskTo(group)} style={{ marginTop: '8px' }} />
+                  {items.map((t) => {
+                    const isCustomRow = t.source === 'custom'
+                    return (
+                      <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => toggle(t)}
+                          style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
+                        >
+                          {t.done ? '✓' : ''}
+                        </button>
+                        {isCustomRow ? (
+                          <TextInput
+                            value={customById.get(t.refId!)?.label ?? ''}
+                            onCommit={(v) => setCustomLabel(t.refId!, v)}
+                            placeholder="Describe this task…"
+                            style={{ flex: 1, minWidth: 0 }}
+                          />
+                        ) : (
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                        )}
+                        <TextInput
+                          value={taskOwners[t.key] ?? ''}
+                          onCommit={(v) => setTaskOwner(t.key, v)}
+                          placeholder="Owner"
+                          style={{ width: '130px', flexShrink: 0 }}
+                        />
+                        <input
+                          type="date"
+                          className="cq-input"
+                          value={taskDueDates[t.key] ?? ''}
+                          onChange={(e) => setTaskDue(t.key, e.target.value)}
+                          aria-label="Due date"
+                          style={{ width: '150px', flexShrink: 0 }}
+                        />
+                        <DelButton onClick={() => removeTask(t)} />
+                      </div>
+                    )
+                  })}
+                  <AddButton label="Add task" onClick={() => addTaskTo(group)} style={{ marginTop: '4px' }} />
                 </div>
               )}
             </div>
