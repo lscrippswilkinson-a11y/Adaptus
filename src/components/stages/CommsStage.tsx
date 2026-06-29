@@ -108,14 +108,6 @@ function TouchpointCard({
         <div style={{ marginTop: '10px', background: 'rgba(91,134,163,0.06)', border: '1px solid rgba(91,134,163,0.18)', borderRadius: '8px', padding: '14px' }}>
           <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6, marginBottom: '12px' }}>{d.why}</div>
 
-          <ul style={{ margin: '0 0 14px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '7px' }}>
-            {d.anatomy.map((a) => (
-              <li key={a.k} style={{ fontSize: '12px', lineHeight: 1.55, color: 'rgba(var(--fg),0.7)' }}>
-                <span style={{ fontWeight: 700, color: 'var(--accent-text)' }}>{a.k}.</span> {a.t}
-              </li>
-            ))}
-          </ul>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
               <Label>{d.contextLabel}</Label>
@@ -322,9 +314,6 @@ export function CommsStage() {
       node: (
       <Card>
         <Label>{coaching.comms.schedule.label}</Label>
-        <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '0 0 16px' }}>
-          {coaching.comms.schedule.why}
-        </div>
 
         {groupNames.length > 0 && (
           <div style={{ background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.22)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>

@@ -269,14 +269,6 @@ export const coaching = {
     /** The structured communication-schedule planner. */
     schedule: {
       label: 'Map out your communication schedule',
-      why: (
-        <>
-          A schedule isn’t “send some updates”; it’s a planned sequence of touchpoints. Lay out <em>who</em> hears{' '}
-          <em>what</em>, through <em>which channel</em>, and <em>when</em>, across the three phases below. Front-load it:
-          people need to hear a change several times before it sticks, so plan plenty of contact early and ease off as
-          confidence grows.
-        </>
-      ),
       phases: {
         before: { label: 'Before launch', hint: 'Build awareness and answer “why”, well before anything actually changes.' },
         launch: { label: 'Launch week', hint: 'Make it real: what to do on day one, and exactly where to get help.' },
@@ -296,13 +288,6 @@ export const coaching = {
     draft: {
       label: 'Draft this communication',
       why: 'Planning the touchpoint is half the job; the other half is the actual words. Work through the prompts below and the program will assemble a draft you can fine-tune and copy out.',
-      /** The anatomy of a message people will actually read and act on. */
-      anatomy: [
-        { k: 'Lead with relevant context', t: 'One or two plain sentences on why this, why now, so the message doesn’t land out of nowhere. People act on things they understand the reason for.' },
-        { k: 'Make the core message impossible to miss', t: 'The single thing they must walk away knowing. If you only had one sentence, this is it; put it up front, not buried at the bottom.' },
-        { k: 'End with one clear call to action', t: 'The one specific thing to do next, with a deadline. Vague asks get ignored; “Log in and enter one time entry by Friday” gets done.' },
-        { k: 'Write like a person', t: 'Acknowledge what’s changing for them, keep it short, skip the jargon, and always say where to get help. Warm and specific beats formal and vague.' },
-      ],
       contextLabel: 'Relevant context: why this, why now',
       contextPlaceholder: 'e.g., Our old billing system is being retired at the end of May, so we’re all moving to Clio.',
       messageLabel: 'Core message: the one thing they must take away',
