@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { FlaskConical, Mail, MailCheck, Lock } from 'lucide-react'
 import { useAuth } from '@/state/AuthContext'
 
+/** Temporarily hide Google sign-in so the only option is the emailed magic link. Flip to true to restore. */
+const GOOGLE_LOGIN_ENABLED = false
+
 /** Full-screen gate shown when Supabase is configured but no one is signed in. */
 export function SignIn() {
   const { signInWithGoogle, sendMagicLink } = useAuth()
@@ -63,19 +66,23 @@ export function SignIn() {
             <p style={{ margin: '8px 0 26px', fontSize: '14px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
               Sign in to access your change projects and collaborate with your team.
             </p>
-            <button
-              type="button"
-              onClick={signInWithGoogle}
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', background: '#fff', color: '#2c4a60', border: 'none', borderRadius: '10px', padding: '13px 20px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
-            >
-              <GoogleMark /> Continue with Google
-            </button>
+            {GOOGLE_LOGIN_ENABLED && (
+              <>
+                <button
+                  type="button"
+                  onClick={signInWithGoogle}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', background: '#fff', color: '#2c4a60', border: 'none', borderRadius: '10px', padding: '13px 20px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
+                >
+                  <GoogleMark /> Continue with Google
+                </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>or</span>
-              <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
-            </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>or</span>
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
+                </div>
+              </>
+            )}
 
             <input
               type="email"
@@ -95,7 +102,7 @@ export function SignIn() {
             </button>
             {error && <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#fca5a5' }}>{error}</div>}
             <p style={{ margin: '18px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
-              Works with any email, Google not required.
+              {GOOGLE_LOGIN_ENABLED ? 'Works with any email, Google not required.' : 'No password needed. Works with any email address.'}
             </p>
             <p style={{ margin: '14px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <Lock size={12} style={{ flexShrink: 0 }} /> Your projects are private to your account and never sold.{' '}
