@@ -18,7 +18,7 @@ the URL + anon key and I'll wire the app to the cloud.
 - It creates the `profiles`, `projects`, `project_members`, `project_invites` tables plus the row-level-security policies. Safe to re-run.
 - Then run the remaining idempotent files **in this order** (each is its own query, safe to re-run):
   `share_links.sql` → `collaboration.sql` → `feedback.sql` → `invite_links.sql` → `progress_events.sql`.
-  - `progress_events.sql` is the privacy-preserving progress tracker: it logs only *how far* users get (generic stage id + index), never plan content. There's no read policy, so you query it with the service role in the SQL editor (see the funnel queries in that file's project notes).
+  - `progress_events.sql` is the privacy-preserving progress tracker: a DB trigger on `projects` logs only *how far* users get (generic stage id + index), never plan content. It runs server-side (invisible to clients), and the table has no RLS policies, so you read it only with the service role in the SQL editor (funnel queries are at the bottom of that file).
 
 ## 4. Turn on Google sign-in
 1. In **Google Cloud Console** (https://console.cloud.google.com): create/select a project →

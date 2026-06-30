@@ -78,18 +78,6 @@ export async function deleteProjectRemote(id: string): Promise<void> {
 }
 
 /**
- * Record a privacy-preserving progress event (how far a user got, never what
- * they wrote). user_id is filled server-side from auth.uid(). Best-effort:
- * callers should swallow errors so analytics never blocks the user.
- */
-export async function logStageCompleted(projectId: string, stageId: string, stageIdx: number): Promise<void> {
-  const { error } = await supabase
-    .from('progress_events')
-    .insert({ project_id: projectId, event: 'stage_completed', stage_id: stageId, stage_idx: stageIdx })
-  if (error) throw error
-}
-
-/**
  * Fetch a project by its public share token, works WITHOUT auth via the
  * `get_shared_project` SECURITY DEFINER RPC, which returns only the public-safe
  * columns of the one matching row (and nothing if the token is wrong/revoked).
