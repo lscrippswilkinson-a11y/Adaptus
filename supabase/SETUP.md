@@ -16,6 +16,9 @@ the URL + anon key and I'll wire the app to the cloud.
 ## 3. Create the database schema
 - **SQL Editor → New query**, paste the entire contents of `supabase/schema.sql`, and **Run**.
 - It creates the `profiles`, `projects`, `project_members`, `project_invites` tables plus the row-level-security policies. Safe to re-run.
+- Then run the remaining idempotent files **in this order** (each is its own query, safe to re-run):
+  `share_links.sql` → `collaboration.sql` → `feedback.sql` → `invite_links.sql` → `progress_events.sql`.
+  - `progress_events.sql` is the privacy-preserving progress tracker: it logs only *how far* users get (generic stage id + index), never plan content. There's no read policy, so you query it with the service role in the SQL editor (see the funnel queries in that file's project notes).
 
 ## 4. Turn on Google sign-in
 1. In **Google Cloud Console** (https://console.cloud.google.com): create/select a project →

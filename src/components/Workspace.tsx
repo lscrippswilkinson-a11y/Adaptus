@@ -4,7 +4,7 @@ import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { hasSupabase } from '@/lib/supabase'
-import { fetchFeedback } from '@/lib/projectsRepo'
+import { fetchFeedback, logStageCompleted } from '@/lib/projectsRepo'
 import { PHASES, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
@@ -89,8 +89,16 @@ export function Workspace({ project }: { project: Project }) {
   const goPrev = () => prevStage && dispatch({ type: 'GO_TO_STAGE', stageIdx: prevIdx })
   const goNext = () => {
     if (!nextStage) return
-    if (!isViewer && !done && canComplete) dispatch({ type: 'COMPLETE_STAGE', toIdx: nextIdx })
-    else dispatch({ type: 'GO_TO_STAGE', stageIdx: nextIdx })
+    if (!isViewer && !done && canComplete) {
+      dispatch({ type: 'COMPLETE_STAGE', toIdx: nextIdx })
+      // Best-effort, privacy-safe progress logging (cloud only): records that
+      // this stage was completed, never any of its content.
+      if (hasSupabase) {
+        logStageCompleted(project.id, stage.id, state.stageIdx).catch((err) =>
+          console.error('[adaptus] failed to log progress event', err),
+        )
+      }
+    } else dispatch({ type: 'GO_TO_STAGE', stageIdx: nextIdx })
   }
 
   // Per-section review feedback (cloud only), kept to power the sidebar open-feedback counts.
