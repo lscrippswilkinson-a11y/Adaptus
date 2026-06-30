@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
-import { AddButton, Card, DelButton, FieldCoach, InsightCallout, Label, SectionTitle, TextInput } from '@/components/ui'
+import { AddButton, Card, DelButton, FieldCoach, InsightCallout, SectionTitle, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
@@ -10,7 +9,6 @@ import { uid } from '@/lib/id'
 export function SponsorStage() {
   const { data, update } = useStageEditor('sponsor')
   const { user } = useAuth()
-  const [draft, setDraft] = useState('')
 
   /** Name to offer for the "this is me" shortcut, drawn from the Google profile. */
   const myName =
@@ -28,10 +26,9 @@ export function SponsorStage() {
     if (actions.some((a) => a.text.toLowerCase() === t.toLowerCase())) return
     update({ sponsorActions: [...actions, { id: uid(), text: t, done: false }] })
   }
-  const submitDraft = () => {
-    addAction(draft)
-    setDraft('')
-  }
+  // "Add another action" drops in a blank card the user then fills in,
+  // mirroring how the Training and Groups review tabs add an item.
+  const addBlankAction = () => update({ sponsorActions: [...actions, { id: uid(), text: '', done: false }] })
   const setActionText = (id: number, text: string) =>
     update({ sponsorActions: actions.map((a) => (a.id === id ? { ...a, text } : a)) })
   const delAction = (id: number) => update({ sponsorActions: actions.filter((a) => a.id !== id) })
@@ -117,9 +114,19 @@ export function SponsorStage() {
           face, and checking back in on progress, is what turns a list into real, visible backing.
         </InsightCallout>
 
-        <Label>Add an action your sponsor will commit to</Label>
+        {actions.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+            {actions.map((a) => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder="Describe this action…" style={{ flex: 1, minWidth: 0 }} />
+                <DelButton onClick={() => delAction(a.id)} />
+              </div>
+            ))}
+          </div>
+        )}
+
         {suggestions.length > 0 && (
-          <div style={{ margin: '4px 0 10px' }}>
+          <div style={{ margin: '0 0 12px' }}>
             <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginBottom: '6px' }}>Suggestions, tap to add:</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {suggestions.map((s) => (
@@ -135,28 +142,8 @@ export function SponsorStage() {
             </div>
           </div>
         )}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <input
-            type="text"
-            className="cq-input"
-            value={draft}
-            placeholder="e.g., Record a 2-minute ‘why’ video for all staff"
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && submitDraft()}
-          />
-          <AddButton label="Add" onClick={submitDraft} style={{ width: 'auto', flexShrink: 0, padding: '9px 18px' }} />
-        </div>
 
-        {actions.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
-            {actions.map((a) => (
-              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder="Describe this action…" style={{ flex: 1, minWidth: 0 }} />
-                <DelButton onClick={() => delAction(a.id)} />
-              </div>
-            ))}
-          </div>
-        )}
+        <AddButton label={actions.length ? 'Add another action' : 'Add an action'} onClick={addBlankAction} />
 
         {actionsInsight && (
           <InsightCallout tone={actionsInsight.tone} style={{ marginTop: '12px' }}>

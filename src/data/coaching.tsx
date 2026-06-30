@@ -280,7 +280,7 @@ export const coaching = {
         { phase: 'before', when: '2 weeks out', audience: 'Timekeepers', channel: 'Manager Cascade', message: 'What changes for your day-to-day + your training date' },
         { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Blast', message: 'Clio is live: how to log in and enter your first time' },
         { phase: 'launch', when: 'Launch week', audience: 'Managers', channel: '1:1 Check-ins', message: 'Check your team has logged in; surface any blockers' },
-        { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'FAQ Document', message: 'Answers to the most common questions so far' },
+        { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Intranet Post', message: 'Answers to the most common questions so far' },
         { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the old system is going away' },
       ] as Omit<CommsTouchpoint, 'id'>[],
     },

@@ -34,7 +34,6 @@ export const CHANNELS: ChannelInfo[] = [
   { name: 'Intranet Post', best: 'A durable reference people can return to anytime.', limit: 'Passive; few go looking unless pointed there.' },
   { name: '1:1 Check-ins', best: 'Best for surfacing individual concerns and quiet resistance.', limit: 'Time-intensive and hard to scale.' },
   { name: 'Video Update', best: "Adds a personal, human tone text can't carry.", limit: 'High effort to produce and you can’t skim it.' },
-  { name: 'FAQ Document', best: 'Answers common questions once and deflects repeats.', limit: 'Only helps those who think to look.' },
   { name: 'Newsletter', best: 'Good for steady, ongoing reinforcement to a wide audience over time.', limit: 'Easy to tune out as routine; not for urgent or one-off news.' },
   { name: 'Demo', best: 'Best for showing the new tool or process in action so people believe it actually works.', limit: 'Needs a working build and prep; time-bound, so pair it with a recording.' },
 ]
