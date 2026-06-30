@@ -32,3 +32,29 @@ create policy "progress_insert" on public.progress_events for insert to authenti
 
 create index if not exists progress_events_user_idx on public.progress_events (user_id);
 create index if not exists progress_events_created_idx on public.progress_events (created_at);
+
+-- ---------------------------------------------------------------------------
+-- FUNNEL QUERIES (run these as needed in the SQL editor; service role bypasses
+-- RLS so you see all users). They read only progress metadata + the projects
+-- table's stage columns, never plan content.
+-- ---------------------------------------------------------------------------
+
+-- 1. Furthest stage reached per user (across all their projects).
+--    select user_id, max(stage_idx) as furthest_idx, count(*) as stages_completed
+--    from public.progress_events where event = 'stage_completed'
+--    group by user_id order by furthest_idx desc;
+
+-- 2. Drop-off funnel: how many distinct users completed each stage.
+--    select stage_idx, stage_id, count(distinct user_id) as users_completed
+--    from public.progress_events where event = 'stage_completed'
+--    group by stage_idx, stage_id order by stage_idx;
+
+-- 3. Current furthest stage per PROJECT straight from the projects table
+--    (no event log needed; shows people who created a project but completed nothing):
+--    select id, current_stage, coalesce(array_length(completed_stages, 1), 0) as stages_done, updated_at
+--    from public.projects order by current_stage desc;
+
+-- 4. Activity over time: stage completions per day.
+--    select date_trunc('day', created_at) as day, count(*) as completions
+--    from public.progress_events where event = 'stage_completed'
+--    group by day order by day;
