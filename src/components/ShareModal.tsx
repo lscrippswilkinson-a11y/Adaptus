@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Check, Copy, FileDown, Link2, Loader2, Trash2 } from 'lucide-react'
+import { Check, Copy, FileDown, Link2, Loader2, Presentation, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
@@ -15,7 +15,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
-  const [pdfBusy, setPdfBusy] = useState(false)
+  const [busy, setBusy] = useState<null | 'pdf' | 'pptx'>(null)
   const briefRef = useRef<HTMLDivElement>(null)
 
   const token = project.shareToken ?? null
@@ -48,16 +48,26 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
 
   // Top-left option: create the link (or copy it if one already exists).
   const shareLinkAction = () => (token ? copy() : createLink())
-  // Top-right option: render the brief to a one-click PDF download.
-  const downloadPdf = async () => {
+
+  const fileBase = () =>
+    (project.name || 'status-brief').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'status-brief'
+  // Rasterise the brief once; both PDF and PPTX build from this canvas.
+  const captureBrief = async () => {
     const el = briefRef.current
-    if (!el || pdfBusy) return
+    if (!el) return null
+    const { default: html2canvas } = await import('html2canvas-pro')
+    return html2canvas(el, { scale: 2, backgroundColor: '#11141f', useCORS: true })
+  }
+
+  // Option: render the brief to a one-click PDF download.
+  const downloadPdf = async () => {
+    if (busy) return
     commitAsk()
-    setPdfBusy(true)
+    setBusy('pdf')
     try {
-      // Load the (heavy) PDF libs only on demand, so they stay out of first paint.
-      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([import('jspdf'), import('html2canvas-pro')])
-      const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#11141f', useCORS: true })
+      const canvas = await captureBrief()
+      if (!canvas) return
+      const { default: jsPDF } = await import('jspdf')
       const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
       const pageW = pdf.internal.pageSize.getWidth()
       const pageH = pdf.internal.pageSize.getHeight()
@@ -82,12 +92,37 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
         pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
         heightLeft -= pageH
       }
-      const safeName = (project.name || 'status-brief').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'status-brief'
-      pdf.save(`${safeName}-status-brief.pdf`)
+      pdf.save(`${fileBase()}-status-brief.pdf`)
     } catch (err) {
       console.error('[adaptus] PDF generation failed', err)
     } finally {
-      setPdfBusy(false)
+      setBusy(null)
+    }
+  }
+
+  // Option: export the brief as a single PowerPoint slide (image, full-bleed
+  // on a slide sized to the brief's own aspect so nothing is squished).
+  const downloadPptx = async () => {
+    if (busy) return
+    commitAsk()
+    setBusy('pptx')
+    try {
+      const canvas = await captureBrief()
+      if (!canvas) return
+      const { default: PptxGenJS } = await import('pptxgenjs')
+      const pptx = new PptxGenJS()
+      const wIn = 10
+      const hIn = (canvas.height / canvas.width) * wIn
+      pptx.defineLayout({ name: 'BRIEF', width: wIn, height: hIn })
+      pptx.layout = 'BRIEF'
+      const slide = pptx.addSlide()
+      slide.background = { color: '11141F' }
+      slide.addImage({ data: canvas.toDataURL('image/png'), x: 0, y: 0, w: wIn, h: hIn })
+      await pptx.writeFile({ fileName: `${fileBase()}-status-brief.pptx` })
+    } catch (err) {
+      console.error('[adaptus] PPTX generation failed', err)
+    } finally {
+      setBusy(null)
     }
   }
 
@@ -119,17 +154,22 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
           </div>
         ) : (
           <>
-            {/* Two ways to share, side by side, at the top. */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '22px' }}>
+            {/* Three ways to share, side by side, at the top. */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '22px' }}>
               <button type="button" onClick={shareLinkAction} className="share-option">
                 <Link2 size={20} color="#5B86A3" />
-                <span className="share-option-title">{token ? 'Copy share link' : 'Shareable link'}</span>
+                <span className="share-option-title">{token ? 'Copy link' : 'Shareable link'}</span>
                 <span className="share-option-sub">A no-login web link to forward.</span>
               </button>
-              <button type="button" onClick={downloadPdf} disabled={pdfBusy} className="share-option" style={{ opacity: pdfBusy ? 0.7 : 1 }}>
-                {pdfBusy ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <FileDown size={20} color="#5B86A3" />}
-                <span className="share-option-title">Downloadable PDF</span>
-                <span className="share-option-sub">{pdfBusy ? 'Building your PDF…' : 'Download the brief as a PDF.'}</span>
+              <button type="button" onClick={downloadPdf} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pdf' ? 0.55 : 1 }}>
+                {busy === 'pdf' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <FileDown size={20} color="#5B86A3" />}
+                <span className="share-option-title">PDF</span>
+                <span className="share-option-sub">{busy === 'pdf' ? 'Building your PDF…' : 'Download the brief as a PDF.'}</span>
+              </button>
+              <button type="button" onClick={downloadPptx} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pptx' ? 0.55 : 1 }}>
+                {busy === 'pptx' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <Presentation size={20} color="#5B86A3" />}
+                <span className="share-option-title">PowerPoint</span>
+                <span className="share-option-sub">{busy === 'pptx' ? 'Building your slide…' : 'Export the brief as a slide.'}</span>
               </button>
             </div>
 
