@@ -3,7 +3,108 @@ import { Check, Copy, FileDown, Link2, Loader2, Presentation, Trash2 } from 'luc
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
+import { preparedness, riskColor, riskLabel } from '@/lib/format'
 import { StatusBrief } from '@/components/StatusBrief'
+
+/** Strip a leading '#' so hex colours suit pptxgenjs (which wants bare hex). */
+const hx = (c: string) => c.replace('#', '')
+
+/**
+ * Build a native, editable 16:9 slide of the status brief (real text + shapes,
+ * not a flattened image), so it drops cleanly into a leadership deck. `pptx` is
+ * a live PptxGenJS instance (typed loose to keep the lib a lazy import).
+ */
+function buildStatusSlide(pptx: any, project: Project) {
+  const sd = project.stageData
+  const prep = preparedness(project)
+  const pct = prep.pct
+  const statusColor = pct >= 80 ? '22C55E' : pct >= 50 ? 'F59E0B' : 'EF4444'
+  const statusWord = pct >= 80 ? 'On track' : pct >= 50 ? 'At risk' : 'Needs attention'
+  const goLive = sd.milestones.goLiveDate
+    ? new Date(sd.milestones.goLiveDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : project.targetDate || '-'
+  const longDate = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  const scoreOf = (l: number, i: number) => Math.round(((l * i) / 9) * 100) / 10
+  const topRisks = sd.risk.items
+    .filter((r) => r.description.trim())
+    .map((r) => ({ ...r, score: scoreOf(r.likelihood, r.impact) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+  const named = sd.stakeholders.rows.filter((r) => r.name.trim())
+  const advocates = named.filter((r) => r.support === 'Advocate').length
+  const resistant = named.filter((r) => r.support === 'Resistant').length
+  const ask = sd.executive.ask?.trim()
+  const branded = !sd.executive.hideBranding
+
+  const PANEL = '1B2130', MUTED = 'AEB9C4', LIGHT = 'B8D0DE', TEXT = 'E8EDF2'
+  const slide = pptx.addSlide()
+  slide.background = { color: '11141F' }
+
+  // Header band
+  slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 1.4, fill: { color: '2C4A5F' } })
+  if (branded) slide.addText('✦  ADAPTUS', { x: 0.5, y: 0.18, w: 4, h: 0.25, fontSize: 9, bold: true, color: 'CFE0EA', charSpacing: 2 })
+  slide.addText(project.name || 'Change initiative', { x: 0.5, y: 0.4, w: 9.4, h: 0.6, fontSize: 26, bold: true, color: 'FFFFFF', valign: 'middle' })
+  slide.addText(`${project.type || 'Change initiative'}   ·   Status Brief   ·   ${longDate}`, { x: 0.5, y: 1.0, w: 9.4, h: 0.3, fontSize: 11, color: LIGHT })
+  slide.addShape('roundRect', { x: 10.5, y: 0.48, w: 2.33, h: 0.52, rectRadius: 0.08, fill: { color: statusColor } })
+  slide.addText(`${statusWord} · ${pct}% ready`, { x: 10.5, y: 0.48, w: 2.33, h: 0.52, fontSize: 11, bold: true, color: '11141F', align: 'center', valign: 'middle' })
+
+  // Metric tiles
+  const tiles = [
+    { v: `${pct}%`, l: 'Launch ready', c: statusColor },
+    { v: goLive, l: 'Go-live', c: 'FFFFFF' },
+    { v: prep.total ? `${prep.done}/${prep.total}` : '-', l: 'Steps complete', c: 'FFFFFF' },
+  ]
+  const tileW = 3.97, gap = 0.2, tileY = 1.7
+  tiles.forEach((t, i) => {
+    const x = 0.5 + i * (tileW + gap)
+    slide.addShape('roundRect', { x, y: tileY, w: tileW, h: 1.1, rectRadius: 0.06, fill: { color: PANEL }, line: { color: '2A3242', width: 1 } })
+    slide.addText(t.v, { x: x + 0.22, y: tileY + 0.12, w: tileW - 0.44, h: 0.6, fontSize: t.v.length > 8 ? 20 : 28, bold: true, color: t.c, valign: 'middle' })
+    slide.addText(t.l.toUpperCase(), { x: x + 0.22, y: tileY + 0.74, w: tileW - 0.44, h: 0.26, fontSize: 10, color: MUTED, charSpacing: 1 })
+  })
+
+  // Left column: top risks
+  const colY = 3.2
+  slide.addText('TOP RISKS TO WATCH', { x: 0.5, y: colY, w: 6, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
+  let ry = colY + 0.5
+  const addRisk = (text: string, sev: string | null, color: string) => {
+    slide.addShape('ellipse', { x: 0.55, y: ry + 0.06, w: 0.14, h: 0.14, fill: { color } })
+    slide.addText(
+      [{ text, options: {} }, ...(sev ? [{ text: `   ${sev}`, options: { color, bold: true } }] : [])],
+      { x: 0.85, y: ry - 0.03, w: 5.6, h: 0.5, fontSize: 12, color: TEXT, valign: 'top' },
+    )
+    ry += 0.62
+  }
+  if (sd.sponsor.noSponsor) addRisk('No executive sponsor identified', 'Critical', 'EF4444')
+  if (topRisks.length) topRisks.forEach((r) => addRisk(r.description, riskLabel(r.score), hx(riskColor(r.score))))
+  else if (!sd.sponsor.noSponsor) slide.addText('No risks logged yet.', { x: 0.85, y: ry, w: 5.6, h: 0.3, fontSize: 12, italic: true, color: MUTED })
+
+  // Right column: coalition + the ask
+  const rx = 7.0
+  slide.addText('WHO’S ON BOARD?', { x: rx, y: colY, w: 5.83, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
+  const sponsorLine = sd.sponsor.noSponsor
+    ? '⚠ No executive sponsor — flagged as a risk'
+    : sd.sponsor.name
+      ? `Sponsor: ${sd.sponsor.name}${sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}`
+      : 'No sponsor named yet'
+  slide.addText(sponsorLine, { x: rx, y: colY + 0.42, w: 5.83, h: 0.35, fontSize: 12.5, bold: !sd.sponsor.noSponsor, color: sd.sponsor.noSponsor ? 'FCA5A5' : 'FFFFFF' })
+  if (named.length) {
+    const parts = [`${advocates} advocate${advocates === 1 ? '' : 's'}`]
+    if (resistant) parts.push(`${resistant} need engagement`)
+    parts.push(`${named.length} mapped`)
+    slide.addText(parts.join('    ·    '), { x: rx, y: colY + 0.82, w: 5.83, h: 0.3, fontSize: 11, color: MUTED })
+  }
+
+  const askY = colY + 1.45
+  slide.addText('WHAT I NEED FROM YOU', { x: rx, y: askY, w: 5.83, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
+  if (ask) {
+    slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: '5B86A3', width: 1 } })
+    slide.addText(ask, { x: rx + 0.25, y: askY + 0.55, w: 5.33, h: 1.5, fontSize: 12.5, color: TEXT, valign: 'top' })
+  } else {
+    slide.addText('Add a clear ask — it’s the line that gets your sponsor to reply.', { x: rx, y: askY + 0.42, w: 5.83, h: 0.4, fontSize: 12, italic: true, color: MUTED })
+  }
+
+  if (branded) slide.addText('Made with Adaptus', { x: 0.5, y: 7.08, w: 6, h: 0.3, fontSize: 10, color: '6B7A88' })
+}
 
 /**
  * Share a project's status brief via a public, no-login link. Generates a
@@ -100,24 +201,16 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
     }
   }
 
-  // Option: export the brief as a single PowerPoint slide (image, full-bleed
-  // on a slide sized to the brief's own aspect so nothing is squished).
+  // Option: export the brief as a native, editable 16:9 PowerPoint slide.
   const downloadPptx = async () => {
     if (busy) return
     commitAsk()
     setBusy('pptx')
     try {
-      const canvas = await captureBrief()
-      if (!canvas) return
       const { default: PptxGenJS } = await import('pptxgenjs')
       const pptx = new PptxGenJS()
-      const wIn = 10
-      const hIn = (canvas.height / canvas.width) * wIn
-      pptx.defineLayout({ name: 'BRIEF', width: wIn, height: hIn })
-      pptx.layout = 'BRIEF'
-      const slide = pptx.addSlide()
-      slide.background = { color: '11141F' }
-      slide.addImage({ data: canvas.toDataURL('image/png'), x: 0, y: 0, w: wIn, h: hIn })
+      pptx.layout = 'LAYOUT_WIDE' // 13.33 x 7.5 in (16:9)
+      buildStatusSlide(pptx, previewProject)
       await pptx.writeFile({ fileName: `${fileBase()}-status-brief.pptx` })
     } catch (err) {
       console.error('[adaptus] PPTX generation failed', err)
