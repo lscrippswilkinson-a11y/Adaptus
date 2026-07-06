@@ -13,7 +13,7 @@ const hx = (c: string) => c.replace('#', '')
 // slides match the summary slide and the on-screen brief.
 const DECK = { BG: '11141F', BAND: '2C4A5F', PANEL: '1B2130', LINE: '2A3242', MUTED: 'AEB9C4', SUB: '8593A0', LIGHT: 'B8D0DE', TEXT: 'E8EDF2' }
 // Friendlier task-group labels — mirrors StatusBrief so the deck reads the same.
-const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected' }
+const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected', 'Sponsor commitments': 'Backer commitments' }
 const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
 const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 // Vertical bounds of a content slide's body (inches), between the title band and footer.
@@ -65,8 +65,8 @@ function buildStatusSlide(pptx: any, project: Project) {
   // Header band
   slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 1.4, fill: { color: '2C4A5F' } })
   if (branded) slide.addText('✦  ADAPTUS', { x: 0.5, y: 0.18, w: 4, h: 0.25, fontSize: 9, bold: true, color: 'CFE0EA', charSpacing: 2 })
-  slide.addText(project.name || 'Change initiative', { x: 0.5, y: 0.4, w: 9.4, h: 0.6, fontSize: 26, bold: true, color: 'FFFFFF', valign: 'middle' })
-  slide.addText(`${project.type || 'Change initiative'}   ·   Status Brief   ·   ${longDate}`, { x: 0.5, y: 1.0, w: 9.4, h: 0.3, fontSize: 11, color: LIGHT })
+  slide.addText(project.name || 'Change project', { x: 0.5, y: 0.4, w: 9.4, h: 0.6, fontSize: 26, bold: true, color: 'FFFFFF', valign: 'middle' })
+  slide.addText(`${project.type || 'Change project'}   ·   Status Brief   ·   ${longDate}`, { x: 0.5, y: 1.0, w: 9.4, h: 0.3, fontSize: 11, color: LIGHT })
   slide.addShape('roundRect', { x: 10.5, y: 0.48, w: 2.33, h: 0.52, rectRadius: 0.08, fill: { color: statusColor } })
   slide.addText(`${statusWord} · ${pct}% ready`, { x: 10.5, y: 0.48, w: 2.33, h: 0.52, fontSize: 11, bold: true, color: '11141F', align: 'center', valign: 'middle' })
 
@@ -96,7 +96,7 @@ function buildStatusSlide(pptx: any, project: Project) {
     )
     ry += 0.62
   }
-  if (sd.sponsor.noSponsor) addRisk('No executive sponsor identified', 'Critical', 'EF4444')
+  if (sd.sponsor.noSponsor) addRisk('No senior backer identified', 'Critical', 'EF4444')
   if (topRisks.length) topRisks.forEach((r) => addRisk(r.description, riskLabel(r.score), hx(riskColor(r.score))))
   else if (!sd.sponsor.noSponsor) {
     // No individual risks logged: fall back to the overall risk-going-in score,
@@ -110,15 +110,15 @@ function buildStatusSlide(pptx: any, project: Project) {
   const rx = 7.0
   slide.addText('WHO’S ON BOARD?', { x: rx, y: colY, w: 5.83, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
   const sponsorLine = sd.sponsor.noSponsor
-    ? '⚠ No executive sponsor — flagged as a risk'
+    ? '⚠ No senior backer — flagged as a risk'
     : sd.sponsor.name
-      ? `Sponsor: ${sd.sponsor.name}${sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}`
-      : 'No sponsor named yet'
+      ? `Backer: ${sd.sponsor.name}${sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}`
+      : 'No backer named yet'
   slide.addText(sponsorLine, { x: rx, y: colY + 0.42, w: 5.83, h: 0.35, fontSize: 12.5, bold: !sd.sponsor.noSponsor, color: sd.sponsor.noSponsor ? 'FCA5A5' : 'FFFFFF' })
   if (named.length) {
-    const parts = [`${advocates} advocate${advocates === 1 ? '' : 's'}`]
-    if (resistant) parts.push(`${resistant} need engagement`)
-    parts.push(`${named.length} mapped`)
+    const parts = [`${advocates} on board`]
+    if (resistant) parts.push(`${resistant} to win over`)
+    parts.push(`${named.length} listed`)
     slide.addText(parts.join('    ·    '), { x: rx, y: colY + 0.82, w: 5.83, h: 0.3, fontSize: 11, color: MUTED })
   }
 
@@ -128,7 +128,7 @@ function buildStatusSlide(pptx: any, project: Project) {
     slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: '5B86A3', width: 1 } })
     slide.addText(ask, { x: rx + 0.25, y: askY + 0.55, w: 5.33, h: 1.5, fontSize: 12.5, color: TEXT, valign: 'top' })
   } else {
-    slide.addText('Add a clear ask — it’s the line that gets your sponsor to reply.', { x: rx, y: askY + 0.42, w: 5.83, h: 0.4, fontSize: 12, italic: true, color: MUTED })
+    slide.addText('Add a clear ask — it’s the line that gets your backer to reply.', { x: rx, y: askY + 0.42, w: 5.83, h: 0.4, fontSize: 12, italic: true, color: MUTED })
   }
 
   if (branded) slide.addText('Made with Adaptus', { x: 0.5, y: 7.08, w: 6, h: 0.3, fontSize: 10, color: '6B7A88' })
@@ -219,10 +219,10 @@ function buildAdoptionSlide(pptx: any, project: Project) {
   const metrics = project.stageData.adoption.metrics.filter((m) => m.name.trim())
   if (!metrics.length) return
 
-  let slide = addContentSlide(pptx, 'Adoption')
+  let slide = addContentSlide(pptx, 'Real use')
   let y = BODY_TOP
   for (const m of metrics) {
-    if (y + 0.95 > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Adoption (cont.)'); y = BODY_TOP }
+    if (y + 0.95 > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Real use (cont.)'); y = BODY_TOP }
     const c = parseFloat(m.current)
     const t = parseFloat(m.target)
     const has = isFinite(c) && isFinite(t) && t !== 0
@@ -382,7 +382,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
         <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>Share</div>
         <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Status brief for leadership</h2>
         <p style={{ margin: '0 0 22px', fontSize: '13px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
-          A read-only, one-glance summary anyone can open, no login. Forward it to your sponsor or exec.
+          A read-only, one-glance summary anyone can open, no login. Forward it to your senior backer or leadership.
         </p>
 
         {!hasSupabase ? (
@@ -416,7 +416,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               className="cq-textarea"
               rows={3}
               value={ask}
-              placeholder="The one clear ask that gets a reply, e.g., “Email all staff before go-live, and join the launch all-hands.”"
+              placeholder="The one clear ask that gets a reply, e.g., “Email all staff before launch, and join the launch meeting.”"
               style={{ marginBottom: '20px' }}
               onChange={(e) => setAsk(e.target.value)}
               onBlur={commitAsk}

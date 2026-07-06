@@ -2,7 +2,7 @@ import type { Project } from '@/types'
 import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
 
 // Friendlier labels for a couple of task groups on the exec-facing brief.
-const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected' }
+const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected', 'Sponsor commitments': 'Backer commitments' }
 const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
 
 /**
@@ -75,8 +75,8 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         <div className="brief-badge" style={{ borderColor: 'rgba(255,255,255,0.35)' }}>
           {statusWord(prep.pct)} · {prep.pct}% ready
         </div>
-        <h1>{project.name || 'Change initiative'}</h1>
-        <div className="bm">{project.type || 'Change initiative'} · Status Brief · {longDate(new Date())}</div>
+        <h1>{project.name || 'Change project'}</h1>
+        <div className="bm">{project.type || 'Change project'} · Status Brief · {longDate(new Date())}</div>
       </div>
 
       <div className="brief-body">
@@ -152,7 +152,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
             <div className="bai">
               <div className="bad" style={{ background: '#ef4444' }} />
               <div style={{ flex: 1 }}>
-                No executive sponsor identified
+                No senior backer identified
                 <span className="btag r" style={{ marginLeft: '8px' }}>Critical</span>
                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '3px' }}>
                   The top predictor of change failure — a senior leader needs to own this.
@@ -180,18 +180,18 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
           <div className="bst">Who’s on board?</div>
           <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.7 }}>
             {sd.sponsor.noSponsor ? (
-              <span style={{ color: '#fca5a5', fontWeight: 600 }}>⚠ No executive sponsor — flagged as a risk</span>
+              <span style={{ color: '#fca5a5', fontWeight: 600 }}>⚠ No senior backer — flagged as a risk</span>
             ) : sd.sponsor.name ? (
-              <>Sponsor: <strong style={{ color: '#fff' }}>{sd.sponsor.name}</strong>{sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}</>
+              <>Backer: <strong style={{ color: '#fff' }}>{sd.sponsor.name}</strong>{sd.sponsor.role ? ` (${sd.sponsor.role})` : ''}</>
             ) : (
-              <span style={{ color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>No sponsor named yet</span>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>No backer named yet</span>
             )}
           </div>
           {named.length > 0 && (
             <div style={{ marginTop: '8px' }}>
-              <span className="btag g">{advocates} advocate{advocates === 1 ? '' : 's'}</span>
-              {resistant > 0 && <span className="btag a">{resistant} need engagement</span>}
-              <span className="btag b">{named.length} mapped</span>
+              <span className="btag g">{advocates} on board</span>
+              {resistant > 0 && <span className="btag a">{resistant} to win over</span>}
+              <span className="btag b">{named.length} listed</span>
             </div>
           )}
         </div>
@@ -206,7 +206,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
               </div>
             ) : (
               <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>
-                Add a clear ask, it’s the line that gets your sponsor to reply.
+                Add a clear ask, it’s the line that gets your backer to reply.
               </div>
             )}
           </div>
@@ -215,7 +215,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         {/* Adoption snapshot */}
         {metrics.length > 0 && (
           <div className="bs">
-            <div className="bst">Adoption</div>
+            <div className="bst">Real use</div>
             {metrics.map((m) => {
               const c = parseFloat(m.current)
               const t = parseFloat(m.target)

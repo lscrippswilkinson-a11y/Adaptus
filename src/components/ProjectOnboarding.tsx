@@ -61,9 +61,9 @@ function BottomLine({ children }: { children: ReactNode }) {
 }
 
 const PHASES: { n: number; label: string; line: string }[] = [
-  { n: 1, label: 'Planning', line: "Define the change, identify who's affected, line up your sponsor and stakeholders." },
-  { n: 2, label: 'Launch Preparation', line: 'Build your comms plan, training roadmap, and go-live checklist.' },
-  { n: 3, label: 'Post-Launch', line: 'Track adoption, manage resistance, sustain the change.' },
+  { n: 1, label: 'Planning', line: "Define the change, identify who's affected, and line up your backer and key people." },
+  { n: 2, label: 'Launch Preparation', line: 'Build your communication plan, training plan, and launch checklist.' },
+  { n: 3, label: 'Post-Launch', line: 'Track real use, handle pushback, and keep the change alive.' },
 ]
 
 function SlideWelcome() {
@@ -72,7 +72,7 @@ function SlideWelcome() {
       <h1 style={headlineStyle}>Let’s build your change plan</h1>
       <p style={bodyStyle}>
         Adaptus walks you through a proven, structured approach to managing organizational change, from the first
-        conversation to long-term adoption. Most change initiatives fail not because the solution was wrong, but because
+        conversation to long-term use. Most change efforts fail not because the solution was wrong, but because
         people weren’t brought along. This process fixes that.
       </p>
       <BottomLine>

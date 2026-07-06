@@ -60,15 +60,15 @@ export const LAUNCH_ITEMS = [
 ]
 
 export const SPONSOR_ACTIONS = [
-  "Communicate the 'why' to their direct reports",
-  'Attend and speak at all-hands launch event',
-  'Brief peer leaders and build coalition',
-  'Remove identified blockers',
-  'Respond to escalated resistance',
+  "Explain the 'why' to their team",
+  'Attend and speak at the launch meeting',
+  'Brief other leaders and win them over',
+  'Remove roadblocks',
+  'Step in on serious pushback',
   "Conduct visible 'walk the floor' check-ins",
-  'Recognize and reward early adopters',
-  'Review adoption metrics monthly',
-  'Send post-launch reinforcement message',
+  'Recognize and reward early users',
+  'Review usage numbers monthly',
+  'Send a follow-up message after launch',
 ]
 
 export const RESISTANCE_TYPES = [

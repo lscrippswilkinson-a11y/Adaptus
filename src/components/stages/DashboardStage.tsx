@@ -36,6 +36,7 @@ const GROUP_LABELS: Record<string, string> = {
   'Resistance': 'Pushback',
   'Dependencies': 'Things you’re waiting on',
   'Impacted groups': 'Who’s affected',
+  'Sponsor commitments': 'Backer commitments',
 }
 const labelFor = (g: string) => GROUP_LABELS[g] ?? g
 
@@ -230,7 +231,7 @@ export function DashboardStage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Share this plan with your team</div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>
-              Send a read-only brief to your sponsor or team so everyone sees the plan and where it stands.
+              Send a read-only brief to your backer or team so everyone sees the plan and where it stands.
             </div>
           </div>
           <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.95)', color: '#1f3445', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px' }}>

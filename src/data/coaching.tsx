@@ -111,22 +111,22 @@ export const coaching = {
     icon: '🏅',
     intro: (
       <>
-        {strong('Who’s the senior person visibly backing this?')} A sponsor’s active, visible support is the single
+        {strong('Who’s the senior person visibly backing this?')} A senior backer’s active, visible support is the single
         biggest predictor of whether a change sticks, more than budget or the tools you pick, because people watch what
-        leaders <em>do</em>. In this step, we will identify the project sponsor and their commitments.
+        leaders <em>do</em>. In this step, we’ll identify that person and what they’ll commit to.
       </>
     ),
     /** Shown when the user declares there's no sponsor. */
     noSponsorRisk:
-      'No executive sponsor is the #1 reason changes fail — without a senior owner, decisions stall, funding dries up, and people quietly opt out. We’ve flagged this as a top risk on your status brief. Your most important next move is to find and recruit one: identify the leader who most feels the pain this change solves, and ask them to back it.',
+      'Having no senior backer is the #1 reason changes fail — without a senior owner, decisions stall, funding dries up, and people quietly opt out. We’ve flagged this as a top risk on your status brief. Your most important next move is to find and recruit one: identify the leader who most feels the pain this change solves, and ask them to back it.',
     fields: {
       name: {
-        label: 'Who is your executive sponsor?',
+        label: 'Who’s your senior backer?',
         why: (
           <>
-            <p style={{ margin: '0 0 10px' }}>We recommend you identify your project sponsor at this point and work through the next steps together.</p>
+            <p style={{ margin: '0 0 10px' }}>We recommend you identify the person backing this at this point and work through the next steps together.</p>
             <p style={{ margin: '0 0 10px' }}>Name one specific senior person who will publicly own this change. Not a committee, one human everyone recognizes. If you can’t name them, that’s the first problem to solve, because a change with no visible owner drifts.</p>
-            <p style={{ margin: 0 }}>If you are the senior person who is sponsoring this project, you can name yourself here.</p>
+            <p style={{ margin: 0 }}>If you’re the senior person backing this, you can name yourself here.</p>
           </>
         ),
         example: 'Elena Torres',
@@ -137,8 +137,8 @@ export const coaching = {
         example: 'Managing Partner',
       } satisfies FieldCopy,
       commitments: {
-        label: 'What has your sponsor committed to do?',
-        why: 'Turn the boxes above into concrete promises: what, and when. The most powerful thing a sponsor can do is model the new behavior themselves, so people see “even the boss is doing this.” Write down what they’ve actually agreed to, so you can hold them to it.',
+        label: 'What has your backer committed to do?',
+        why: 'Turn the boxes above into concrete promises: what, and when. The most powerful thing a backer can do is model the new behavior themselves, so people see “even the boss is doing this.” Write down what they’ve actually agreed to, so you can hold them to it.',
         example:
           'Record a 2-minute video for all staff explaining why we’re moving to Clio, co-present at the launch all-hands, and personally enter her own time in Clio from day one so everyone sees she’s doing it too.',
       } satisfies FieldCopy,
@@ -150,9 +150,9 @@ export const coaching = {
     /** Reacts to how many sponsor actions are committed. */
     actionsInsight(count: number): Insight | null {
       if (count === 0)
-        return { tone: 'priority', text: 'Pick at least a few. A sponsor who does nothing visible is just a name on a slide; pick the actions yours will genuinely commit to and show up for.' }
+        return { tone: 'priority', text: 'Pick at least a few. A backer who does nothing visible is just a name on a slide; pick the actions yours will genuinely commit to and show up for.' }
       if (count >= 3)
-        return { tone: 'success', text: 'That’s the right idea, these visible, repeated actions are exactly what move people off the fence. A sponsor who shows up beats one who just signs off.' }
+        return { tone: 'success', text: 'That’s the right idea, these visible, repeated actions are exactly what move people off the fence. A backer who shows up beats one who just signs off.' }
       return null
     },
   },
@@ -590,7 +590,7 @@ export const coaching = {
     icon: '📊',
     intro: (
       <>
-        {strong('An executive brief is a one-page update for a busy leader.')} Picture a partner who has ninety seconds
+        {strong('A status brief is a one-page update for a busy leader.')} Picture a partner who has ninety seconds
         between meetings. A good brief answers their four questions before they ask: <em>Are we on track? What could go
         wrong? Who’s on board? And what do you need from me?</em> You don’t write it from scratch; the button below
         pulls together everything you’ve already entered in the earlier stages into a clean summary.
@@ -598,7 +598,7 @@ export const coaching = {
     ),
     richerNote: {
       tone: 'info',
-      text: 'The more of the earlier stages you’ve filled in, your groups, sponsor, risks, stakeholders, and launch checklist, the richer and more convincing this brief will be. If it looks thin, that’s usually a sign to go back and flesh out a stage or two first.',
+      text: 'The more of the earlier stages you’ve filled in, your groups, backer, risks, key people, and launch checklist, the richer and more convincing this brief will be. If it looks thin, that’s usually a sign to go back and flesh out a stage or two first.',
     } satisfies Insight,
   },
 

@@ -47,9 +47,9 @@ export function SponsorStage() {
 
   const nameStep: WizardStep = {
     id: 'name',
-    title: 'Your sponsor',
+    title: 'Your backer',
     isFilled: noSponsor || !!data.name.trim(),
-    summary: noSponsor ? 'No executive sponsor — flagged as a risk' : data.name,
+    summary: noSponsor ? 'No senior backer — flagged as a risk' : data.name,
     node: (
       <FieldCoach
         label={f.name.label}
@@ -77,7 +77,7 @@ export function SponsorStage() {
                   fontFamily: 'inherit',
                 }}
               >
-                The sponsor is me, use “{myName}”
+                I’m the backer, use “{myName}”
               </button>
             )}
           </>
@@ -86,7 +86,7 @@ export function SponsorStage() {
         {/* Escape hatch: many real projects launch without a named sponsor. */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '9px', marginTop: '14px', cursor: 'pointer', fontSize: '13px', color: 'rgba(var(--fg),0.7)' }}>
           <input type="checkbox" checked={noSponsor} onChange={(e) => toggleNoSponsor(e.target.checked)} style={{ width: '17px', height: '17px', accentColor: '#ef4444', cursor: 'pointer', flexShrink: 0 }} />
-          We don’t have an executive sponsor (yet)
+          We don’t have a senior backer (yet)
         </label>
 
         {noSponsor && (
@@ -98,19 +98,19 @@ export function SponsorStage() {
 
   const actionsStep: WizardStep = {
     id: 'actions',
-    title: 'Sponsor actions',
+    title: 'Backer actions',
     isFilled: actions.length > 0,
     summary: actions.length ? `${actions.length} action${actions.length === 1 ? '' : 's'} planned` : undefined,
     node: (
       <Card>
-        <SectionTitle>Sponsor Action Plan</SectionTitle>
+        <SectionTitle>What your backer will do</SectionTitle>
         <p style={{ fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.6, margin: '4px 0 0' }}>
-          Build this <strong>with your sponsor</strong>, not just for them. Each action you add becomes a checklist item
-          on your Launch Preparation dashboard, where you can give it an owner and a due date and check it off as it’s done.
+          Build this <strong>with your backer</strong>, not just for them. Each action you add becomes a checklist item
+          on your launch checklist, where you can give it an owner and a due date and check it off as it’s done.
         </p>
 
         <InsightCallout tone="info" style={{ margin: '14px 0' }}>
-          We recommend setting aside time with your sponsor to walk through each action together. Agreeing them face to
+          We recommend setting aside time with your backer to walk through each action together. Agreeing them face to
           face, and checking back in on progress, is what turns a list into real, visible backing.
         </InsightCallout>
 

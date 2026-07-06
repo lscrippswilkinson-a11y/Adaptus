@@ -84,7 +84,7 @@ export function ReportStage() {
           <div className="brief-hdr">
             <div className="brief-badge">{prep.pct}% prepared</div>
             <h1>{project.name}</h1>
-            <div className="bm">{project.type || 'Change initiative'} · Launch Success Report · {longDate(new Date())}</div>
+            <div className="bm">{project.type || 'Change project'} · Launch Success Report · {longDate(new Date())}</div>
           </div>
           <div className="brief-body">
             {/* Outcome */}

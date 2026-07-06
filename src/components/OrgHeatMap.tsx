@@ -127,18 +127,18 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
         <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>Organization change heat map</span>
       </div>
       <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.62)', marginBottom: '18px', lineHeight: 1.5 }}>
-        Which teams are absorbing the most change across all your initiatives. Higher load = more concurrent change, watch for fatigue.
+        Which teams have the most change on their plate across all your projects. More change at once means a higher risk of burnout.
       </div>
 
       {/* Gauges + KPI tiles */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', alignItems: 'center', marginBottom: '22px', paddingBottom: '20px', borderBottom: '1px solid rgba(var(--fg),0.07)' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
           <Gauge value={summary.orgLoad} color={LOAD_COLOR[summary.orgBand]} label="Change load" band={summary.orgBand} goodWhenLow />
-          <Gauge value={summary.avgReadiness} color={READY_COLOR[readinessBand(summary.avgReadiness)]} label="Avg readiness" band={readinessBand(summary.avgReadiness)} goodWhenLow={false} />
+          <Gauge value={summary.avgReadiness} color={READY_COLOR[readinessBand(summary.avgReadiness)]} label="How ready" band={readinessBand(summary.avgReadiness)} goodWhenLow={false} />
         </div>
         <div style={{ flex: 1, minWidth: '260px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          <Stat value={summary.teamsImpacted} label="Teams impacted" />
-          <Stat value={summary.initiatives} label="Active initiatives" />
+          <Stat value={summary.teamsImpacted} label="Teams affected" />
+          <Stat value={summary.initiatives} label="Active changes" />
           <Stat value={`~${fmtPeople}`} label="People affected" />
           <Stat value={summary.teamsAtRisk} label="Teams at risk" color={summary.teamsAtRisk > 0 ? ALARM : undefined} />
         </div>
@@ -190,7 +190,7 @@ export function OrgHeatMap({ projects }: { projects: Project[] }) {
                       {t.isAtRisk && <span style={{ flexShrink: 0, fontSize: '9.5px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', color: ALARM, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', borderRadius: '5px', padding: '1px 6px' }}>At risk</span>}
                     </span>
                     <span style={{ display: 'block', fontSize: '11px', color: 'rgba(var(--fg),0.62)', marginTop: '1px' }}>
-                      {t.initiativeCount} initiative{t.initiativeCount === 1 ? '' : 's'}{t.peopleCount > 0 ? ` · ~${t.peopleCount} people` : ''}
+                      {t.initiativeCount} change{t.initiativeCount === 1 ? '' : 's'}{t.peopleCount > 0 ? ` · ~${t.peopleCount} people` : ''}
                     </span>
                   </span>
                 </button>
