@@ -61,7 +61,7 @@ export function TestingStage() {
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
           <Label>What are you testing?</Label>
-          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="e.g., UAT with 5 pilot users" />
+          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="e.g., 5 real users try it on their own work" />
           <div style={{ marginTop: '18px' }}>
             <GuidedLabel>What kind of test is it?</GuidedLabel>
             <ChipPicker value={t.type} options={TEST_TYPES} onChange={(v) => setItem(t.id, { type: v })} />

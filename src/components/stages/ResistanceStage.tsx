@@ -38,7 +38,7 @@ export function ResistanceStage() {
         <div>
           <h2 style={headline}>{w.source.label}</h2>
           <div style={whyStyle}>{w.source.why}</div>
-          <AddItemButton label="Add your first source of resistance" onClick={addItem} />
+          <AddItemButton label="Add your first source of pushback" onClick={addItem} />
         </div>
       ),
     })
@@ -77,7 +77,7 @@ export function ResistanceStage() {
       summary: `${item.severity} severity`,
       node: (
         <div>
-          <h2 style={headline}>How serious is this resistance?</h2>
+          <h2 style={headline}>How serious is this pushback?</h2>
           <div style={whyStyle}>{w.severity.why}</div>
           <LevelPicker value={item.severity} options={SEVERITY_LEVELS} onChange={(v) => setItem(item.id, { severity: v })} />
         </div>
@@ -87,19 +87,19 @@ export function ResistanceStage() {
     // Screen 3: intervention (+ high-severity note on the last)
     steps.push({
       id: `${item.id}-intervention`,
-      title: `${who}: intervention`,
+      title: `${who}: your response`,
       isFilled: !!item.intervention.trim(),
       summary: item.intervention || undefined,
       node: (
         <div>
           <h2 style={headline}>How will you address it?</h2>
           <div style={whyStyle}>{w.intervention.why}</div>
-          <Label>Intervention: who does what, by when?</Label>
-          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, dedicated coaching sprint..." />
+          <Label>Your response: who does what, by when?</Label>
+          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, then one-on-one coaching..." />
           {mode === 'guided' && isLast && highSeverityNote && (
             <InsightCallout tone={highSeverityNote.tone} style={{ marginTop: '16px' }}>{highSeverityNote.text}</InsightCallout>
           )}
-          {isLast && <AddAnotherButton label="Add another source of resistance" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label="Add another source of pushback" onAdd={addItem} />}
         </div>
       ),
     })
@@ -118,7 +118,7 @@ export function ResistanceStage() {
         example={coaching.resistance.fields.generalPlan.example}
         onUseExample={() => update({ generalPlan: coaching.resistance.fields.generalPlan.example })}
       >
-        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder="e.g., Weekly pulse survey for 8 weeks, any score below 3/5 triggers manager check-in within 48 hours..." rows={4} />
+        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder="e.g., Weekly check-in survey for 8 weeks, any score below 3/5 triggers manager check-in within 48 hours..." rows={4} />
       </FieldCoach>
     ),
   })

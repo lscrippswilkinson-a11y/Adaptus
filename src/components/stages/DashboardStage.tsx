@@ -32,6 +32,10 @@ const GROUP_ORDER = [
 const GROUP_LABELS: Record<string, string> = {
   'Launch readiness': 'Go-live checklist', // avoid clashing with the "Launch Preparedness" score label
   'Your tasks': 'Additional tasks',
+  'Stakeholders': 'Key people',
+  'Resistance': 'Pushback',
+  'Dependencies': 'Things you’re waiting on',
+  'Impacted groups': 'Who’s affected',
 }
 const labelFor = (g: string) => GROUP_LABELS[g] ?? g
 

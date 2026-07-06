@@ -20,7 +20,7 @@ export function SustainmentStage() {
           example={f.reinforcementOwner.example}
           onUseExample={() => update({ reinforcementOwner: f.reinforcementOwner.example })}
         >
-          <TextInput value={data.reinforcementOwner} onCommit={(v) => update({ reinforcementOwner: v })} placeholder="e.g., Operations Manager, HR Business Partner" />
+          <TextInput value={data.reinforcementOwner} onCommit={(v) => update({ reinforcementOwner: v })} placeholder="e.g., Operations Manager, or a team lead" />
         </FieldCoach>
       ),
     },
@@ -84,7 +84,7 @@ export function SustainmentStage() {
           example={f.recognitionPlan.example}
           onUseExample={() => update({ recognitionPlan: f.recognitionPlan.example })}
         >
-          <TextArea value={data.recognitionPlan} onCommit={(v) => update({ recognitionPlan: v })} placeholder="e.g., Monthly shoutout at all-hands, manager scorecards include adoption KPI..." rows={4} />
+          <TextArea value={data.recognitionPlan} onCommit={(v) => update({ recognitionPlan: v })} placeholder="e.g., Monthly shoutout at the all-staff meeting, and managers check who’s still using it..." rows={4} />
         </FieldCoach>
       ),
     },

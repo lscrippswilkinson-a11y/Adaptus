@@ -208,7 +208,7 @@ export const coaching = {
       if (res > adv)
         return { tone: 'warn', text: `You’ve got more people pushing back (${res}) than championing (${adv}). That’s a signal to slow down and win key people over individually before going wider; don’t out-run your support.` }
       if (adv > 0)
-        return { tone: 'success', text: `Your coalition is forming (${adv} advocate${adv > 1 ? 's' : ''}). Keep leaning on them publicly; momentum builds when people see respected colleagues on board.` }
+        return { tone: 'success', text: `Your supporters are lining up (${adv} on board). Keep championing them publicly; momentum builds when people see respected colleagues backing it.` }
       return null
     },
   },
@@ -544,7 +544,7 @@ export const coaching = {
     icon: '🛡️',
     intro: (
       <>
-        {strong('Resistance is normal, and it’s almost never about people being difficult.')} It’s usually fear, extra
+        {strong('Pushback is normal, and it’s almost never about people being difficult.')} It’s usually fear, extra
         work landing on their plate, a sense they’re losing status, or simply not feeling heard. Name the real reason and
         you can fix the cause instead of fighting the symptoms.
       </>
@@ -553,7 +553,7 @@ export const coaching = {
     wizard: {
       source: {
         label: 'Where do you expect pushback to come from?',
-        why: 'Pick the most likely reason, and who it’s coming from. Resistance is rarely people being difficult; it’s usually fear, extra work, lost status, or not feeling heard. Naming the real cause lets you fix that, instead of fighting the symptoms.',
+        why: 'Pick the most likely reason, and who it’s coming from. Pushback is rarely people being difficult; it’s usually fear, extra work, lost status, or not feeling heard. Naming the real cause lets you fix that, instead of fighting the symptoms.',
       },
       severity: {
         label: 'How serious is this resistance?',
@@ -566,8 +566,8 @@ export const coaching = {
     },
     fields: {
       generalPlan: {
-        label: 'General Resistance Management Plan',
-        why: 'The items above are the resistance you can already see. This is your radar for the resistance you can’t: how will you keep listening once things go live, so a quiet grumble doesn’t turn into a full stall? Pulse surveys, manager check-ins, and an easy feedback channel all work; the key is deciding in advance what you’ll do when a warning sign shows up.',
+        label: 'Your ongoing plan for pushback',
+        why: 'The items above are the pushback you can already see. This is your radar for the pushback you can’t: how will you keep listening once things go live, so a quiet grumble doesn’t turn into a full stall? Quick check-in surveys, manager check-ins, and an easy feedback channel all work; the key is deciding in advance what you’ll do when a warning sign shows up.',
         example:
           'We’ll run a short weekly pulse check (one or two questions) for the first eight weeks after launch. Any team that scores below 3 out of 5 gets a follow-up from their own manager within 48 hours, and we’ll keep an open feedback channel so people can flag problems without going through three layers of approval.',
       } satisfies FieldCopy,

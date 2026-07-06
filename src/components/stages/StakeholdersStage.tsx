@@ -37,13 +37,13 @@ export function StakeholdersStage() {
   if (data.rows.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first stakeholder',
+      title: 'Add your first key person',
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <AddItemButton label="Add your first stakeholder" onClick={addRow} />
+          <AddItemButton label="Add your first key person" onClick={addRow} />
         </div>
       ),
     })
@@ -110,18 +110,18 @@ export function StakeholdersStage() {
     // Screen 4: engagement action (+ live insight, coalition tally on the last)
     steps.push({
       id: `${r.id}-action`,
-      title: `${who}: engagement action`,
+      title: `${who}: your next move`,
       isFilled: !!r.action.trim(),
       summary: r.action || undefined,
       node: (
         <div>
           <h2 style={headline}>What will you do to move {r.name.trim() || 'them'} toward Advocate?</h2>
           <div style={whyStyle}>{w.action.why}</div>
-          <Label>Engagement action</Label>
-          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., 1:1 briefing before the all-hands..." />
+          <Label>What you’ll do</Label>
+          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., a quick one-to-one before the big meeting..." />
           {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}
           {mode === 'guided' && isLast && coalition && <InsightCallout tone={coalition.tone} style={{ marginTop: '12px' }}>{coalition.text}</InsightCallout>}
-          {isLast && <AddAnotherButton label="Add another stakeholder" onAdd={addRow} />}
+          {isLast && <AddAnotherButton label="Add another person" onAdd={addRow} />}
         </div>
       ),
     })

@@ -2,7 +2,7 @@ import type { Project } from '@/types'
 import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
 
 // Friendlier labels for a couple of task groups on the exec-facing brief.
-const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks' }
+const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected' }
 const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
 
 /**

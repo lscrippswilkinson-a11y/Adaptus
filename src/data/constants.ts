@@ -115,7 +115,7 @@ export const LAUNCH_EXPLAINERS: Record<string, string> = {
   'Executive sponsor briefed':
     'Your sponsor needs to know what\'s launching, what their visible role is on day one, and how to answer questions from their peers. An uninformed sponsor undermines credibility immediately.',
   'IT/systems ready':
-    'All infrastructure, software, integrations, user accounts, permissions, tested in production. User provisioning complete, help desk routing confirmed, legacy cutover plan locked.',
+    'All infrastructure, software, integrations, user accounts, permissions, tested in production. Everyone’s logins set up, help desk routing confirmed, and a plan locked for switching off the old system.',
   'Training complete':
     'All impacted users have had access to the training they need. For high-risk groups, confirm completion before go-live, not after.',
   'Comms sent':
@@ -127,5 +127,5 @@ export const LAUNCH_EXPLAINERS: Record<string, string> = {
   'Success metrics defined':
     'Pre-defined metrics, data sources, targets, and timeline for assessment. Without them, you can\'t claim success or diagnose failure after go-live.',
   'Go/no-go decision made':
-    'A formal checkpoint, 24–48 hours before launch, where stakeholders review readiness criteria and make an explicit decision to proceed, delay, or cancel.',
+    'A formal checkpoint, 24–48 hours before launch, where the team reviews what’s ready and makes an explicit decision to proceed, delay, or cancel.',
 }

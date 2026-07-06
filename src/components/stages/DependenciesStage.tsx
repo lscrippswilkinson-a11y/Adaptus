@@ -34,20 +34,20 @@ export function DependenciesStage() {
   if (data.items.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first dependency',
+      title: 'Add the first thing you’re waiting on',
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <AddItemButton label="Add your first dependency" onClick={addItem} />
+          <AddItemButton label="Add the first thing you’re waiting on" onClick={addItem} />
         </div>
       ),
     })
   }
 
   data.items.forEach((d, i) => {
-    const what = d.name.trim() || `Dependency ${i + 1}`
+    const what = d.name.trim() || `Item ${i + 1}`
     const isLast = i === data.items.length - 1
 
     // Screen 1: name + type
@@ -60,13 +60,13 @@ export function DependenciesStage() {
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <Label>What you depend on</Label>
-          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="e.g., IT account provisioning" />
+          <Label>What you’re waiting on</Label>
+          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="e.g., IT sets up everyone’s logins" />
           <div style={{ marginTop: '18px' }}>
-            <GuidedLabel>What kind of dependency is it?</GuidedLabel>
+            <GuidedLabel>What kind is it?</GuidedLabel>
             <ChipPicker value={d.type} options={DEPENDENCY_TYPES} onChange={(v) => setItem(d.id, { type: v as DependencyType })} />
           </div>
-          {data.items.length > 1 && <RemoveItemButton label="Remove this dependency" onClick={() => delItem(d.id)} />}
+          {data.items.length > 1 && <RemoveItemButton label="Remove this item" onClick={() => delItem(d.id)} />}
         </div>
       ),
     })
@@ -117,7 +117,7 @@ export function DependenciesStage() {
           {mode === 'guided' && isLast && atRiskNote && (
             <InsightCallout tone={atRiskNote.tone} style={{ marginTop: '16px' }}>{atRiskNote.text}</InsightCallout>
           )}
-          {isLast && <AddAnotherButton label="Add another dependency" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label="Add another thing you’re waiting on" onAdd={addItem} />}
         </div>
       ),
     })
