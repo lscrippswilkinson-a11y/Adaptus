@@ -41,16 +41,18 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-      <div style={{ position: 'relative', background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
+      <div style={{ position: 'relative', background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', width: '500px', maxWidth: '90vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          style={{ position: 'absolute', top: '18px', right: '18px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', color: 'rgba(var(--fg),0.45)', cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ position: 'absolute', top: '18px', right: '18px', zIndex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', color: 'rgba(var(--fg),0.45)', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           <X size={18} />
         </button>
 
+        {/* Scrollable body so the modal never overflows the viewport on shorter screens. */}
+        <div style={{ padding: '36px 44px', overflowY: 'auto' }}>
         <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Name your change</h2>
 
         <div className="cq-lbl">Project name</div>
@@ -186,6 +188,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           >
             <Rocket size={16} /> Launch project
           </button>
+        </div>
         </div>
       </div>
     </div>
