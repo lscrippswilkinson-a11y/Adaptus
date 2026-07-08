@@ -4,7 +4,7 @@ import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
 import { AddButton, Card, DelButton, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { CHANNELS } from '@/data/constants'
+import { ORG_PROFILES } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
@@ -66,6 +66,8 @@ function TouchpointCard({
   // Open by default if the user has already started drafting this one.
   const [open, setOpen] = useState(!!(t.greeting || t.context || t.cta || t.closer || t.draft))
   const [copied, setCopied] = useState(false)
+  // The written-message drafter fits any email/memo channel, whatever the org profile calls it.
+  const isWritten = /email|memo/i.test(t.channel)
 
   const buildDraft = () =>
     onChange({
@@ -124,7 +126,7 @@ function TouchpointCard({
       <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message: what this audience needs to know" />
 
       {/* The full drafting helper only makes sense for written email; other channels are spoken/cascaded. */}
-      {t.channel === 'Email Blast' && (
+      {isWritten && (
         <div style={{ marginTop: '10px' }}>
           <button type="button" style={linkBtnStyle} onClick={() => setOpen((s) => !s)}>
             {open ? '▾ Hide drafting help' : `✍️ ${d.label}`}
@@ -132,7 +134,7 @@ function TouchpointCard({
         </div>
       )}
 
-      {t.channel === 'Email Blast' && open && (
+      {isWritten && open && (
         <div style={{ marginTop: '10px', background: 'rgba(91,134,163,0.06)', border: '1px solid rgba(91,134,163,0.18)', borderRadius: '8px', padding: '14px' }}>
           <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6, marginBottom: '12px' }}>{d.why}</div>
 
@@ -214,6 +216,17 @@ export function CommsStage() {
     }
   }, [data.keyMessages, defineSeed, update])
 
+  // The organization profile chosen in step 1 tailors the channel options.
+  const orgProfile = ORG_PROFILES.find((p) => p.id === data.orgType) ?? ORG_PROFILES[0]
+  const activeChannels = orgProfile.channels
+
+  const setOrgType = (id: string) => {
+    const profile = ORG_PROFILES.find((p) => p.id === id)
+    const names = new Set(profile?.channels.map((c) => c.name))
+    // Drop any selected channels that don't exist in the newly chosen profile.
+    update({ orgType: id, channels: data.channels.filter((c) => names.has(c)) })
+  }
+
   const toggleChannel = (ch: string) => {
     const cur = new Set(data.channels)
     if (cur.has(ch)) cur.delete(ch)
@@ -234,6 +247,70 @@ export function CommsStage() {
   const loadExample = () => setSchedule([...schedule, ...coaching.comms.schedule.example.map((e) => ({ ...e, id: uid() }))])
 
   const steps: WizardStep[] = [
+    {
+      id: 'orgType',
+      title: 'Your organization',
+      isFilled: !!data.orgType,
+      summary: data.orgType ? orgProfile.name : undefined,
+      node: (
+        <Card>
+          <Label>What kind of organization is this for?</Label>
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
+            Pick the closest match. It tailors the rest of this plan, especially the channels, to how your organization
+            actually communicates.
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+            {ORG_PROFILES.map((p) => {
+              const sel = data.orgType === p.id
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setOrgType(p.id)}
+                  aria-pressed={sel}
+                  style={{
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    textAlign: 'left',
+                    width: '100%',
+                    background: sel ? 'rgba(91,134,163,0.12)' : 'rgba(var(--fg),0.02)',
+                    border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
+                    borderRadius: '12px',
+                    padding: '14px 16px',
+                    paddingRight: '40px',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      border: `2px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.22)'}`,
+                      background: sel ? '#5B86A3' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {sel && <Check size={12} strokeWidth={3} color="var(--on-accent)" />}
+                  </span>
+                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
+                  <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.5 }}>{p.blurb}</span>
+                </button>
+              )
+            })}
+          </div>
+        </Card>
+      ),
+    },
     {
       id: 'keyMessages',
       title: 'Core message',
@@ -263,7 +340,7 @@ export function CommsStage() {
           Pick the channels you’ll use, each plays to a different strength. Most changes need a few working together.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          {CHANNELS.map((ch) => {
+          {activeChannels.map((ch) => {
             const sel = data.channels.includes(ch.name)
             return (
               <button
@@ -316,12 +393,12 @@ export function CommsStage() {
             )
           })}
         </div>
-        {!data.channels.includes('Manager Cascade') && (
+        {orgProfile.id === 'corporate' && !data.channels.includes('Manager Cascade') && (
           <InsightCallout tone={coaching.comms.managerCascade.tone} style={{ marginTop: '12px' }}>
             {coaching.comms.managerCascade.text}
           </InsightCallout>
         )}
-        {data.channels.length === 1 && data.channels[0] === 'Email Blast' && (
+        {orgProfile.id === 'corporate' && data.channels.length === 1 && data.channels[0] === 'Email Blast' && (
           <InsightCallout tone={coaching.comms.emailOnly.tone} style={{ marginTop: '12px' }}>
             {coaching.comms.emailOnly.text}
           </InsightCallout>

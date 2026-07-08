@@ -145,6 +145,8 @@ export interface CommsTouchpoint {
 }
 
 export interface CommsData {
+  /** Which organization profile the plan is tailored to (see ORG_PROFILES). Drives the channel options. */
+  orgType?: string
   channels: string[]
   keyMessages: string
   /** Planned communication touchpoints across the three launch phases. */

@@ -38,6 +38,58 @@ export const CHANNELS: ChannelInfo[] = [
   { name: 'Demo', best: 'Best for showing the new tool or process in action so people believe it actually works.', limit: 'Needs a working build and prep; time-bound, so pair it with a recording.' },
 ]
 
+/**
+ * An organization profile picked at the start of the Communications stage. It
+ * tailors the rest of the stage, most importantly the channel options, to how
+ * that kind of organization actually communicates. "Corporate" reuses the
+ * general CHANNELS set; the others swap in their own vocabulary.
+ */
+export interface OrgProfile {
+  id: string
+  name: string
+  blurb: string
+  channels: ChannelInfo[]
+}
+
+export const ORG_PROFILES: OrgProfile[] = [
+  {
+    id: 'corporate',
+    name: 'Corporate / Enterprise',
+    blurb: 'A larger company with departments, layers of managers, and formal channels.',
+    channels: CHANNELS,
+  },
+  {
+    id: 'law-firm',
+    name: 'Law Firm',
+    blurb: 'A partnership: partners, associates, and support staff, with buy-in that flows top-down.',
+    channels: [
+      { name: 'Partner-Level Meeting', best: 'Win the decision-makers first; nothing moves without partner buy-in.', limit: 'Hard to schedule; partners guard their billable time.' },
+      { name: 'Associate-Level Meeting', best: 'Reach the people doing the day-to-day work who feel the change most.', limit: 'Associates may hold back candid questions in a group.' },
+      { name: 'Staff-Level Meeting', best: 'Brief the paralegals, secretaries, and admin who keep the firm running.', limit: 'Easy to skip, yet often the most affected by process change.' },
+      { name: 'Practice Group Meeting', best: 'Tailor the message to how each practice area actually works.', limit: 'Keeps groups siloed; the firm-wide picture can get lost.' },
+      { name: 'Firm-Wide Email / Memo', best: 'A formal record every attorney and staffer receives at once.', limit: 'Skimmed between matters; low retention on its own.' },
+      { name: 'Managing Partner Announcement', best: 'Carries the most weight; signals this is a firm priority, not optional.', limit: 'Feels top-down if it is the only touch.' },
+      { name: '1:1 Check-in', best: 'Surfaces quiet concerns from senior partners or key rainmakers.', limit: 'Time-intensive and hard to scale across the firm.' },
+      { name: 'Firm Intranet / Portal Post', best: 'A durable reference filed where staff already look for policies.', limit: 'Passive; few go looking unless pointed there.' },
+    ],
+  },
+  {
+    id: 'smb',
+    name: 'Small to Medium Business',
+    blurb: 'A lean team where most people know each other and there are few layers to cross.',
+    channels: [
+      { name: 'Team Huddle', best: 'Everyone fits in one room; the fastest way to get the whole team aligned.', limit: 'Interrupts the day; tricky if people work different shifts.' },
+      { name: 'All-Hands Meeting', best: 'Launch the change and take questions with the whole company at once.', limit: 'Infrequent, so it cannot carry the day-to-day detail.' },
+      { name: 'Group Chat (Slack / Teams / WhatsApp)', best: 'Quick, informal updates the whole team already checks.', limit: 'Easily buried; important notes scroll away.' },
+      { name: 'Owner / Founder Message', best: 'A direct word from the top lands hard in a small company.', limit: 'Can feel personal or pressured if it is the only channel.' },
+      { name: 'Email', best: 'Reaches everyone at once and leaves a record.', limit: 'Low retention; people skim or miss it.' },
+      { name: '1:1 Conversation', best: 'Personal and direct, and easy to do when the team is small.', limit: 'Time-intensive; the message can drift between chats.' },
+      { name: 'Notice Board / Break Room', best: 'Catches frontline and non-desk staff who miss email and chat.', limit: 'Passive and easy to walk past.' },
+      { name: 'Quick Video / Loom', best: 'A warm, personal update people can watch on their own time.', limit: 'Takes effort to record; not for urgent back-and-forth.' },
+    ],
+  },
+]
+
 export const RISK_CATS = [
   'Technical',
   'People / Culture',

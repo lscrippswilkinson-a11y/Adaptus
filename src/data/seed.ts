@@ -19,7 +19,7 @@ export function emptyProject(): Project {
       sponsor: { name: '', role: '', sponsorActions: [], commitments: '', escalationRules: [], noSponsor: false },
       stakeholders: { rows: [] },
       risk: { items: [] },
-      comms: { channels: [], keyMessages: '', schedule: [] },
+      comms: { orgType: '', channels: [], keyMessages: '', schedule: [] },
       training: { items: [] },
       testing: { items: [] },
       dependencies: { items: [] },
