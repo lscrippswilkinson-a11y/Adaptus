@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Project } from '@/types'
 import { CHANGE_TYPES } from '@/data/constants'
+import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE } from '@/data/business'
 
 const sideBtn: React.CSSProperties = {
   flex: 1,
@@ -21,6 +22,7 @@ const sideBtn: React.CSSProperties = {
 export function EditProjectModal({ project, onClose, onSave }: { project: Project; onClose: () => void; onSave: (updated: Project) => void }) {
   const [name, setName] = useState(project.name)
   const [type, setType] = useState(project.type)
+  const [businessType, setBusinessType] = useState(project.businessType || DEFAULT_BUSINESS_TYPE.id)
   const [description, setDescription] = useState(project.description)
   const [targetDate, setTargetDate] = useState(project.targetDate)
 
@@ -28,7 +30,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
 
   const save = () => {
     if (!isValid) return
-    onSave({ ...project, name: name.trim(), type, description: description.trim(), targetDate })
+    onSave({ ...project, name: name.trim(), type, businessType, description: description.trim(), targetDate })
   }
 
   return (
@@ -61,6 +63,21 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
               onClick={() => setType(t)}
             >
               {t}
+            </button>
+          ))}
+        </div>
+
+        <div className="cq-lbl">Organization type</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '6px 0 18px' }}>
+          {BUSINESS_TYPES.map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              className={'ch-btn' + (businessType === b.id ? ' sel' : '')}
+              style={{ fontSize: '12px' }}
+              onClick={() => setBusinessType(b.id)}
+            >
+              {b.name}
             </button>
           ))}
         </div>

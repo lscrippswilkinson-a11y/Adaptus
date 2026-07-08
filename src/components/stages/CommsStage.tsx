@@ -4,7 +4,7 @@ import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
 import { AddButton, Card, DelButton, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { ORG_PROFILES } from '@/data/constants'
+import { getBusinessProfile } from '@/data/business'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
 
@@ -216,16 +216,10 @@ export function CommsStage() {
     }
   }, [data.keyMessages, defineSeed, update])
 
-  // The organization profile chosen in step 1 tailors the channel options.
-  const orgProfile = ORG_PROFILES.find((p) => p.id === data.orgType) ?? ORG_PROFILES[0]
-  const activeChannels = orgProfile.channels
-
-  const setOrgType = (id: string) => {
-    const profile = ORG_PROFILES.find((p) => p.id === id)
-    const names = new Set(profile?.channels.map((c) => c.name))
-    // Drop any selected channels that don't exist in the newly chosen profile.
-    update({ orgType: id, channels: data.channels.filter((c) => names.has(c)) })
-  }
+  // The project's business type tailors the channel options and the example schedule.
+  const profile = getBusinessProfile(project?.businessType)
+  const activeChannels = profile.channels
+  const hasManagerCascade = activeChannels.some((c) => c.name === 'Manager Cascade')
 
   const toggleChannel = (ch: string) => {
     const cur = new Set(data.channels)
@@ -244,73 +238,9 @@ export function CommsStage() {
   const setTouchpoint = (id: number, patch: Partial<CommsTouchpoint>) =>
     setSchedule(schedule.map((t) => (t.id === id ? { ...t, ...patch } : t)))
   const delTouchpoint = (id: number) => setSchedule(schedule.filter((t) => t.id !== id))
-  const loadExample = () => setSchedule([...schedule, ...coaching.comms.schedule.example.map((e) => ({ ...e, id: uid() }))])
+  const loadExample = () => setSchedule([...schedule, ...profile.examples.comms.schedule.map((e) => ({ ...e, id: uid() }))])
 
   const steps: WizardStep[] = [
-    {
-      id: 'orgType',
-      title: 'Your organization',
-      isFilled: !!data.orgType,
-      summary: data.orgType ? orgProfile.name : undefined,
-      node: (
-        <Card>
-          <Label>What kind of organization is this for?</Label>
-          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
-            Pick the closest match. It tailors the rest of this plan, especially the channels, to how your organization
-            actually communicates.
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {ORG_PROFILES.map((p) => {
-              const sel = data.orgType === p.id
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => setOrgType(p.id)}
-                  aria-pressed={sel}
-                  style={{
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    textAlign: 'left',
-                    width: '100%',
-                    background: sel ? 'rgba(91,134,163,0.12)' : 'rgba(var(--fg),0.02)',
-                    border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
-                    borderRadius: '12px',
-                    padding: '14px 16px',
-                    paddingRight: '40px',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  <span
-                    aria-hidden
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      border: `2px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.22)'}`,
-                      background: sel ? '#5B86A3' : 'transparent',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {sel && <Check size={12} strokeWidth={3} color="var(--on-accent)" />}
-                  </span>
-                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{p.name}</span>
-                  <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.5 }}>{p.blurb}</span>
-                </button>
-              )
-            })}
-          </div>
-        </Card>
-      ),
-    },
     {
       id: 'keyMessages',
       title: 'Core message',
@@ -393,12 +323,12 @@ export function CommsStage() {
             )
           })}
         </div>
-        {orgProfile.id === 'corporate' && !data.channels.includes('Manager Cascade') && (
+        {hasManagerCascade && !data.channels.includes('Manager Cascade') && (
           <InsightCallout tone={coaching.comms.managerCascade.tone} style={{ marginTop: '12px' }}>
             {coaching.comms.managerCascade.text}
           </InsightCallout>
         )}
-        {orgProfile.id === 'corporate' && data.channels.length === 1 && data.channels[0] === 'Email Blast' && (
+        {data.channels.length === 1 && /email/i.test(data.channels[0]) && (
           <InsightCallout tone={coaching.comms.emailOnly.tone} style={{ marginTop: '12px' }}>
             {coaching.comms.emailOnly.text}
           </InsightCallout>

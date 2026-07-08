@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Rocket, X } from 'lucide-react'
+import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE } from '@/data/business'
 
 export interface ProjectDraft {
   name: string
   type: string
+  /** Business-type profile that tailors the core planning stages. */
+  businessType: string
   description: string
   targetDate: string
   /** Emails to grant editor access once the project is created. */
@@ -13,7 +16,7 @@ export interface ProjectDraft {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (draft: ProjectDraft) => void }) {
-  const [draft, setDraft] = useState<ProjectDraft>({ name: '', type: '', description: '', targetDate: '', invites: [] })
+  const [draft, setDraft] = useState<ProjectDraft>({ name: '', type: '', businessType: DEFAULT_BUSINESS_TYPE.id, description: '', targetDate: '', invites: [] })
   const [emailInput, setEmailInput] = useState('')
 
   const isValid = draft.name.trim().length > 0
@@ -62,6 +65,36 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
             if (e.key === 'Enter') create()
           }}
         />
+
+        <div className="cq-lbl" style={{ marginTop: '20px' }}>What kind of organization is this for?</div>
+        <p style={{ margin: '4px 0 8px', color: 'rgba(var(--fg),0.5)', fontSize: '12px', lineHeight: 1.5 }}>
+          This tailors the whole plan, the channels, examples, and suggestions, to how your organization works. You can change it later.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {BUSINESS_TYPES.map((b) => {
+            const sel = draft.businessType === b.id
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setDraft({ ...draft, businessType: b.id })}
+                aria-pressed={sel}
+                style={{
+                  textAlign: 'left',
+                  background: sel ? 'rgba(91,134,163,0.14)' : 'rgba(var(--fg),0.03)',
+                  border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
+                  borderRadius: '10px',
+                  padding: '10px 13px',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{b.name}</div>
+                <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.45, marginTop: '2px' }}>{b.blurb}</div>
+              </button>
+            )
+          })}
+        </div>
 
         <div className="cq-lbl" style={{ marginTop: '20px' }}>Launch date <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>(optional)</span></div>
         <input

@@ -2,13 +2,16 @@ import { useStageEditor } from '@/state/AppContext'
 import { useAuth } from '@/state/AuthContext'
 import { AddButton, Card, DelButton, FieldCoach, InsightCallout, SectionTitle, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
-import { SPONSOR_ACTIONS } from '@/data/constants'
 import { coaching } from '@/data/coaching'
+import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
 
 export function SponsorStage() {
-  const { data, update } = useStageEditor('sponsor')
+  const { project, data, update } = useStageEditor('sponsor')
   const { user } = useAuth()
+  // The backer example name and the suggested actions are tailored to the business type.
+  const profile = getBusinessProfile(project?.businessType)
+  const sponsorEx = profile.examples.sponsor
 
   /** Name to offer for the "this is me" shortcut, drawn from the Google profile. */
   const myName =
@@ -34,7 +37,7 @@ export function SponsorStage() {
   const delAction = (id: number) => update({ sponsorActions: actions.filter((a) => a.id !== id) })
 
   // Pre-set actions become quick-add suggestions; hide ones already on the list.
-  const suggestions = SPONSOR_ACTIONS.filter((s) => !actions.some((a) => a.text === s))
+  const suggestions = profile.sponsorActions.filter((s) => !actions.some((a) => a.text === s))
 
   const actionsInsight = coaching.sponsor.actionsInsight(actions.length)
   const f = coaching.sponsor.fields
@@ -54,12 +57,12 @@ export function SponsorStage() {
       <FieldCoach
         label={f.name.label}
         why={f.name.why}
-        example={f.name.example}
-        onUseExample={() => update({ name: f.name.example })}
+        example={sponsorEx.name}
+        onUseExample={() => update({ name: sponsorEx.name })}
       >
         {!noSponsor && (
           <>
-            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder="e.g., Elena Torres" />
+            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={`e.g., ${sponsorEx.name}`} />
             {myName && data.name !== myName && (
               <button
                 type="button"

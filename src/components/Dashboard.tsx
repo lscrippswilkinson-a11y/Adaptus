@@ -75,7 +75,7 @@ export function Dashboard() {
   const total = state.projects.length
 
   const createProject = (draft: ProjectDraft) => {
-    const project = { ...emptyProject(), name: draft.name, type: draft.type, description: draft.description, targetDate: draft.targetDate }
+    const project = { ...emptyProject(), name: draft.name, type: draft.type, businessType: draft.businessType, description: draft.description, targetDate: draft.targetDate }
     addProject(project, draft.invites)
   }
 

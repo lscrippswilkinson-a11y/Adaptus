@@ -5,6 +5,7 @@ import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { AddItemButton, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { coaching } from '@/data/coaching'
+import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
 
 const IMPACT_LEVELS: LevelOption<Impact>[] = [
@@ -101,8 +102,10 @@ function GroupsHub({
 }
 
 export function GroupsStage() {
-  const { data, update } = useStageEditor('groups')
+  const { project, data, update } = useStageEditor('groups')
   const w = coaching.groups.wizard
+  // Suggested groups are tailored to the project's business type.
+  const suggestedGroups = getBusinessProfile(project?.businessType).suggestedGroups
 
   const setGroup = (id: number, patch: Partial<ImpactedGroup>) =>
     update({ groups: data.groups.map((g) => (g.id === id ? { ...g, ...patch } : g)) })
@@ -128,6 +131,28 @@ export function GroupsStage() {
           <div style={whyStyle}>{w.name.why}</div>
           <Label>Group name</Label>
           <TextInput value={g.name} onCommit={(v) => setGroup(g.id, { name: v })} placeholder="e.g., Billing team" />
+          {(() => {
+            // Quick-add chips for common groups in this kind of organization, hiding any already used.
+            const used = new Set(data.groups.map((x) => x.name.trim().toLowerCase()))
+            const chips = suggestedGroups.filter((s) => !used.has(s.toLowerCase()))
+            return chips.length > 0 ? (
+              <div style={{ marginTop: '10px' }}>
+                <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginBottom: '6px' }}>Common groups, tap to use:</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {chips.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setGroup(g.id, { name: s })}
+                      style={{ fontSize: '12px', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '999px', padding: '5px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
+                    >
+                      + {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null
+          })()}
           <div style={{ marginTop: '14px' }}>
             <Label>About how many people? (optional)</Label>
             <TextInput value={g.size} onCommit={(v) => setGroup(g.id, { size: v })} placeholder="e.g., 18" />

@@ -2,10 +2,13 @@ import { useStageEditor } from '@/state/AppContext'
 import { FieldCoach, TextArea } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
+import { getBusinessProfile } from '@/data/business'
 
 export function DefineStage() {
-  const { data, update } = useStageEditor('define')
+  const { project, data, update } = useStageEditor('define')
   const f = coaching.define.fields
+  // Worked examples are tailored to the project's business type.
+  const ex = getBusinessProfile(project?.businessType).examples.define
 
   const steps: WizardStep[] = [
     {
@@ -18,8 +21,8 @@ export function DefineStage() {
         <FieldCoach
           label={f.statement.label}
           why={f.statement.why}
-          example={f.statement.example}
-          onUseExample={() => update({ statement: f.statement.example })}
+          example={ex.statement}
+          onUseExample={() => update({ statement: ex.statement })}
         >
           <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder="e.g., We’re switching from X to Y, and people will now do Z." rows={3} />
         </FieldCoach>
@@ -35,8 +38,8 @@ export function DefineStage() {
         <FieldCoach
           label={f.successLooks.label}
           why={f.successLooks.why}
-          example={f.successLooks.example}
-          onUseExample={() => update({ successLooks: f.successLooks.example })}
+          example={ex.successLooks}
+          onUseExample={() => update({ successLooks: ex.successLooks })}
         >
           <TextArea value={data.successLooks} onCommit={(v) => update({ successLooks: v })} placeholder="In 90 days, we’ll know this worked when..." rows={3} />
         </FieldCoach>
@@ -52,8 +55,8 @@ export function DefineStage() {
         <FieldCoach
           label={f.whyNow.label}
           why={f.whyNow.why}
-          example={f.whyNow.example}
-          onUseExample={() => update({ whyNow: f.whyNow.example })}
+          example={ex.whyNow}
+          onUseExample={() => update({ whyNow: ex.whyNow })}
         >
           <TextArea value={data.whyNow} onCommit={(v) => update({ whyNow: v })} placeholder="The business reason, and what happens if you don’t change..." rows={3} />
         </FieldCoach>

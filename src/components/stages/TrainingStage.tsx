@@ -5,8 +5,8 @@ import { InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { useWizardMode } from '@/state/WizardModeContext'
 import { AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
-import { TRAINING_FORMATS } from '@/data/constants'
 import { coaching, type Insight } from '@/data/coaching'
+import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
 
 /**
@@ -96,15 +96,17 @@ function TrainingHub({
 }
 
 export function TrainingStage() {
-  const { data, update } = useStageEditor('training')
+  const { project, data, update } = useStageEditor('training')
   const { mode } = useWizardMode()
   const w = coaching.training.wizard
   const note = coaching.training.managersFirst
+  // Training-format options are tailored to the project's business type.
+  const formats = getBusinessProfile(project?.businessType).trainingFormats
 
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
-  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: 'Workshop', owner: '', done: false }] })
+  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: formats[0], owner: '', done: false }] })
 
   const steps: WizardStep[] = []
 
@@ -156,7 +158,7 @@ export function TrainingStage() {
           <h2 style={headline}>{w.format.label}</h2>
           <div style={whyStyle}>{w.format.why}</div>
           <GuidedLabel>Format</GuidedLabel>
-          <ChipPicker value={t.format} options={TRAINING_FORMATS} onChange={(v) => setItem(t.id, { format: v })} />
+          <ChipPicker value={t.format} options={formats} onChange={(v) => setItem(t.id, { format: v })} />
         </div>
       ),
     })
