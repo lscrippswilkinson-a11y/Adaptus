@@ -189,6 +189,7 @@ function TouchpointCard({
 export function CommsStage() {
   const { project, data, update } = useStageEditor('comms')
   const schedule = data.schedule ?? []
+  const [newChannel, setNewChannel] = useState('')
 
   // Pull context from earlier stages so the plan builds on what's already there.
   const define = project?.stageData.define
@@ -226,6 +227,13 @@ export function CommsStage() {
     if (cur.has(ch)) cur.delete(ch)
     else cur.add(ch)
     update({ channels: [...cur] })
+  }
+
+  // Let people add their OWN channels — the preset list below is just a starting point, not the whole menu.
+  const addCustomChannel = () => {
+    const name = newChannel.trim()
+    if (name && !data.channels.includes(name)) update({ channels: [...data.channels, name] })
+    setNewChannel('')
   }
 
   const setSchedule = (next: CommsTouchpoint[]) => update({ schedule: next })
@@ -267,7 +275,84 @@ export function CommsStage() {
       <Card>
         <Label>Communication channels</Label>
         <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
-          Pick the channels you’ll use, each plays to a different strength. Most changes need a few working together.
+          How will you get the word out? Add the channels your organization actually uses, whatever you call them. Most
+          changes need a few working together.
+        </div>
+
+        {/* Add your own channels first — don’t lock people into our preset list. */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: data.channels.length ? '14px' : '18px' }}>
+          <input
+            className="cq-input"
+            value={newChannel}
+            onChange={(e) => setNewChannel(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                addCustomChannel()
+              }
+            }}
+            placeholder="Add a channel — e.g. Town hall, Slack, Team huddle…"
+            aria-label="Add a communication channel"
+            style={{ flex: 1 }}
+          />
+          <button type="button" style={fillBtnStyle} onClick={addCustomChannel} disabled={!newChannel.trim()}>
+            Add
+          </button>
+        </div>
+
+        {/* Everything chosen so far — custom or tapped from the suggestions below — each removable. */}
+        {data.channels.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px' }}>
+            {data.channels.map((name) => (
+              <span
+                key={name}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--text)',
+                  background: 'rgba(91,134,163,0.14)',
+                  border: '1px solid rgba(91,134,163,0.3)',
+                  borderRadius: '999px',
+                  padding: '5px 6px 5px 13px',
+                }}
+              >
+                {name}
+                <button
+                  type="button"
+                  onClick={() => toggleChannel(name)}
+                  aria-label={`Remove ${name}`}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: 'rgba(var(--fg),0.1)',
+                    color: 'rgba(var(--fg),0.7)',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    lineHeight: 1,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* The preset list is now optional inspiration, not the only way in. */}
+        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '3px' }}>
+          Common channels — tap to add
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', lineHeight: 1.5, marginBottom: '12px' }}>
+          Just ideas to get you started, each plays to a different strength.
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           {activeChannels.map((ch) => {
@@ -315,9 +400,6 @@ export function CommsStage() {
                 <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{ch.name}</span>
                 <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.72)', lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>Best for:</span> {ch.best}
-                </span>
-                <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5 }}>
-                  <span style={{ fontWeight: 600 }}>Watch out:</span> {ch.limit}
                 </span>
               </button>
             )
