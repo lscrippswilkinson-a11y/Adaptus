@@ -113,7 +113,7 @@ export function SponsorStage() {
         </p>
 
         <InsightCallout tone="info" style={{ margin: '14px 0' }}>
-          We recommend setting aside time with your backer to walk through each action together. Agreeing them face to
+          We recommend setting aside time with your backer to walk through each action together. Agreeing on them face to
           face, and checking back in on progress, is what turns a list into real, visible backing.
         </InsightCallout>
 
