@@ -22,7 +22,27 @@ export interface FieldCopy {
   example: string
 }
 
-const strong = (children: ReactNode) => <strong style={{ color: 'var(--text)' }}>{children}</strong>
+/**
+ * The opening line of a step's intro, rendered as a subtitle on its own line
+ * above the paragraph rather than as a bold run inside it. Sized in `em` so it
+ * scales with whatever it sits in: the big guided intro screen and the smaller
+ * summary-view banner both get the right proportions from one definition.
+ */
+const lede = (children: ReactNode) => (
+  <span
+    style={{
+      display: 'block',
+      fontSize: '1.2em',
+      fontWeight: 600,
+      lineHeight: 1.4,
+      letterSpacing: '-0.01em',
+      color: 'var(--text)',
+      marginBottom: '10px',
+    }}
+  >
+    {children}
+  </span>
+)
 
 export const coaching = {
   /* ---------------------------------------------------------------- DEFINE */
@@ -30,8 +50,8 @@ export const coaching = {
     icon: '🧭',
     intro: (
       <>
-        {strong('To get your project started,')} we first need to identify the change, what is changing, and who is
-        affected, as simply as possible.
+        {lede('Start by naming the change.')} To get your project started, we first need to identify what is changing,
+        and who is affected, as simply as possible.
       </>
     ),
     fields: {
@@ -71,9 +91,9 @@ export const coaching = {
     icon: '👥',
     intro: (
       <>
-        {strong('Not everyone feels a change the same way.')} List the groups this touches and rate two things for each
-        , how much their work <em>changes</em> (Impact) and how <em>ready</em> they are (Readiness), and you’ll see
-        exactly where to spend your time.
+        {lede('Not everyone feels a change the same way.')} List the groups this touches and rate two things for each:
+        how much their work <em>changes</em> (Impact) and how <em>ready</em> they are (Readiness). You’ll see exactly
+        where to spend your time.
       </>
     ),
     /** Point-of-entry copy for the guided, one-question-per-group flow. */
@@ -111,7 +131,7 @@ export const coaching = {
     icon: '🏅',
     intro: (
       <>
-        {strong('Who’s the senior person visibly backing this?')} A senior backer’s active, visible support is the single
+        {lede('Who’s the senior person visibly backing this?')} A senior backer’s active, visible support is the single
         biggest predictor of whether a change sticks, more than budget or the tools you pick, because people watch what
         leaders <em>do</em>. In this step, we’ll identify that person and what they’ll commit to.
       </>
@@ -162,7 +182,7 @@ export const coaching = {
     icon: '🤝',
     intro: (
       <>
-        {strong('Change spreads through people, not memos.')} A few influential voices saying “this is good” beat any
+        {lede('Change spreads through people, not memos.')} A few influential voices saying “this is good” beat any
         announcement you send. Map the people who matter by how much <em>sway</em> they have (Influence) and where they
         stand today (Support), so you know who to win over first.
       </>
@@ -218,7 +238,7 @@ export const coaching = {
     icon: '⚡',
     intro: (
       <>
-        {strong('“What could go wrong?”, answered on purpose, not in a crisis.')} List what could trip up your rollout,
+        {lede('“What could go wrong?”, answered on purpose, not in a crisis.')} List what could trip up your rollout,
         then rate each one’s <em>likelihood</em> and <em>impact</em> to get a score that tells you what to worry about
         first. Write the fix <em>now</em>, while it’s cheap.
       </>
@@ -254,7 +274,7 @@ export const coaching = {
     icon: '📣',
     intro: (
       <>
-        {strong('Keep your teams and their leaders talking.')} Clear, steady communication between each group and the
+        {lede('Keep your teams and their leaders talking.')} Clear, steady communication between each group and the
         leaders guiding them is what keeps everyone aligned through a change.
       </>
     ),
@@ -335,7 +355,7 @@ export const coaching = {
     icon: '🎓',
     intro: (
       <>
-        {strong('Telling people isn’t the same as teaching them.')} Match the training to the need: a short video is
+        {lede('Telling people isn’t the same as teaching them.')} Match the training to the need: a short video is
         fine for “here’s what’s coming,” but learning a brand-new tool takes hands-on practice. List each activity
         below.
       </>
@@ -375,7 +395,7 @@ export const coaching = {
     icon: '🧪',
     intro: (
       <>
-        {strong('Don’t take it on faith that it works, check.')} Before you ask everyone to switch, prove the new way
+        {lede('Don’t take it on faith that it works, check.')} Before you ask everyone to switch, prove the new way
         holds up: real people doing real tasks, your data carried over, the connections to other systems working. A
         passed test now beats a nasty surprise on launch day.
       </>
@@ -407,7 +427,7 @@ export const coaching = {
     icon: '🔗',
     intro: (
       <>
-        {strong('What does your launch quietly rely on?')} Most rollouts depend on other people delivering first: IT
+        {lede('What does your launch quietly rely on?')} Most rollouts depend on other people delivering first: IT
         provisioning accounts, a vendor flipping a switch, finance exporting data. Naming each one, with an owner and a
         date, turns invisible risks into things you can actually chase.
       </>
@@ -439,7 +459,7 @@ export const coaching = {
     icon: '🚀',
     intro: (
       <>
-        {strong('This is your mission control for go-live.')} It pulls together everything you planned and turns it into
+        {lede('This is your mission control for go-live.')} It pulls together everything you planned and turns it into
         one checklist. Your <strong style={{ color: 'var(--accent-text)' }}>Launch Preparedness</strong> score is simply the share
         of these tasks that are done; tick things off (here, or back in their own sections) and watch it climb. Don’t
         set a firm launch date until it’s comfortably high.
@@ -452,7 +472,7 @@ export const coaching = {
     icon: '📊',
     intro: (
       <>
-        {strong('Tell the story of how the launch went.')} This pulls your plan and real adoption numbers into a
+        {lede('Tell the story of how the launch went.')} This pulls your plan and real adoption numbers into a
         one-page summary you can save as a PDF for leadership. Fill in the wins, lessons, and shoutouts below.
       </>
     ),
@@ -462,7 +482,7 @@ export const coaching = {
     icon: '🚀',
     intro: (
       <>
-        {strong('Going live is a decision, not a date on the calendar.')} It’s tempting to pick a launch day and work
+        {lede('Going live is a decision, not a date on the calendar.')} It’s tempting to pick a launch day and work
         backwards to it, but you only flip the switch when you’re genuinely ready. Use the checklist below to be honest
         with yourself about what’s actually done. Rushing a launch before the pieces are in place is one of the most
         common ways a change quietly falls apart.
@@ -499,9 +519,9 @@ export const coaching = {
     icon: '📈',
     intro: (
       <>
-        {strong('Adoption means people actually using the change in their daily work')}, not just showing up to
-        training. So measure the real thing: logins, the share of people doing it the new way, how often the old system
-        still gets touched. That’s how you know it’s landing.
+        {lede('Adoption means people actually using the change in their daily work, not just showing up to training.')}
+        So measure the real thing: logins, the share of people doing it the new way, how often the old system still gets
+        touched. That’s how you know it’s landing.
       </>
     ),
     /** Point-of-entry copy for the guided, one-metric-at-a-time flow. */
@@ -552,7 +572,7 @@ export const coaching = {
     icon: '🛡️',
     intro: (
       <>
-        {strong('Pushback is normal, and it’s almost never about people being difficult.')} It’s usually fear, extra
+        {lede('Pushback is normal, and it’s almost never about people being difficult.')} It’s usually fear, extra
         work landing on their plate, a sense they’re losing status, or simply not feeling heard. Name the real reason and
         you can fix the cause instead of fighting the symptoms.
       </>
@@ -598,7 +618,7 @@ export const coaching = {
     icon: '📊',
     intro: (
       <>
-        {strong('A status brief is a one-page update for a busy leader.')} Picture a partner who has ninety seconds
+        {lede('A status brief is a one-page update for a busy leader.')} Picture a partner who has ninety seconds
         between meetings. A good brief answers their four questions before they ask: <em>Are we on track? What could go
         wrong? Who’s on board? And what do you need from me?</em> You don’t write it from scratch; the button below
         pulls together everything you’ve already entered in the earlier stages into a clean summary.
@@ -615,7 +635,7 @@ export const coaching = {
     icon: '🔄',
     intro: (
       <>
-        {strong('This is the plan that makes the change actually stick.')} Most changes don’t fail at launch; they fail
+        {lede('This is the plan that makes the change actually stick.')} Most changes don’t fail at launch; they fail
         quietly months later, when people drift back to the old way under pressure. Someone has to keep the new way alive
         until it’s just “how we do things.”
       </>
@@ -662,7 +682,7 @@ export const coaching = {
     icon: '🏆',
     intro: (
       <>
-        {strong('The change is live, now bank what you learned.')} This is the step almost everyone skips, and it’s
+        {lede('The change is live, now bank what you learned.')} This is the step almost everyone skips, and it’s
         exactly how a company gets <em>better</em> at change over time. Spend ten honest minutes writing down what
         worked, what you’d do differently, and who carried it. The next change you run will be far easier because of
         these notes.
