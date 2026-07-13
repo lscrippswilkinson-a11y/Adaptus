@@ -115,7 +115,10 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
                 </div>
                 {items.slice(0, 6).map((t) => (
                   <div key={t.key} className="bai">
-                    <div style={{ width: '14px', height: '14px', borderRadius: '4px', border: '1.5px solid rgba(255,255,255,0.4)', flexShrink: 0, marginTop: '2px' }} />
+                    {/* A bullet, not a checkbox: the brief is read-only, and an
+                        empty tick-box invites a recipient to check something
+                        they can't. */}
+                    <div className="bad" style={{ background: 'rgba(255,255,255,0.35)' }} />
                     <div style={{ flex: 1 }}>
                       <div>{t.label}</div>
                       {(t.owner || t.due) && (
@@ -127,7 +130,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
                   </div>
                 ))}
                 {items.length > 6 && (
-                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginLeft: '24px', marginTop: '2px' }}>+{items.length - 6} more</div>
+                  <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginLeft: '16px', marginTop: '2px' }}>+{items.length - 6} more</div>
                 )}
               </div>
             ))

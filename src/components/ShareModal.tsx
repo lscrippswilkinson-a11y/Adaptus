@@ -160,19 +160,9 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               </button>
             </div>
 
-            {/* The "what I need from you" ask */}
-            <div className="cq-lbl">What I need from leadership</div>
-            <textarea
-              className="cq-textarea"
-              rows={3}
-              value={ask}
-              placeholder="The one clear ask that gets a reply. Example: “Email all staff before launch, and join the launch meeting.”"
-              style={{ marginBottom: '20px' }}
-              onChange={(e) => setAsk(e.target.value)}
-              onBlur={commitAsk}
-            />
-
-            {/* Link controls (shown once a link exists) */}
+            {/* Link controls (shown once a link exists). Directly under the
+                share buttons: the link is what the user came here for, so it
+                shouldn't sit below the fields that only tune what it says. */}
             {token && (
               <>
                 <div className="cq-lbl">Share link</div>
@@ -195,6 +185,18 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 </button>
               </>
             )}
+
+            {/* The "what I need from you" ask */}
+            <div className="cq-lbl">What I need from leadership</div>
+            <textarea
+              className="cq-textarea"
+              rows={3}
+              value={ask}
+              placeholder="The one clear ask that gets a reply. Example: “Email all staff before launch, and join the launch meeting.”"
+              style={{ marginBottom: '20px' }}
+              onChange={(e) => setAsk(e.target.value)}
+              onBlur={commitAsk}
+            />
 
             {/* The user's own logo + colour, carried by every report below. */}
             <BrandingPanel project={project} onUpdate={onUpdate} />
