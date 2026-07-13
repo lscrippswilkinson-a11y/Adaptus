@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Copy, FileDown, Image as ImageIcon, Link2, Loader2, Presentation, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
@@ -8,6 +8,9 @@ import { bare, brandOf, shade } from '@/lib/brand'
 import { breakPoints, downloadPdf, downloadPng } from '@/lib/exports'
 import { StatusBrief } from '@/components/StatusBrief'
 import { BrandingPanel } from '@/components/BrandingPanel'
+
+/** The width the brief is laid out and exported at: 8.5in of letter paper at 96dpi. */
+const EXPORT_W = 816
 
 /** Strip a leading '#' so hex colours suit pptxgenjs (which wants bare hex). */
 const hx = (c: string) => c.replace('#', '')
@@ -288,7 +291,29 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState<null | 'pdf' | 'pptx' | 'image'>(null)
+  /** The off-screen, letter-width brief: the one that gets captured. */
   const briefRef = useRef<HTMLDivElement>(null)
+  const previewWrapRef = useRef<HTMLDivElement>(null)
+  const previewInnerRef = useRef<HTMLDivElement>(null)
+  const [preview, setPreview] = useState({ scale: 1, height: 0 })
+
+  // Fit the letter-width brief into whatever width the modal gives us, and give
+  // the (transform-scaled, so zero-height as far as layout is concerned) wrapper
+  // its real height back.
+  useEffect(() => {
+    const wrap = previewWrapRef.current
+    const inner = previewInnerRef.current
+    if (!wrap || !inner) return
+    const measure = () => {
+      const scale = Math.min(1, wrap.clientWidth / EXPORT_W)
+      setPreview({ scale, height: inner.offsetHeight * scale })
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(wrap)
+    ro.observe(inner)
+    return () => ro.disconnect()
+  }, [])
 
   const token = project.shareToken ?? null
   const shareUrl = token ? `${window.location.origin}/?share=${token}` : ''
@@ -491,11 +516,25 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               </span>
             </label>
 
-            {/* Live preview of exactly what recipients see. The id scopes the
-                print stylesheet so "Download PDF" prints only the brief. */}
+            {/* Live preview of exactly what recipients see. It's the full
+                letter-width brief scaled down to fit the modal, rather than a
+                narrow re-flow of it, so what's previewed is what's exported.
+                The id scopes the print stylesheet to the brief alone. */}
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>Preview</div>
-            <div id="brief-print" ref={briefRef}>
-              <StatusBrief project={previewProject} />
+            <div id="brief-print" ref={previewWrapRef} style={{ overflow: 'hidden', height: preview.height || undefined }}>
+              <div ref={previewInnerRef} style={{ width: `${EXPORT_W}px`, transform: `scale(${preview.scale})`, transformOrigin: 'top left' }}>
+                <StatusBrief project={previewProject} />
+              </div>
+            </div>
+
+            {/* The copy the PDF and the image are actually captured from, held
+                off-screen at full letter width. Capturing the on-screen preview
+                would bake in the modal's width, squeezing the two columns to
+                about 230px each. */}
+            <div aria-hidden style={{ position: 'fixed', top: 0, left: '-10000px', width: `${EXPORT_W}px`, pointerEvents: 'none' }}>
+              <div ref={briefRef}>
+                <StatusBrief project={previewProject} />
+              </div>
             </div>
           </>
         )}

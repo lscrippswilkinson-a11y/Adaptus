@@ -91,7 +91,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
       <div className="brief-body">
         {/* 1: Are we on track? */}
-        <div className="bs">
+        <div className="bs bs-wide">
           <div className="bst">Are we on track?</div>
           <div className="bsg">
             <div className="bsc"><div className="v" style={{ color: prepColor(prep.pct) }}>{prep.pct}%</div><div className="l">Launch ready</div></div>
@@ -214,7 +214,7 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
         {/* 4: What do you need from me? (the reply hook) */}
         {(ask || !publicView) && (
-          <div className="bs">
+          <div className="bs bs-wide">
             <div className="bst">What I need from you</div>
             {ask ? (
               <div style={{ background: 'rgba(91,134,163,0.12)', borderLeft: '3px solid #5B86A3', borderRadius: '0 8px 8px 0', padding: '12px 16px', fontSize: '14px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>

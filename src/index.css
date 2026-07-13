@@ -440,11 +440,30 @@ option {
   color: var(--brand-fg, #fff);
   font-weight: 600;
 }
+/* Two columns: on a letter/A4 page (and on any reasonably wide screen) a single
+   column of full-width sections wastes half the paper and pushes the brief onto
+   more pages than it needs. Sections auto-place across the two tracks in DOM
+   order; `.bs-wide` ones (the metric tiles, the ask) span both. Narrow screens
+   fall back to one column. `align-items: start` keeps a short section from
+   stretching to match a tall neighbour. */
 .brief-body {
   padding: 28px 32px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 30px;
+  align-items: start;
+}
+@media (max-width: 700px) {
+  .brief-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .bs {
   margin-bottom: 28px;
+  min-width: 0;
+}
+.bs-wide {
+  grid-column: 1 / -1;
 }
 .bs:last-child {
   margin-bottom: 0;

@@ -37,7 +37,10 @@ export function SharedBriefPage({ token }: { token: string }) {
 
   return (
     <div className="cq-root" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 20px' }}>
-      <div style={{ width: '100%', maxWidth: '640px' }}>
+      {/* Wide enough for the brief's two columns to breathe (it's the same
+          816px letter page the PDF is exported at); it folds back to one column
+          on a narrow screen. */}
+      <div style={{ width: '100%', maxWidth: '860px' }}>
         {state.status === 'loading' && (
           <div style={{ textAlign: 'center', color: 'rgba(var(--fg),0.5)', fontSize: '14px', marginTop: '80px' }}>Loading…</div>
         )}

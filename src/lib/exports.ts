@@ -66,12 +66,24 @@ export async function downloadPng(el: HTMLElement, filename: string, background 
 
 /**
  * Offsets (in CSS px, relative to `el`) where a page may safely break: the
- * bottom edge of each child matching `selector`. Anything the caller doesn't
- * nominate is treated as unbreakable and pushed whole onto the next page.
+ * bottom edge of each element matching `selector`, minus any that would cut
+ * through a *different* one.
+ *
+ * That last part is what makes a two-column report work. Sections sit side by
+ * side, so the bottom of the left one is usually somewhere in the middle of the
+ * right one; breaking there would slice the neighbour in half. A boundary only
+ * counts if no section straddles it.
  */
 export function breakPoints(el: HTMLElement, selector: string): number[] {
   const top = el.getBoundingClientRect().top
-  return Array.from(el.querySelectorAll(selector)).map((n) => n.getBoundingClientRect().bottom - top)
+  const boxes = Array.from(el.querySelectorAll(selector)).map((n) => {
+    const r = n.getBoundingClientRect()
+    return { top: r.top - top, bottom: r.bottom - top }
+  })
+  return boxes
+    .map((b) => b.bottom)
+    .filter((y) => !boxes.some((b) => b.top < y - 1 && b.bottom > y + 1))
+    .sort((a, b) => a - b)
 }
 
 /**
@@ -87,7 +99,8 @@ export async function downloadPdf(
   const background = opts.background ?? REPORT_BG
   const canvas = await captureNode(el, background)
   const { default: jsPDF } = await import('jspdf')
-  const pdf = new jsPDF({ unit: 'pt', format: 'a4', compress: true })
+  // Letter, not A4: these reports are handed to US leadership and get printed.
+  const pdf = new jsPDF({ unit: 'pt', format: 'letter', compress: true })
   const pageW = pdf.internal.pageSize.getWidth()
   const pageH = pdf.internal.pageSize.getHeight()
 
