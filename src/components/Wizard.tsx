@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Rocket, X } from 'lucide-react'
-import { DEFAULT_BUSINESS_TYPE, TAILORED_BUSINESS_TYPES, type BusinessProfile } from '@/data/business'
+import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE, TAILORED_BUSINESS_TYPES } from '@/data/business'
 
 export interface ProjectDraft {
   name: string
@@ -39,30 +39,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
     onCreate({ ...draft, invites: [...draft.invites, ...extra] })
   }
 
-  /** One organization-type choice: the Standard Template, and each tailored template. */
-  const orgOption = (b: BusinessProfile) => {
-    const sel = draft.businessType === b.id
-    return (
-      <button
-        key={b.id}
-        type="button"
-        onClick={() => setDraft({ ...draft, businessType: b.id })}
-        aria-pressed={sel}
-        style={{
-          textAlign: 'left',
-          background: sel ? 'rgba(91,134,163,0.14)' : 'rgba(var(--fg),0.03)',
-          border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
-          borderRadius: '10px',
-          padding: '10px 13px',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-        }}
-      >
-        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{b.name}</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.45, marginTop: '2px' }}>{b.blurb}</div>
-      </button>
-    )
-  }
+  const selectedType = BUSINESS_TYPES.find((b) => b.id === draft.businessType)
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
@@ -93,20 +70,25 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           }}
         />
 
-        <div className="cq-lbl" style={{ marginTop: '20px', marginBottom: '8px' }}>What kind of organization is this for?</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {orgOption(DEFAULT_BUSINESS_TYPE)}
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '6px 0 2px' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(var(--fg),0.1)' }} />
-            <span style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.5)', whiteSpace: 'nowrap' }}>
-              Or pick one of our tailored templates
-            </span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(var(--fg),0.1)' }} />
-          </div>
-
-          {TAILORED_BUSINESS_TYPES.map(orgOption)}
-        </div>
+        <div className="cq-lbl" style={{ marginTop: '20px', marginBottom: '8px' }}>Select a template</div>
+        <select
+          className="cq-select"
+          value={draft.businessType}
+          onChange={(e) => setDraft({ ...draft, businessType: e.target.value })}
+        >
+          <option value={DEFAULT_BUSINESS_TYPE.id}>{DEFAULT_BUSINESS_TYPE.name}</option>
+          <optgroup label="Tailored templates">
+            {TAILORED_BUSINESS_TYPES.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </optgroup>
+        </select>
+        {/* The chosen template's one-liner. The cards used to carry this; in a
+            dropdown the description is invisible until you open it, so keep it
+            visible for whatever is currently selected. */}
+        {selectedType && (
+          <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.5)', fontSize: '12px', lineHeight: 1.5 }}>{selectedType.blurb}</p>
+        )}
 
         <div className="cq-lbl" style={{ marginTop: '20px' }}>Launch date <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>(optional)</span></div>
         <input
