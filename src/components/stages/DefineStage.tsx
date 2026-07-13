@@ -18,13 +18,8 @@ export function DefineStage() {
       summary: data.statement,
       emptyLabel: 'Not answered yet',
       node: (
-        <FieldCoach
-          label={f.statement.label}
-          why={f.statement.why}
-          example={ex.statement}
-          onUseExample={() => update({ statement: ex.statement })}
-        >
-          <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder="e.g., We’re switching from X to Y, and people will now do Z." rows={3} />
+        <FieldCoach label={f.statement.label} why={f.statement.why}>
+          <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder={ex.statement} rows={3} />
         </FieldCoach>
       ),
     },
@@ -35,13 +30,8 @@ export function DefineStage() {
       summary: data.successLooks,
       emptyLabel: 'Not answered yet',
       node: (
-        <FieldCoach
-          label={f.successLooks.label}
-          why={f.successLooks.why}
-          example={ex.successLooks}
-          onUseExample={() => update({ successLooks: ex.successLooks })}
-        >
-          <TextArea value={data.successLooks} onCommit={(v) => update({ successLooks: v })} placeholder="In 90 days, we’ll know this worked when..." rows={3} />
+        <FieldCoach label={f.successLooks.label} why={f.successLooks.why}>
+          <TextArea value={data.successLooks} onCommit={(v) => update({ successLooks: v })} placeholder={ex.successLooks} rows={3} />
         </FieldCoach>
       ),
     },
@@ -52,13 +42,8 @@ export function DefineStage() {
       summary: data.whyNow,
       emptyLabel: 'Not answered yet',
       node: (
-        <FieldCoach
-          label={f.whyNow.label}
-          why={f.whyNow.why}
-          example={ex.whyNow}
-          onUseExample={() => update({ whyNow: ex.whyNow })}
-        >
-          <TextArea value={data.whyNow} onCommit={(v) => update({ whyNow: v })} placeholder="The business reason, and what happens if you don’t change..." rows={3} />
+        <FieldCoach label={f.whyNow.label} why={f.whyNow.why}>
+          <TextArea value={data.whyNow} onCommit={(v) => update({ whyNow: v })} placeholder={ex.whyNow} rows={3} />
         </FieldCoach>
       ),
     },

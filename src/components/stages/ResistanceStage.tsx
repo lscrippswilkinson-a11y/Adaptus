@@ -112,13 +112,8 @@ export function ResistanceStage() {
     isFilled: !!data.generalPlan.trim(),
     summary: data.generalPlan || undefined,
     node: (
-      <FieldCoach
-        label={coaching.resistance.fields.generalPlan.label}
-        why={coaching.resistance.fields.generalPlan.why}
-        example={coaching.resistance.fields.generalPlan.example}
-        onUseExample={() => update({ generalPlan: coaching.resistance.fields.generalPlan.example })}
-      >
-        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder="e.g., Weekly check-in survey for 8 weeks, any score below 3/5 triggers manager check-in within 48 hours..." rows={4} />
+      <FieldCoach label={coaching.resistance.fields.generalPlan.label} why={coaching.resistance.fields.generalPlan.why}>
+        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder={coaching.resistance.fields.generalPlan.example} rows={4} />
       </FieldCoach>
     ),
   })

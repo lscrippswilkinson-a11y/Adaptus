@@ -100,15 +100,22 @@ interface TextAreaProps extends TextInputProps {
   rows?: number
 }
 
+/** Rough characters per line at the textarea's width, used to size it. */
+const CHARS_PER_LINE = 58
+
 export function TextArea({ value, onCommit, placeholder, rows = 4, style }: TextAreaProps) {
   const [local, setLocal] = useState(value)
   useEffect(() => setLocal(value), [value])
+  // Placeholders carry the worked example, which can run to a few sentences, so
+  // grow the box enough to show all of it rather than clipping it. Sized off the
+  // placeholder (not the value) so the box doesn't resize as the user types.
+  const fit = placeholder ? Math.ceil(placeholder.length / CHARS_PER_LINE) : 0
   return (
     <textarea
       className="cq-textarea"
       value={local}
       placeholder={placeholder}
-      rows={rows}
+      rows={Math.max(rows, fit)}
       style={style}
       onChange={(e) => setLocal(e.target.value)}
       onBlur={() => local !== value && onCommit(local)}
@@ -237,32 +244,17 @@ interface FieldCoachProps {
   label: string
   /** Plain-language explanation of why this field matters (no jargon). */
   why: ReactNode
-  /** An optional worked example the user can read and drop into the field. */
-  example?: string
-  /** Called when the user clicks "Use this example", should set the field. */
-  onUseExample?: () => void
-  /** The input itself. */
+  /** The input itself. Pass the worked example as its `placeholder`. */
   children: ReactNode
 }
 
-const linkBtnStyle: CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--accent-text)',
-  cursor: 'pointer',
-  fontSize: '12px',
-  fontWeight: 600,
-  padding: 0,
-  fontFamily: 'inherit',
-}
-
 /**
- * A field wrapped with point-of-entry coaching: the "why", the input, and an
- * expandable worked example that can be inserted with one click. This is the
- * core "learn as you go" pattern for non-expert users.
+ * A field wrapped with point-of-entry coaching: the question, the "why", and the
+ * input. This is the core "learn as you go" pattern for non-expert users. The
+ * worked example belongs in the input's own placeholder, where the user reads it
+ * without having to open anything and it clears itself the moment they type.
  */
-export function FieldCoach({ label, why, example, onUseExample, children }: FieldCoachProps) {
-  const [showExample, setShowExample] = useState(false)
+export function FieldCoach({ label, why, children }: FieldCoachProps) {
   const hero = useContext(FieldCoachVariantCtx) === 'hero'
   const flat = useContext(FlatContainerCtx)
   const cardStyle: CSSProperties | undefined = hero
@@ -281,28 +273,6 @@ export function FieldCoach({ label, why, example, onUseExample, children }: Fiel
         ? { fontSize: '15px', color: 'rgba(var(--fg),0.72)', lineHeight: 1.7, margin: '0 0 22px' }
         : { fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.6, margin: '0 0 12px' }}>{why}</div>
       {children}
-      {example && (
-        <div style={{ marginTop: '10px' }}>
-          <button type="button" style={linkBtnStyle} onClick={() => setShowExample((s) => !s)}>
-            {showExample ? '▾ Hide example' : '▸ Show an example'}
-          </button>
-          {showExample && (
-            <div style={{ marginTop: '8px', background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.2)', borderRadius: '8px', padding: '12px 14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Example</div>
-              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.78)', lineHeight: 1.6, fontStyle: 'italic' }}>“{example}”</div>
-              {onUseExample && (
-                <button
-                  type="button"
-                  onClick={onUseExample}
-                  style={{ marginTop: '12px', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '6px 12px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Use this example →
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </Card>
   )
 }

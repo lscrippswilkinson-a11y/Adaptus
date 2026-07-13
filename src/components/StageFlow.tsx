@@ -20,6 +20,14 @@ export interface WizardStep {
   /** Whether the user has entered something (drives the review tick). */
   isFilled?: boolean
   /**
+   * Review screen only: consecutive steps sharing this key collapse into a
+   * single row, titled by the first of them, with their summaries stacked.
+   * Editing the row opens the first step, and Next walks through the rest.
+   * Use it to keep answers that describe one thing (a backer and the actions
+   * they've agreed to) from reading as separate, fragmented entries.
+   */
+  reviewGroup?: string
+  /**
    * Hub mode only: marks the first screen of an item, so "Back" returns to the
    * hub instead of stepping into the previous item.
    */
@@ -333,7 +341,31 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
   )
 }
 
+/** A step has an answer worth reading back (a blank string doesn't count). */
+function isAnswered(s: WizardStep) {
+  return !!s.isFilled && s.summary != null && !(typeof s.summary === 'string' && s.summary.trim() === '')
+}
+
+/** One review row: a lone step, or a run of steps sharing a `reviewGroup`. */
+interface ReviewRow {
+  group?: string
+  /** Index of the row's first step, where Edit lands. */
+  stepIndex: number
+  parts: WizardStep[]
+}
+
+function toRows(steps: WizardStep[]): ReviewRow[] {
+  const rows: ReviewRow[] = []
+  steps.forEach((s, i) => {
+    const open = rows[rows.length - 1]
+    if (s.reviewGroup && open?.group === s.reviewGroup) open.parts.push(s)
+    else rows.push({ group: s.reviewGroup, stepIndex: i, parts: [s] })
+  })
+  return rows
+}
+
 function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: number) => void }) {
+  const rows = toRows(steps)
   return (
     <div>
       <h3 style={{ margin: '0 0 4px', fontSize: '19px', fontWeight: 800, color: 'var(--text)' }}>Review your answers</h3>
@@ -341,15 +373,14 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
         Here’s everything you entered. Click any item to change it, then mark the step complete below.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {steps.map((s, i) => {
-          // An empty/whitespace string summary counts as unanswered (so the
-          // placeholder shows instead of a blank line).
-          const answered = s.isFilled && !(typeof s.summary === 'string' && s.summary.trim() === '') && s.summary != null
+        {rows.map((row, i) => {
+          // A grouped row is only ticked once every answer in it is in.
+          const done = row.parts.every(isAnswered)
           return (
           <button
-            key={s.id}
+            key={row.parts[0].id}
             type="button"
-            onClick={() => onEdit(i)}
+            onClick={() => onEdit(row.stepIndex)}
             style={{
               display: 'flex',
               alignItems: 'flex-start',
@@ -374,17 +405,25 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: s.isFilled ? '#22c55e' : 'rgba(var(--fg),0.08)',
-                color: s.isFilled ? 'var(--on-accent)' : 'rgba(var(--fg),0.4)',
+                background: done ? '#22c55e' : 'rgba(var(--fg),0.08)',
+                color: done ? 'var(--on-accent)' : 'rgba(var(--fg),0.4)',
               }}
             >
-              {s.isFilled ? <Check size={13} strokeWidth={3} /> : <span style={{ fontSize: '11px', fontWeight: 700 }}>{i + 1}</span>}
+              {done ? <Check size={13} strokeWidth={3} /> : <span style={{ fontSize: '11px', fontWeight: 700 }}>{i + 1}</span>}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '2px' }}>{s.title}</div>
-              <div style={{ fontSize: '13px', color: answered ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: answered ? 'normal' : 'italic' }}>
-                {answered ? s.summary : s.emptyLabel ?? 'Not added yet'}
-              </div>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{row.parts[0].title}</div>
+              {row.parts.map((s) => {
+                const answered = isAnswered(s)
+                return (
+                  <div
+                    key={s.id}
+                    style={{ fontSize: '13px', color: answered ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: answered ? 'normal' : 'italic' }}
+                  >
+                    {answered ? s.summary : s.emptyLabel ?? 'Not added yet'}
+                  </div>
+                )
+              })}
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
               <Pencil size={12} /> Edit

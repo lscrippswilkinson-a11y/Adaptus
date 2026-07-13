@@ -116,13 +116,8 @@ export function AdoptionStage() {
     isFilled: !!data.notes.trim(),
     summary: data.notes || undefined,
     node: (
-      <FieldCoach
-        label={coaching.adoption.fields.notes.label}
-        why={coaching.adoption.fields.notes.why}
-        example={coaching.adoption.fields.notes.example}
-        onUseExample={() => update({ notes: coaching.adoption.fields.notes.example })}
-      >
-        <TextArea value={data.notes} onCommit={(v) => update({ notes: v })} placeholder="What are you hearing from the field?" rows={4} />
+      <FieldCoach label={coaching.adoption.fields.notes.label} why={coaching.adoption.fields.notes.why}>
+        <TextArea value={data.notes} onCommit={(v) => update({ notes: v })} placeholder={coaching.adoption.fields.notes.example} rows={4} />
       </FieldCoach>
     ),
   })

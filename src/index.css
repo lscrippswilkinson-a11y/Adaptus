@@ -133,6 +133,14 @@ body {
 .cq-textarea:focus {
   border-color: rgba(91, 134, 163, 0.6);
 }
+/* Placeholders carry the worked example for each field, so they have to be
+   comfortably readable, not the browser's faint default (and Firefox dims
+   placeholders further unless opacity is reset). */
+.cq-input::placeholder,
+.cq-textarea::placeholder {
+  color: rgba(var(--fg), 0.45);
+  opacity: 1;
+}
 .cq-select {
   background: rgba(var(--fg), 0.05);
   border: 1px solid rgba(var(--fg), 0.1);

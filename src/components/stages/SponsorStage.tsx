@@ -48,18 +48,18 @@ export function SponsorStage() {
   const toggleNoSponsor = (v: boolean) =>
     update(v ? { noSponsor: true, name: '', role: '' } : { noSponsor: false })
 
+  // The backer and the actions they've agreed to are one thing, so they share a
+  // review row: the name, with their actions listed under it.
+  const reviewGroup = 'backer'
+
   const nameStep: WizardStep = {
     id: 'name',
     title: 'Your backer',
+    reviewGroup,
     isFilled: noSponsor || !!data.name.trim(),
     summary: noSponsor ? 'No senior backer — flagged as a risk' : data.name,
     node: (
-      <FieldCoach
-        label={f.name.label}
-        why={f.name.why}
-        example={sponsorEx.name}
-        onUseExample={() => update({ name: sponsorEx.name })}
-      >
+      <FieldCoach label={f.name.label} why={f.name.why}>
         {!noSponsor && (
           <>
             <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={`e.g., ${sponsorEx.name}`} />
@@ -99,11 +99,23 @@ export function SponsorStage() {
     ),
   }
 
+  // Blank cards (added but never filled in) aren't commitments, so they don't
+  // count towards the review tick and don't show up in the read-back.
+  const namedActions = actions.filter((a) => a.text.trim())
+
   const actionsStep: WizardStep = {
     id: 'actions',
     title: 'Backer actions',
-    isFilled: actions.length > 0,
-    summary: actions.length ? `${actions.length} action${actions.length === 1 ? '' : 's'} planned` : undefined,
+    reviewGroup,
+    isFilled: namedActions.length > 0,
+    emptyLabel: 'No actions agreed yet',
+    summary: namedActions.length ? (
+      <ul style={{ margin: '2px 0 0', paddingLeft: '17px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        {namedActions.map((a) => (
+          <li key={a.id}>{a.text}</li>
+        ))}
+      </ul>
+    ) : undefined,
     node: (
       <Card>
         <SectionTitle>What your backer will do</SectionTitle>

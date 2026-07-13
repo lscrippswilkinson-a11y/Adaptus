@@ -37,8 +37,8 @@ export function ReportStage() {
       isFilled: !!closeout.wins.trim(),
       summary: closeout.wins,
       node: (
-        <FieldCoach label={fc.wins.label} why={fc.wins.why} example={fc.wins.example} onUseExample={() => update({ wins: fc.wins.example })}>
-          <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder="What worked? What would you repeat?" rows={3} />
+        <FieldCoach label={fc.wins.label} why={fc.wins.why}>
+          <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder={fc.wins.example} rows={3} />
         </FieldCoach>
       ),
     },
@@ -48,8 +48,8 @@ export function ReportStage() {
       isFilled: !!closeout.lessons.trim(),
       summary: closeout.lessons,
       node: (
-        <FieldCoach label={fc.lessons.label} why={fc.lessons.why} example={fc.lessons.example} onUseExample={() => update({ lessons: fc.lessons.example })}>
-          <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder="What would you do differently?" rows={3} />
+        <FieldCoach label={fc.lessons.label} why={fc.lessons.why}>
+          <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder={fc.lessons.example} rows={3} />
         </FieldCoach>
       ),
     },
@@ -59,8 +59,8 @@ export function ReportStage() {
       isFilled: !!closeout.shoutouts.trim(),
       summary: closeout.shoutouts,
       node: (
-        <FieldCoach label={fc.shoutouts.label} why={fc.shoutouts.why} example={fc.shoutouts.example} onUseExample={() => update({ shoutouts: fc.shoutouts.example })}>
-          <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder="Name the people who went above and beyond." rows={2} />
+        <FieldCoach label={fc.shoutouts.label} why={fc.shoutouts.why}>
+          <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder={fc.shoutouts.example} rows={2} />
         </FieldCoach>
       ),
     },

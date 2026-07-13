@@ -14,12 +14,8 @@ export function SustainmentStage() {
       isFilled: !!data.reinforcementOwner.trim(),
       summary: data.reinforcementOwner,
       node: (
-        <FieldCoach
-          label={f.reinforcementOwner.label}
-          why={f.reinforcementOwner.why}
-          example={f.reinforcementOwner.example}
-          onUseExample={() => update({ reinforcementOwner: f.reinforcementOwner.example })}
-        >
+        <FieldCoach label={f.reinforcementOwner.label} why={f.reinforcementOwner.why}>
+          {/* One-liner: the field wants a name, so the short example is the one that fits. */}
           <TextInput value={data.reinforcementOwner} onCommit={(v) => update({ reinforcementOwner: v })} placeholder="e.g., Operations Manager, or a team lead" />
         </FieldCoach>
       ),
@@ -30,13 +26,8 @@ export function SustainmentStage() {
       isFilled: !!data.checkpointDates.trim(),
       summary: data.checkpointDates,
       node: (
-        <FieldCoach
-          label={f.checkpointDates.label}
-          why={f.checkpointDates.why}
-          example={f.checkpointDates.example}
-          onUseExample={() => update({ checkpointDates: f.checkpointDates.example })}
-        >
-          <TextArea value={data.checkpointDates} onCommit={(v) => update({ checkpointDates: v })} placeholder="e.g., 30-day: Oct 15 · 60-day: Nov 15 · 90-day: Dec 15" rows={3} />
+        <FieldCoach label={f.checkpointDates.label} why={f.checkpointDates.why}>
+          <TextArea value={data.checkpointDates} onCommit={(v) => update({ checkpointDates: v })} placeholder={f.checkpointDates.example} rows={3} />
         </FieldCoach>
       ),
     },
@@ -46,13 +37,8 @@ export function SustainmentStage() {
       isFilled: !!data.metrics.trim(),
       summary: data.metrics,
       node: (
-        <FieldCoach
-          label={f.metrics.label}
-          why={f.metrics.why}
-          example={f.metrics.example}
-          onUseExample={() => update({ metrics: f.metrics.example })}
-        >
-          <TextArea value={data.metrics} onCommit={(v) => update({ metrics: v })} placeholder="e.g., Monthly login rate stays above 85%, no return to manual reporting..." rows={3} />
+        <FieldCoach label={f.metrics.label} why={f.metrics.why}>
+          <TextArea value={data.metrics} onCommit={(v) => update({ metrics: v })} placeholder={f.metrics.example} rows={3} />
         </FieldCoach>
       ),
     },
@@ -62,13 +48,8 @@ export function SustainmentStage() {
       isFilled: !!data.risks.trim(),
       summary: data.risks,
       node: (
-        <FieldCoach
-          label={f.risks.label}
-          why={f.risks.why}
-          example={f.risks.example}
-          onUseExample={() => update({ risks: f.risks.example })}
-        >
-          <TextArea value={data.risks} onCommit={(v) => update({ risks: v })} placeholder="e.g., New untrained manager, peak season pressure, competing priority rollouts..." rows={3} />
+        <FieldCoach label={f.risks.label} why={f.risks.why}>
+          <TextArea value={data.risks} onCommit={(v) => update({ risks: v })} placeholder={f.risks.example} rows={3} />
         </FieldCoach>
       ),
     },
@@ -78,13 +59,8 @@ export function SustainmentStage() {
       isFilled: !!data.recognitionPlan.trim(),
       summary: data.recognitionPlan,
       node: (
-        <FieldCoach
-          label={f.recognitionPlan.label}
-          why={f.recognitionPlan.why}
-          example={f.recognitionPlan.example}
-          onUseExample={() => update({ recognitionPlan: f.recognitionPlan.example })}
-        >
-          <TextArea value={data.recognitionPlan} onCommit={(v) => update({ recognitionPlan: v })} placeholder="e.g., Monthly shoutout at the all-staff meeting, and managers check who’s still using it..." rows={4} />
+        <FieldCoach label={f.recognitionPlan.label} why={f.recognitionPlan.why}>
+          <TextArea value={data.recognitionPlan} onCommit={(v) => update({ recognitionPlan: v })} placeholder={f.recognitionPlan.example} rows={4} />
         </FieldCoach>
       ),
     },
