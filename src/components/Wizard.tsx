@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Rocket, X } from 'lucide-react'
-import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE } from '@/data/business'
+import { DEFAULT_BUSINESS_TYPE, TAILORED_BUSINESS_TYPES, type BusinessProfile } from '@/data/business'
 
 export interface ProjectDraft {
   name: string
@@ -39,6 +39,31 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
     onCreate({ ...draft, invites: [...draft.invites, ...extra] })
   }
 
+  /** One organization-type choice, used for Generic and each tailored template. */
+  const orgOption = (b: BusinessProfile) => {
+    const sel = draft.businessType === b.id
+    return (
+      <button
+        key={b.id}
+        type="button"
+        onClick={() => setDraft({ ...draft, businessType: b.id })}
+        aria-pressed={sel}
+        style={{
+          textAlign: 'left',
+          background: sel ? 'rgba(91,134,163,0.14)' : 'rgba(var(--fg),0.03)',
+          border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
+          borderRadius: '10px',
+          padding: '10px 13px',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+        }}
+      >
+        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{b.name}</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.45, marginTop: '2px' }}>{b.blurb}</div>
+      </button>
+    )
+  }
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ position: 'relative', background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', width: '500px', maxWidth: '90vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -73,29 +98,17 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           This tailors the whole plan, the channels, examples, and suggestions, to how your organization works. You can change it later.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {BUSINESS_TYPES.map((b) => {
-            const sel = draft.businessType === b.id
-            return (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => setDraft({ ...draft, businessType: b.id })}
-                aria-pressed={sel}
-                style={{
-                  textAlign: 'left',
-                  background: sel ? 'rgba(91,134,163,0.14)' : 'rgba(var(--fg),0.03)',
-                  border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
-                  borderRadius: '10px',
-                  padding: '10px 13px',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{b.name}</div>
-                <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.45, marginTop: '2px' }}>{b.blurb}</div>
-              </button>
-            )
-          })}
+          {orgOption(DEFAULT_BUSINESS_TYPE)}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '6px 0 2px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(var(--fg),0.1)' }} />
+            <span style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.5)', whiteSpace: 'nowrap' }}>
+              Or pick one of our tailored templates
+            </span>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(var(--fg),0.1)' }} />
+          </div>
+
+          {TAILORED_BUSINESS_TYPES.map(orgOption)}
         </div>
 
         <div className="cq-lbl" style={{ marginTop: '20px' }}>Launch date <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>(optional)</span></div>

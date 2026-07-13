@@ -79,75 +79,43 @@ const MEDICAL_CHANNELS: ChannelInfo[] = [
   { name: 'Super-User Floor Support', best: 'At-the-elbow help during go-live; the biggest driver of adoption.', limit: 'Needs trained super-users freed from their normal duties.' },
 ]
 
+// Generic first, as the safe pick for anyone whose organization isn't one of the
+// tailored templates, then the templates ordered smallest to largest and the
+// specialist types last. Deliberately not led by Large Corporation: most people
+// planning a rollout here aren't in one, and leading with it sets the wrong
+// expectation of who this is for.
 export const BUSINESS_TYPES: BusinessProfile[] = [
   {
-    id: 'large-corp',
-    name: 'Large Corporation',
-    blurb: 'A large company with departments, layers of managers, and formal channels.',
+    id: 'generic',
+    name: 'Generic',
+    blurb: 'Not sure, or none of the below? A plan that works for any organization.',
     channels: CHANNELS,
-    suggestedGroups: ['Sales team', 'Customer Success', 'Marketing', 'Finance', 'IT', 'Regional managers', 'Frontline staff'],
+    suggestedGroups: ['Frontline staff', 'Team leads', 'Managers', 'Admin / back office', 'Finance', 'IT'],
     sponsorActions: SPONSOR_ACTIONS,
     trainingFormats: TRAINING_FORMATS,
     examples: {
       define: {
         statement:
-          'We’re replacing our legacy CRM with Salesforce. Sales, customer success, and marketing will manage every account, deal, and case in one shared system instead of the old tool and a patchwork of spreadsheets.',
-        scope: 'Our ~600 sales and customer-success reps across four regions, plus the marketing and operations teams who rely on the data.',
-        headcount: 'About 4,000 people company-wide, with ~600 in the system daily',
-        successLooks: 'Within 90 days of launch, 85% of reps log every new deal in Salesforce each week and we’ve retired the legacy CRM completely.',
-        whyNow: 'The legacy CRM is out of support next year and its bad data is costing us deals. Standardizing now, before the new fiscal year, gives us one clean pipeline leadership can actually trust.',
+          'We’re replacing the spreadsheets we track our work in with a single online tool. Everyone will enter their own updates in one place instead of emailing files back and forth.',
+        scope: 'Every team that touches the process: the people doing the work day-to-day, their team leads, and the admin staff who chase the numbers.',
+        headcount: 'About 120 people',
+        successLooks: 'Within 60 days, 90% of the team update the new tool every week and the old spreadsheets are switched off.',
+        whyNow: 'The spreadsheets break constantly and nobody trusts the numbers in them. Fixing it now, before our next busy stretch, saves everyone hours of rework.',
       },
       sponsor: {
-        name: 'Elena Torres',
-        role: 'SVP of Sales',
+        name: 'Alex Morgan',
+        role: 'Head of Operations',
         commitments:
-          'Open the launch all-hands with why we’re moving to Salesforce, review pipeline in Salesforce (not the old exports) in every regional review, and require her own directs to run their forecasts from it from day one.',
+          'Open the launch meeting with why we’re making the change, use the new tool for their own weekly update from day one, and check in with team leads through the first two weeks to clear blockers.',
       },
       comms: {
         keyMessages:
-          'Our legacy CRM is being retired, so from [date] every deal, account, and case lives in Salesforce. It’s a few minutes to log as you go, it means cleaner pipeline and fewer status meetings, and there’s help on hand the whole way.',
+          'The old spreadsheets are going away, so from [date] everyone puts their updates straight into the new tool. It takes a few minutes a week, it means the numbers are finally worth trusting, and there’s help on hand the whole way.',
         schedule: [
-          { phase: 'before', when: '6 weeks out', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Why we’re moving to Salesforce, and roughly when' },
-          { phase: 'before', when: '2 weeks out', audience: 'Sales team', channel: 'Manager Cascade', message: 'What changes for your day-to-day + your training date' },
-          { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Blast', message: 'Salesforce is live: how to log in and enter your first deal' },
-          { phase: 'launch', when: 'Launch week', audience: 'Managers', channel: '1:1 Check-ins', message: 'Check your team has logged in; surface any blockers' },
-          { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Intranet Post', message: 'Answers to the most common questions so far' },
-          { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the old CRM is going away' },
-        ],
-      },
-    },
-  },
-  {
-    id: 'medium-corp',
-    name: 'Medium Corporation',
-    blurb: 'A mid-sized company with a few teams and managers, but less formal machinery.',
-    channels: MEDIUM_CORP_CHANNELS,
-    suggestedGroups: ['Operations', 'Sales', 'Customer service', 'Finance / accounting', 'Team leads', 'IT'],
-    sponsorActions: SPONSOR_ACTIONS,
-    trainingFormats: TRAINING_FORMATS,
-    examples: {
-      define: {
-        statement:
-          'We’re moving from our old order and inventory spreadsheets to NetSuite. Operations, sales, and finance will all work from one live system instead of re-keying orders between tools.',
-        scope: 'Our warehouse and operations crew, the sales desk, customer service, and the finance team, across our two sites.',
-        headcount: 'About 600 people',
-        successLooks: 'Within 60 days, every order flows through NetSuite with under 2% needing manual correction, and the old spreadsheets are switched off.',
-        whyNow: 'We’ve outgrown the spreadsheets; double entry is causing shipping errors and late invoices. Fixing it now, before our busy season, protects both margin and customer trust.',
-      },
-      sponsor: {
-        name: 'Marcus Bell',
-        role: 'Chief Operating Officer',
-        commitments:
-          'Kick off the all-hands explaining why we’re moving to NetSuite, join the first week’s floor walk-throughs, and run the weekly ops numbers straight from NetSuite so the team sees leadership using it too.',
-      },
-      comms: {
-        keyMessages:
-          'Our order and inventory spreadsheets are going away, so from [date] every order goes through NetSuite. It’s quick once you know the steps, it means fewer shipping mix-ups and faster invoicing, and support is right there while you learn.',
-        schedule: [
-          { phase: 'before', when: '4 weeks out', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Why we’re moving to NetSuite, and roughly when' },
-          { phase: 'before', when: '1 week out', audience: 'Operations', channel: 'Team Meeting', message: 'What changes for your day-to-day + your training date' },
-          { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Update', message: 'NetSuite is live: how to log in and enter your first order' },
-          { phase: 'launch', when: 'Launch week', audience: 'Team leads', channel: '1:1 Check-ins', message: 'Check your team is logging orders; surface any blockers' },
+          { phase: 'before', when: '4 weeks out', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Why we’re making the change, and roughly when' },
+          { phase: 'before', when: '1 week out', audience: 'Team leads', channel: 'Manager Cascade', message: 'What changes for your team + when they’ll be trained' },
+          { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Update', message: 'The new tool is live: how to log in and add your first update' },
+          { phase: 'launch', when: 'Launch week', audience: 'Team leads', channel: '1:1 Check-ins', message: 'Check your team has logged in; surface any blockers' },
           { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Slack / Teams Channel', message: 'Answers to the most common questions so far' },
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the spreadsheets are going away' },
         ],
@@ -194,6 +162,80 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'launch', when: 'Launch week', audience: 'All staff', channel: 'Notice Board / Break Room', message: 'Quick cheat sheet pinned up where everyone can see it' },
           { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Team Huddle', message: 'How it’s going, and answers to the common questions' },
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'Owner / Founder Message', message: 'A thank-you, early wins, and the old till is switched off' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'medium-corp',
+    name: 'Medium Corporation',
+    blurb: 'A mid-sized company with a few teams and managers, but less formal machinery.',
+    channels: MEDIUM_CORP_CHANNELS,
+    suggestedGroups: ['Operations', 'Sales', 'Customer service', 'Finance / accounting', 'Team leads', 'IT'],
+    sponsorActions: SPONSOR_ACTIONS,
+    trainingFormats: TRAINING_FORMATS,
+    examples: {
+      define: {
+        statement:
+          'We’re moving from our old order and inventory spreadsheets to NetSuite. Operations, sales, and finance will all work from one live system instead of re-keying orders between tools.',
+        scope: 'Our warehouse and operations crew, the sales desk, customer service, and the finance team, across our two sites.',
+        headcount: 'About 600 people',
+        successLooks: 'Within 60 days, every order flows through NetSuite with under 2% needing manual correction, and the old spreadsheets are switched off.',
+        whyNow: 'We’ve outgrown the spreadsheets; double entry is causing shipping errors and late invoices. Fixing it now, before our busy season, protects both margin and customer trust.',
+      },
+      sponsor: {
+        name: 'Marcus Bell',
+        role: 'Chief Operating Officer',
+        commitments:
+          'Kick off the all-hands explaining why we’re moving to NetSuite, join the first week’s floor walk-throughs, and run the weekly ops numbers straight from NetSuite so the team sees leadership using it too.',
+      },
+      comms: {
+        keyMessages:
+          'Our order and inventory spreadsheets are going away, so from [date] every order goes through NetSuite. It’s quick once you know the steps, it means fewer shipping mix-ups and faster invoicing, and support is right there while you learn.',
+        schedule: [
+          { phase: 'before', when: '4 weeks out', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Why we’re moving to NetSuite, and roughly when' },
+          { phase: 'before', when: '1 week out', audience: 'Operations', channel: 'Team Meeting', message: 'What changes for your day-to-day + your training date' },
+          { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Update', message: 'NetSuite is live: how to log in and enter your first order' },
+          { phase: 'launch', when: 'Launch week', audience: 'Team leads', channel: '1:1 Check-ins', message: 'Check your team is logging orders; surface any blockers' },
+          { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Slack / Teams Channel', message: 'Answers to the most common questions so far' },
+          { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the spreadsheets are going away' },
+        ],
+      },
+    },
+  },
+  {
+    id: 'large-corp',
+    name: 'Large Corporation',
+    blurb: 'A large company with departments, layers of managers, and formal channels.',
+    channels: CHANNELS,
+    suggestedGroups: ['Sales team', 'Customer Success', 'Marketing', 'Finance', 'IT', 'Regional managers', 'Frontline staff'],
+    sponsorActions: SPONSOR_ACTIONS,
+    trainingFormats: TRAINING_FORMATS,
+    examples: {
+      define: {
+        statement:
+          'We’re replacing our legacy CRM with Salesforce. Sales, customer success, and marketing will manage every account, deal, and case in one shared system instead of the old tool and a patchwork of spreadsheets.',
+        scope: 'Our ~600 sales and customer-success reps across four regions, plus the marketing and operations teams who rely on the data.',
+        headcount: 'About 4,000 people company-wide, with ~600 in the system daily',
+        successLooks: 'Within 90 days of launch, 85% of reps log every new deal in Salesforce each week and we’ve retired the legacy CRM completely.',
+        whyNow: 'The legacy CRM is out of support next year and its bad data is costing us deals. Standardizing now, before the new fiscal year, gives us one clean pipeline leadership can actually trust.',
+      },
+      sponsor: {
+        name: 'Elena Torres',
+        role: 'SVP of Sales',
+        commitments:
+          'Open the launch all-hands with why we’re moving to Salesforce, review pipeline in Salesforce (not the old exports) in every regional review, and require her own directs to run their forecasts from it from day one.',
+      },
+      comms: {
+        keyMessages:
+          'Our legacy CRM is being retired, so from [date] every deal, account, and case lives in Salesforce. It’s a few minutes to log as you go, it means cleaner pipeline and fewer status meetings, and there’s help on hand the whole way.',
+        schedule: [
+          { phase: 'before', when: '6 weeks out', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Why we’re moving to Salesforce, and roughly when' },
+          { phase: 'before', when: '2 weeks out', audience: 'Sales team', channel: 'Manager Cascade', message: 'What changes for your day-to-day + your training date' },
+          { phase: 'launch', when: 'Go-live day', audience: 'All staff', channel: 'Email Blast', message: 'Salesforce is live: how to log in and enter your first deal' },
+          { phase: 'launch', when: 'Launch week', audience: 'Managers', channel: '1:1 Check-ins', message: 'Check your team has logged in; surface any blockers' },
+          { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Intranet Post', message: 'Answers to the most common questions so far' },
+          { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the old CRM is going away' },
         ],
       },
     },
@@ -292,10 +334,17 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
   },
 ]
 
-/** The default profile used for new projects and any project with no type set. */
-export const DEFAULT_BUSINESS_TYPE = BUSINESS_TYPES[0]
+/**
+ * The default profile used for new projects and any project with no type set:
+ * the org-neutral one, so nobody gets another kind of organization's vocabulary
+ * by accident just because they didn't pick.
+ */
+export const DEFAULT_BUSINESS_TYPE = BUSINESS_TYPES.find((b) => b.id === 'generic') ?? BUSINESS_TYPES[0]
 
-/** Resolve a project's business-type id to its profile, defaulting to Large Corporation. */
+/** The tailored templates, i.e. everything the picker offers below Generic. */
+export const TAILORED_BUSINESS_TYPES = BUSINESS_TYPES.filter((b) => b.id !== DEFAULT_BUSINESS_TYPE.id)
+
+/** Resolve a project's business-type id to its profile, defaulting to Generic. */
 export function getBusinessProfile(id?: string): BusinessProfile {
   return BUSINESS_TYPES.find((b) => b.id === id) ?? DEFAULT_BUSINESS_TYPE
 }
