@@ -39,7 +39,6 @@ export function SponsorStage() {
   // Pre-set actions become quick-add suggestions; hide ones already on the list.
   const suggestions = profile.sponsorActions.filter((s) => !actions.some((a) => a.text === s))
 
-  const actionsInsight = coaching.sponsor.actionsInsight(actions.length)
   const f = coaching.sponsor.fields
   const noSponsor = data.noSponsor
 
@@ -124,10 +123,7 @@ export function SponsorStage() {
           on your launch checklist, where you can give it an owner and a due date and check it off as it’s done.
         </p>
 
-        <InsightCallout tone="info" style={{ margin: '14px 0' }}>
-          We recommend setting aside time with your backer to walk through each action together. Agreeing on them face to
-          face, and checking back in on progress, is what turns a list into real, visible backing.
-        </InsightCallout>
+        <div style={{ height: '14px' }} />
 
         {actions.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
@@ -140,31 +136,27 @@ export function SponsorStage() {
           </div>
         )}
 
+        {/* Suggested actions for this business type. Picking one adds it to the
+            list above; the select resets so it always reads as an "add" control
+            rather than a field holding a value. */}
         {suggestions.length > 0 && (
           <div style={{ margin: '0 0 12px' }}>
-            <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginBottom: '6px' }}>Suggestions, tap to add:</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <select
+              className="cq-select"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) addAction(e.target.value)
+              }}
+            >
+              <option value="">Add a suggested action…</option>
               {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => addAction(s)}
-                  style={{ fontSize: '12px', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '999px', padding: '5px 11px', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  + {s}
-                </button>
+                <option key={s} value={s}>{s}</option>
               ))}
-            </div>
+            </select>
           </div>
         )}
 
         <AddButton label={actions.length ? 'Add another action' : 'Add an action'} onClick={addBlankAction} />
-
-        {actionsInsight && (
-          <InsightCallout tone={actionsInsight.tone} style={{ marginTop: '12px' }}>
-            {actionsInsight.text}
-          </InsightCallout>
-        )}
       </Card>
     ),
   }
