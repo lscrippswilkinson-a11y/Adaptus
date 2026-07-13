@@ -8,7 +8,7 @@ import { CHANNELS, SPONSOR_ACTIONS, TRAINING_FORMATS, type ChannelInfo } from '@
  * the groups it's made of, what a senior backer commits to, the training
  * formats that fit, and a coherent worked example for each stage.
  *
- * Large Corporation is the default and reuses the general option lists from
+ * The Standard Template is the default and reuses the general option lists from
  * constants.ts; the others swap in their own vocabulary and examples. Each
  * profile's examples tell one consistent story so the guidance reads coherently
  * end to end.
@@ -80,7 +80,8 @@ const MEDICAL_CHANNELS: ChannelInfo[] = [
   { name: 'Super-User Floor Support', best: 'At-the-elbow help during go-live; the biggest driver of adoption.', limit: 'Needs trained super-users freed from their normal duties.' },
 ]
 
-// Generic first, as the safe pick for anyone whose organization isn't one of the
+// The Standard Template (id `generic`, a STORED value, don't rename it) comes
+// first, as the safe pick for anyone whose organization isn't one of the
 // tailored templates, then the templates ordered smallest to largest and the
 // specialist types last. Deliberately not led by Large Corporation: most people
 // planning a rollout here aren't in one, and leading with it sets the wrong
@@ -88,7 +89,7 @@ const MEDICAL_CHANNELS: ChannelInfo[] = [
 export const BUSINESS_TYPES: BusinessProfile[] = [
   {
     id: 'generic',
-    name: 'Generic',
+    name: 'Standard Template',
     blurb: 'Not sure, or none of the below? A plan that works for any organization.',
     channels: CHANNELS,
     suggestedGroups: ['Frontline staff', 'Team leads', 'Managers', 'Admin / back office', 'Finance', 'IT'],
@@ -372,10 +373,10 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
  */
 export const DEFAULT_BUSINESS_TYPE = BUSINESS_TYPES.find((b) => b.id === 'generic') ?? BUSINESS_TYPES[0]
 
-/** The tailored templates, i.e. everything the picker offers below Generic. */
+/** The tailored templates, i.e. everything the picker offers below the Standard Template. */
 export const TAILORED_BUSINESS_TYPES = BUSINESS_TYPES.filter((b) => b.id !== DEFAULT_BUSINESS_TYPE.id)
 
-/** Resolve a project's business-type id to its profile, defaulting to Generic. */
+/** Resolve a project's business-type id to its profile, defaulting to the Standard Template. */
 export function getBusinessProfile(id?: string): BusinessProfile {
   return BUSINESS_TYPES.find((b) => b.id === id) ?? DEFAULT_BUSINESS_TYPE
 }

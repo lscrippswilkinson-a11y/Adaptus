@@ -39,7 +39,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
     onCreate({ ...draft, invites: [...draft.invites, ...extra] })
   }
 
-  /** One organization-type choice, used for Generic and each tailored template. */
+  /** One organization-type choice: the Standard Template, and each tailored template. */
   const orgOption = (b: BusinessProfile) => {
     const sel = draft.businessType === b.id
     return (
@@ -93,10 +93,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           }}
         />
 
-        <div className="cq-lbl" style={{ marginTop: '20px' }}>What kind of organization is this for?</div>
-        <p style={{ margin: '4px 0 8px', color: 'rgba(var(--fg),0.5)', fontSize: '12px', lineHeight: 1.5 }}>
-          This tailors the whole plan, the channels, examples, and suggestions, to how your organization works. You can change it later.
-        </p>
+        <div className="cq-lbl" style={{ marginTop: '20px', marginBottom: '8px' }}>What kind of organization is this for?</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {orgOption(DEFAULT_BUSINESS_TYPE)}
 
