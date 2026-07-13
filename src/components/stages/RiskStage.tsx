@@ -93,7 +93,7 @@ export function RiskStage() {
           <ChipPicker value={r.category} options={RISK_CATS} onChange={(v) => setItem(r.id, { category: v })} />
           <div style={{ marginTop: '18px' }}>
             <Label>Describe the risk</Label>
-            <TextInput value={r.description} onCommit={(v) => setItem(r.id, { description: v })} placeholder="e.g., staff keep using the old system" />
+            <TextInput value={r.description} onCommit={(v) => setItem(r.id, { description: v })} placeholder="Example: staff keep using the old system" />
           </div>
           {data.items.length > 1 && <RemoveItemButton label="Remove this risk" onClick={() => delItem(r.id)} />}
         </div>
@@ -141,7 +141,7 @@ export function RiskStage() {
           <h2 style={headline}>What’s your plan if this happens?</h2>
           <div style={whyStyle}>{w.mitigation.why}</div>
           <Label>Mitigation plan: your fix if this happens</Label>
-          <TextInput value={r.mitigation} onCommit={(v) => setItem(r.id, { mitigation: v })} placeholder="e.g., Run both systems in parallel for 2 weeks as a safety net" />
+          <TextInput value={r.mitigation} onCommit={(v) => setItem(r.id, { mitigation: v })} placeholder="Example: Run both systems in parallel for 2 weeks as a safety net" />
           {mode === 'guided' && isLast && avg !== null && (
             <div style={{ marginTop: '18px' }}>
               <ScoreCard avg={avg} count={data.items.length} />

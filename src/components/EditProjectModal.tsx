@@ -47,7 +47,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
           className="cq-input"
           autoFocus
           value={name}
-          placeholder="e.g., Salesforce CRM Rollout Q3"
+          placeholder="Example: Salesforce CRM Rollout Q3"
           style={{ marginBottom: '18px' }}
           onChange={(e) => setName(e.target.value)}
         />

@@ -62,7 +62,7 @@ export function SponsorStage() {
       <FieldCoach label={f.name.label} why={f.name.why}>
         {!noSponsor && (
           <>
-            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={`e.g., ${sponsorEx.name}`} />
+            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={`Example: ${sponsorEx.name}`} />
             {myName && data.name !== myName && (
               <button
                 type="button"

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { ArrowRight, ChevronDown, ChevronRight, Share2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, Check, ChevronDown, ChevronRight, FileDown, Image as ImageIcon, Link2, Loader2, Share2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import { useShare } from '@/state/ShareContext'
 import { AddButton, DelButton, TextInput } from '@/components/ui'
-import { collectLaunchTasks, preparedness, type PrepTask } from '@/lib/format'
+import { buildTimeline, collectLaunchTasks, preparedness, type PrepTask } from '@/lib/format'
+import { breakPoints, downloadPdf, downloadPng, nodeBackground } from '@/lib/exports'
 import { uid } from '@/lib/id'
 
 // Green once meaningfully on track (>70%), amber mid, red low, green reads as
@@ -15,6 +16,9 @@ const todayISO = () => {
   const n = new Date()
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
 }
+// Every group collectLaunchTasks can emit has to be listed here, or its tasks
+// render nowhere while still counting against the preparedness score. "Your
+// tasks" is the fallback group for a custom task with none set, so it goes last.
 const GROUP_ORDER = [
   'Launch readiness',
   'Sponsor commitments',
@@ -26,6 +30,7 @@ const GROUP_ORDER = [
   'Risks',
   'Resistance',
   'Impacted groups',
+  'Your tasks',
 ]
 
 /** Display labels for task groups (keys above stay stable for the data layer). */
@@ -40,15 +45,6 @@ const GROUP_LABELS: Record<string, string> = {
 }
 const labelFor = (g: string) => GROUP_LABELS[g] ?? g
 
-/** One dot on the launch timeline: a dated task, or the go-live milestone. */
-interface TimelineEntry {
-  date: string
-  label: string
-  group: string
-  owner: string
-  done: boolean
-  milestone: boolean
-}
 
 /** Live ticking countdown to the go-live date (handles today / past gracefully). */
 function GoLiveCountdown({ date }: { date: string }) {
@@ -106,6 +102,10 @@ export function DashboardStage() {
   // Explicit expand/collapse overrides per group; absent => default (completed
   // sections collapse, others stay open).
   const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({})
+  // Quick timeline export (the card is captured straight from the DOM).
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const [tlBusy, setTlBusy] = useState<null | 'image' | 'pdf'>(null)
+  const [copiedLink, setCopiedLink] = useState(false)
   if (!project) return null
 
   const prep = preparedness(project)
@@ -187,19 +187,51 @@ export function DashboardStage() {
   // Raw custom-task labels for inline editing (PrepTask.label bakes in a fallback).
   const customById = new Map(milestones.customTasks.map((c) => [c.id, c]))
 
-  // Timeline: every dated task (plus the go-live milestone) in date order,
-  // grouped by date so items sharing a day sit under one marker.
-  const timelineItems: TimelineEntry[] = [
-    ...tasks
-      .filter((t) => !!t.due)
-      .map((t) => ({ date: t.due!, label: t.label, group: labelFor(t.group), owner: t.owner ?? '', done: t.done, milestone: false })),
-    ...(goLiveDate ? [{ date: goLiveDate, label: 'Go-live', group: '', owner: '', done: false, milestone: true }] : []),
-  ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-  const timeline: { date: string; items: TimelineEntry[] }[] = []
+  // Timeline: every dated task, the go-live milestone, and the post-launch
+  // reviews, in date order, grouped by date so items sharing a day sit under one
+  // marker. Built by the same function the brief and the deck use, so what the
+  // user sees here is exactly what a recipient gets.
+  const timelineItems = buildTimeline(project).map((t) => ({ ...t, group: labelFor(t.group) }))
+  const timeline: { date: string; items: typeof timelineItems }[] = []
   for (const it of timelineItems) {
     const last = timeline[timeline.length - 1]
     if (last && last.date === it.date) last.items.push(it)
     else timeline.push({ date: it.date, items: [it] })
+  }
+
+  const fileBase = (project.name || 'launch').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'launch'
+
+  // Export just the timeline, as it appears here. Pages break between date
+  // groups, so a date's items are never split across two pages.
+  const exportTimeline = async (kind: 'image' | 'pdf') => {
+    const el = timelineRef.current
+    if (!el || tlBusy) return
+    setTlBusy(kind)
+    try {
+      const background = nodeBackground(el)
+      if (kind === 'image') await downloadPng(el, `${fileBase}-timeline.png`, background)
+      else await downloadPdf(el, `${fileBase}-timeline.pdf`, { breaks: breakPoints(el, '[data-tl-row]'), background })
+    } catch (err) {
+      console.error('[adaptus] timeline export failed', err)
+    } finally {
+      setTlBusy(null)
+    }
+  }
+
+  // The link is the project's share link: a no-login page carrying the brief,
+  // timeline included. With no link yet, open the share panel to create one.
+  const timelineLink = async () => {
+    if (!project.shareToken) {
+      openShare?.()
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/?share=${project.shareToken}`)
+      setCopiedLink(true)
+      window.setTimeout(() => setCopiedLink(false), 1800)
+    } catch {
+      openShare?.()
+    }
   }
 
   return (
@@ -316,8 +348,8 @@ export function DashboardStage() {
             .filter((t) => t.group === group)
             .map((t, i) => ({ t, i }))
             .sort((a, b) => {
-              const da = taskDueDates[a.t.key] ?? ''
-              const db = taskDueDates[b.t.key] ?? ''
+              const da = a.t.due ?? ''
+              const db = b.t.due ?? ''
               if (da && db) return da < db ? -1 : da > db ? 1 : a.i - b.i
               if (da) return -1
               if (db) return 1
@@ -380,7 +412,7 @@ export function DashboardStage() {
                           <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
                         )}
                         <TextInput
-                          value={taskOwners[t.key] ?? ''}
+                          value={t.owner ?? ''}
                           onCommit={(v) => setTaskOwner(t.key, v)}
                           placeholder="Owner"
                           style={{ width: '130px', flexShrink: 0 }}
@@ -388,7 +420,7 @@ export function DashboardStage() {
                         <input
                           type="date"
                           className="cq-input"
-                          value={taskDueDates[t.key] ?? ''}
+                          value={t.due ?? ''}
                           onChange={(e) => setTaskDue(t.key, e.target.value)}
                           aria-label="Due date"
                           style={{ width: '150px', flexShrink: 0 }}
@@ -406,9 +438,30 @@ export function DashboardStage() {
       </div>
 
       {/* Timeline: everything dated, in order */}
-      <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Timeline</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '16px' }}>Every launch item with a date, in order, plus your go-live.</div>
+      <div className="cq-card" ref={timelineRef}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Timeline</div>
+            <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '16px' }}>Every launch item with a date, in order, plus your go-live.</div>
+          </div>
+
+          {/* Quick export, so the timeline can be handed out on its own without
+              going through the full share brief. Hidden from the exports
+              themselves (data-export-hide), or the buttons end up in the image. */}
+          {timeline.length > 0 && (
+            <div data-export-hide style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <button type="button" onClick={timelineLink} className="tl-export" title="Copy a shareable link to this plan">
+                {copiedLink ? <Check size={13} /> : <Link2 size={13} />} {copiedLink ? 'Copied' : 'Link'}
+              </button>
+              <button type="button" onClick={() => exportTimeline('image')} disabled={!!tlBusy} className="tl-export">
+                {tlBusy === 'image' ? <Loader2 size={13} className="spin" /> : <ImageIcon size={13} />} Image
+              </button>
+              <button type="button" onClick={() => exportTimeline('pdf')} disabled={!!tlBusy} className="tl-export">
+                {tlBusy === 'pdf' ? <Loader2 size={13} className="spin" /> : <FileDown size={13} />} PDF
+              </button>
+            </div>
+          )}
+        </div>
         {timeline.length === 0 ? (
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.45)', fontStyle: 'italic' }}>
             No dated items yet, set due dates on your launch tasks above to build the timeline.
@@ -420,7 +473,7 @@ export function DashboardStage() {
             {timeline.map((grp) => {
               const overdue = grp.date < today
               return (
-                <div key={grp.date} style={{ position: 'relative', display: 'flex', marginBottom: '16px' }}>
+                <div key={grp.date} data-tl-row style={{ position: 'relative', display: 'flex', marginBottom: '16px' }}>
                   <div style={{ width: '56px', flexShrink: 0, textAlign: 'right', paddingTop: '2px', fontSize: '12px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>
                     {shortDate(grp.date)}
                   </div>
@@ -437,7 +490,7 @@ export function DashboardStage() {
                           )}
                         </div>
                         {it.done && <span style={{ flexShrink: 0, fontSize: '11px', color: '#86efac', fontWeight: 700 }}>✓ Done</span>}
-                        {!it.done && overdue && !it.milestone && (
+                        {!it.done && overdue && !it.milestone && !it.postLaunch && (
                           <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>
                         )}
                       </div>

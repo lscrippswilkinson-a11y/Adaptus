@@ -27,8 +27,8 @@ export function emptyProject(): Project {
       milestones: { owners: [], goLiveDate: '', launchChecklist: [], customTasks: [], checkoff: {}, taskOwners: {}, taskDueDates: {}, hiddenTasks: [] },
       adoption: { metrics: [], notes: '' },
       resistance: { items: [], generalPlan: '' },
-      executive: { generated: false, ask: '', hideBranding: false },
-      sustainment: { reinforcementOwner: '', checkpointDates: '', metrics: '', risks: '', recognitionPlan: '' },
+      executive: { generated: false, ask: '', hideBranding: false, brandLogo: '', brandLogoRatio: 1, brandColor: '' },
+      sustainment: { reinforcementOwner: '', checkpoint30: '', checkpoint60: '', checkpoint90: '', checkpointDates: '', metrics: '', risks: '', recognitionPlan: '' },
       closeout: { wins: '', lessons: '', shoutouts: '' },
     },
   }

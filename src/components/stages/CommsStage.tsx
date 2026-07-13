@@ -291,7 +291,7 @@ export function CommsStage() {
                 addCustomChannel()
               }
             }}
-            placeholder="Add a channel — e.g. Town hall, Slack, Team huddle…"
+            placeholder="Add a channel. Example: Town hall, Slack, Team huddle"
             aria-label="Add a communication channel"
             style={{ flex: 1 }}
           />

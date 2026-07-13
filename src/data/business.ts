@@ -31,6 +31,7 @@ export interface BusinessProfile {
     define: { statement: string; scope: string; headcount: string; successLooks: string; whyNow: string }
     sponsor: { name: string; role: string; commitments: string }
     comms: { keyMessages: string; schedule: Omit<CommsTouchpoint, 'id'>[] }
+    training: { title: string; audience: string; owner: string }
   }
 }
 
@@ -120,6 +121,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the spreadsheets are going away' },
         ],
       },
+      training: {
+        title: 'Hands-on session: adding your weekly update in the new tool',
+        audience: 'Everyone who updates the tracker, plus their team leads',
+        owner: 'The operations team, with each team lead running a refresher',
+      },
     },
   },
   {
@@ -164,6 +170,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'Owner / Founder Message', message: 'A thank-you, early wins, and the old till is switched off' },
         ],
       },
+      training: {
+        title: 'Hands-on shift on the new POS, before we open',
+        audience: 'All floor and counter staff, plus both shift supervisors',
+        owner: 'Sam, the owner, with the supplier’s trainer in for the first session',
+      },
     },
   },
   {
@@ -201,6 +212,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the spreadsheets are going away' },
         ],
       },
+      training: {
+        title: 'Hands-on workshop: taking an order end to end in NetSuite',
+        audience: 'The warehouse and operations crew, plus the sales desk',
+        owner: 'Our NetSuite project lead, with team leads running refreshers',
+      },
     },
   },
   {
@@ -237,6 +253,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Intranet Post', message: 'Answers to the most common questions so far' },
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'All-Hands Meeting', message: 'Early wins, and a reminder the old CRM is going away' },
         ],
+      },
+      training: {
+        title: 'Hands-on workshop: logging a deal in Salesforce',
+        audience: 'All ~600 sales and customer-success reps',
+        owner: 'Sales Enablement, with regional managers hosting refreshers',
       },
     },
   },
@@ -284,6 +305,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'Managing Partner Announcement', message: 'Early wins, and a reminder the old system is going away' },
         ],
       },
+      training: {
+        title: 'Hands-on Clio time-entry workshop',
+        audience: 'All 38 timekeepers, attorneys and paralegals',
+        owner: 'The billing manager, with IT on hand for logins',
+      },
     },
   },
   {
@@ -329,6 +355,11 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
           { phase: 'after', when: 'Week 2', audience: 'All staff', channel: 'Intranet / Portal Post', message: 'Answers to the most common questions so far' },
           { phase: 'after', when: 'Month 1', audience: 'All staff', channel: 'Provider Meeting', message: 'Early wins, and a reminder the old EHR is going away' },
         ],
+      },
+      training: {
+        title: 'At-the-elbow Epic charting lab, ahead of go-live',
+        audience: 'Providers, nurses, and medical assistants across all four sites',
+        owner: 'Our clinical informatics lead, with super-users on the floor',
       },
     },
   },

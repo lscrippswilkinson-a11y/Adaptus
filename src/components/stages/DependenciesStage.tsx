@@ -61,7 +61,7 @@ export function DependenciesStage() {
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
           <Label>What you’re waiting on</Label>
-          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="e.g., IT sets up everyone’s logins" />
+          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="Example: IT sets up everyone’s logins" />
           <div style={{ marginTop: '18px' }}>
             <GuidedLabel>What kind is it?</GuidedLabel>
             <ChipPicker value={d.type} options={DEPENDENCY_TYPES} onChange={(v) => setItem(d.id, { type: v as DependencyType })} />
@@ -82,7 +82,7 @@ export function DependenciesStage() {
           <h2 style={headline}>Who owns it?</h2>
           <div style={whyStyle}>{w.detail.why}</div>
           <Label>Owner: who’s responsible?</Label>
-          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="e.g., IT - Priya" />
+          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="Example: IT - Priya" />
         </div>
       ),
     })

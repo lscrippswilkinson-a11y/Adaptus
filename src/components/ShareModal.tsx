@@ -1,17 +1,42 @@
 import { useRef, useState } from 'react'
-import { Check, Copy, FileDown, Link2, Loader2, Presentation, Trash2 } from 'lucide-react'
+import { Check, Copy, FileDown, Image as ImageIcon, Link2, Loader2, Presentation, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
-import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+import { avgRisk, buildTimeline, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+import { bare, brandOf, shade } from '@/lib/brand'
+import { breakPoints, downloadPdf, downloadPng } from '@/lib/exports'
 import { StatusBrief } from '@/components/StatusBrief'
+import { BrandingPanel } from '@/components/BrandingPanel'
 
 /** Strip a leading '#' so hex colours suit pptxgenjs (which wants bare hex). */
 const hx = (c: string) => c.replace('#', '')
 
 // Shared deck palette (bare hex for pptxgenjs) and helpers, so the follow-on
-// slides match the summary slide and the on-screen brief.
+// slides match the summary slide and the on-screen brief. BAND and LIGHT are
+// derived per-project from the user's brand colour (see deckPalette).
 const DECK = { BG: '11141F', BAND: '2C4A5F', PANEL: '1B2130', LINE: '2A3242', MUTED: 'AEB9C4', SUB: '8593A0', LIGHT: 'B8D0DE', TEXT: 'E8EDF2' }
+
+/** The deck palette for a project: the shared dark base, re-accented in its brand colour. */
+function deckPalette(project: Project) {
+  const brand = brandOf(project)
+  return {
+    ...DECK,
+    BAND: bare(shade(brand.color, -0.35)),
+    LIGHT: bare(shade(brand.color, 0.45)),
+    BAND_FG: bare(brand.fg === '#FFFFFF' ? '#FFFFFF' : '#11141F'),
+    logo: brand.logo,
+    logoRatio: brand.logoRatio,
+  }
+}
+type Deck = ReturnType<typeof deckPalette>
+
+/** Drop the user's logo into a slide's top-right, sized to a fixed height. */
+function addLogo(slide: any, deck: Deck, y = 0.22, h = 0.46) {
+  if (!deck.logo) return
+  const w = Math.min(2.6, h * deck.logoRatio)
+  slide.addImage({ data: deck.logo, x: 13.33 - 0.5 - w, y, w, h })
+}
 // Friendlier task-group labels — mirrors StatusBrief so the deck reads the same.
 const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected', 'Sponsor commitments': 'Backer commitments' }
 const groupLabel = (g: string) => GROUP_LABELS[g] ?? g
@@ -20,11 +45,12 @@ const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateStrin
 const BODY_TOP = 1.25, BODY_BOTTOM = 7.05
 
 /** A fresh 16:9 content slide with the shared dark background + a slim title band. */
-function addContentSlide(pptx: any, title: string) {
+function addContentSlide(pptx: any, title: string, deck: Deck) {
   const slide = pptx.addSlide()
-  slide.background = { color: DECK.BG }
-  slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.9, fill: { color: DECK.BAND } })
-  slide.addText(title, { x: 0.5, y: 0.16, w: 12.3, h: 0.55, fontSize: 22, bold: true, color: 'FFFFFF', valign: 'middle' })
+  slide.background = { color: deck.BG }
+  slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 0.9, fill: { color: deck.BAND } })
+  slide.addText(title, { x: 0.5, y: 0.16, w: 12.3, h: 0.55, fontSize: 22, bold: true, color: deck.BAND_FG, valign: 'middle' })
+  addLogo(slide, deck)
   return slide
 }
 
@@ -36,7 +62,7 @@ const estLines = (text: string, charsPerLine: number) => Math.max(1, Math.ceil((
  * not a flattened image), so it drops cleanly into a leadership deck. `pptx` is
  * a live PptxGenJS instance (typed loose to keep the lib a lazy import).
  */
-function buildStatusSlide(pptx: any, project: Project) {
+function buildStatusSlide(pptx: any, project: Project, deck: Deck) {
   const sd = project.stageData
   const prep = preparedness(project)
   const pct = prep.pct
@@ -58,14 +84,16 @@ function buildStatusSlide(pptx: any, project: Project) {
   const ask = sd.executive.ask?.trim()
   const branded = !sd.executive.hideBranding
 
-  const PANEL = '1B2130', MUTED = 'AEB9C4', LIGHT = 'B8D0DE', TEXT = 'E8EDF2'
+  const PANEL = deck.PANEL, MUTED = deck.MUTED, LIGHT = deck.LIGHT, TEXT = deck.TEXT
   const slide = pptx.addSlide()
-  slide.background = { color: '11141F' }
+  slide.background = { color: deck.BG }
 
-  // Header band
-  slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 1.4, fill: { color: '2C4A5F' } })
-  if (branded) slide.addText('✦  ADAPTUS', { x: 0.5, y: 0.18, w: 4, h: 0.25, fontSize: 9, bold: true, color: 'CFE0EA', charSpacing: 2 })
-  slide.addText(project.name || 'Change project', { x: 0.5, y: 0.4, w: 9.4, h: 0.6, fontSize: 26, bold: true, color: 'FFFFFF', valign: 'middle' })
+  // Header band, in the project's brand colour when it has one.
+  slide.addShape('rect', { x: 0, y: 0, w: 13.33, h: 1.4, fill: { color: deck.BAND } })
+  // The user's own logo takes the mark; the Adaptus one shows only without it.
+  if (deck.logo) addLogo(slide, deck, 0.16, 0.5)
+  else if (branded) slide.addText('✦  ADAPTUS', { x: 0.5, y: 0.18, w: 4, h: 0.25, fontSize: 9, bold: true, color: LIGHT, charSpacing: 2 })
+  slide.addText(project.name || 'Change project', { x: 0.5, y: 0.4, w: 9.4, h: 0.6, fontSize: 26, bold: true, color: deck.BAND_FG, valign: 'middle' })
   slide.addText(`${project.type || 'Change project'}   ·   Status Brief   ·   ${longDate}`, { x: 0.5, y: 1.0, w: 9.4, h: 0.3, fontSize: 11, color: LIGHT })
   slide.addShape('roundRect', { x: 10.5, y: 0.48, w: 2.33, h: 0.52, rectRadius: 0.08, fill: { color: statusColor } })
   slide.addText(`${statusWord} · ${pct}% ready`, { x: 10.5, y: 0.48, w: 2.33, h: 0.52, fontSize: 11, bold: true, color: '11141F', align: 'center', valign: 'middle' })
@@ -125,7 +153,7 @@ function buildStatusSlide(pptx: any, project: Project) {
   const askY = colY + 1.45
   slide.addText('WHAT I NEED FROM YOU', { x: rx, y: askY, w: 5.83, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
   if (ask) {
-    slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: '5B86A3', width: 1 } })
+    slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: bare(brandOf(project).color), width: 1 } })
     slide.addText(ask, { x: rx + 0.25, y: askY + 0.55, w: 5.33, h: 1.5, fontSize: 12.5, color: TEXT, valign: 'top' })
   } else {
     slide.addText('Add a clear ask — it’s the line that gets your backer to reply.', { x: rx, y: askY + 0.42, w: 5.83, h: 0.4, fontSize: 12, italic: true, color: MUTED })
@@ -139,15 +167,15 @@ function buildStatusSlide(pptx: any, project: Project) {
  * owner/due, paginated across as many slides as needed (same source + grouping
  * as the brief, but never truncated). Adds nothing when there are no open tasks.
  */
-function buildTasksSlides(pptx: any, project: Project) {
+function buildTasksSlides(pptx: any, project: Project, deck: Deck) {
   const openTasks = collectLaunchTasks(project).filter((t) => !t.done)
   const prep = preparedness(project)
   if (prep.total === 0 || openTasks.length === 0) {
     // Match the brief's positive states rather than emitting a blank slide.
-    const slide = addContentSlide(pptx, 'What’s left before launch')
+    const slide = addContentSlide(pptx, 'What’s left before launch', deck)
     slide.addText(
       prep.total === 0 ? 'Launch tasks haven’t been mapped yet.' : `✓ All ${prep.total} tasks complete — ready to launch.`,
-      { x: 0.5, y: BODY_TOP, w: 12.3, h: 0.4, fontSize: 14, italic: prep.total === 0, bold: prep.total !== 0, color: prep.total === 0 ? DECK.MUTED : '86EFAC' },
+      { x: 0.5, y: BODY_TOP, w: 12.3, h: 0.4, fontSize: 14, italic: prep.total === 0, bold: prep.total !== 0, color: prep.total === 0 ? deck.MUTED : '86EFAC' },
     )
     return
   }
@@ -158,14 +186,14 @@ function buildTasksSlides(pptx: any, project: Project) {
     return acc
   }, [])
 
-  let slide = addContentSlide(pptx, 'What’s left before launch')
+  let slide = addContentSlide(pptx, 'What’s left before launch', deck)
   let y = BODY_TOP
-  const nextPage = () => { slide = addContentSlide(pptx, 'What’s left before launch (cont.)'); y = BODY_TOP }
+  const nextPage = () => { slide = addContentSlide(pptx, 'What’s left before launch (cont.)', deck); y = BODY_TOP }
 
   for (const { group, items } of openByGroup) {
     // Keep a group header with at least its first row; otherwise start a page.
     if (y + 0.95 > BODY_BOTTOM) nextPage()
-    slide.addText(`${groupLabel(group).toUpperCase()}   ·   ${items.length} left`, { x: 0.5, y, w: 12.3, h: 0.3, fontSize: 12, bold: true, color: DECK.LIGHT, charSpacing: 1 })
+    slide.addText(`${groupLabel(group).toUpperCase()}   ·   ${items.length} left`, { x: 0.5, y, w: 12.3, h: 0.3, fontSize: 12, bold: true, color: deck.LIGHT, charSpacing: 1 })
     y += 0.44
 
     for (const t of items) {
@@ -173,14 +201,14 @@ function buildTasksSlides(pptx: any, project: Project) {
       const rowH = 0.3 * estLines(t.label, 108) + (hasSub ? 0.26 : 0.14)
       if (y + rowH > BODY_BOTTOM) {
         nextPage()
-        slide.addText(`${groupLabel(group).toUpperCase()} (CONT.)`, { x: 0.5, y, w: 12.3, h: 0.3, fontSize: 12, bold: true, color: DECK.LIGHT, charSpacing: 1 })
+        slide.addText(`${groupLabel(group).toUpperCase()} (CONT.)`, { x: 0.5, y, w: 12.3, h: 0.3, fontSize: 12, bold: true, color: deck.LIGHT, charSpacing: 1 })
         y += 0.44
       }
-      slide.addShape('roundRect', { x: 0.55, y: y + 0.03, w: 0.17, h: 0.17, rectRadius: 0.03, fill: { color: DECK.BG }, line: { color: '6E7C8A', width: 1 } })
-      slide.addText(t.label, { x: 0.9, y: y - 0.03, w: 11.85, h: 0.3 * estLines(t.label, 108), fontSize: 12.5, color: DECK.TEXT, valign: 'top' })
+      slide.addShape('roundRect', { x: 0.55, y: y + 0.03, w: 0.17, h: 0.17, rectRadius: 0.03, fill: { color: deck.BG }, line: { color: '6E7C8A', width: 1 } })
+      slide.addText(t.label, { x: 0.9, y: y - 0.03, w: 11.85, h: 0.3 * estLines(t.label, 108), fontSize: 12.5, color: deck.TEXT, valign: 'top' })
       if (hasSub) {
         const sub = [t.owner ? `Owner: ${t.owner}` : '', t.due ? `Due ${shortDate(t.due)}` : ''].filter(Boolean).join('     ·     ')
-        slide.addText(sub, { x: 0.9, y: y + 0.3 * estLines(t.label, 108) - 0.06, w: 11.85, h: 0.24, fontSize: 10, color: DECK.SUB })
+        slide.addText(sub, { x: 0.9, y: y + 0.3 * estLines(t.label, 108) - 0.06, w: 11.85, h: 0.24, fontSize: 10, color: deck.SUB })
       }
       y += rowH
     }
@@ -193,20 +221,24 @@ function buildTasksSlides(pptx: any, project: Project) {
  * Mirrors the brief's "Coming up, by date" (open dated tasks only — no
  * milestone/done rows). Adds nothing when no open task is dated.
  */
-function buildTimelineSlide(pptx: any, project: Project) {
-  const dueByDate = collectLaunchTasks(project)
-    .filter((t) => !t.done && t.due)
-    .sort((a, b) => (a.due! < b.due! ? -1 : a.due! > b.due! ? 1 : 0))
-  if (!dueByDate.length) return
+function buildTimelineSlide(pptx: any, project: Project, deck: Deck) {
+  // The same timeline the dashboard and the brief show: dated tasks, the go-live
+  // milestone, and the reviews that come after it.
+  const timeline = buildTimeline(project)
+  if (!timeline.length) return
 
-  let slide = addContentSlide(pptx, 'Launch timeline')
+  let slide = addContentSlide(pptx, 'Launch timeline', deck)
   let y = BODY_TOP
-  for (const t of dueByDate) {
-    const label = t.label + (t.owner ? `   ·   ${t.owner}` : '')
+  for (const t of timeline) {
+    const suffix = [t.owner, t.postLaunch ? 'after launch' : ''].filter(Boolean).join('   ·   ')
+    const label = (t.milestone ? '🚀 ' : '') + t.label + (suffix ? `   ·   ${suffix}` : '')
     const rowH = 0.3 * estLines(label, 104) + 0.2
-    if (y + rowH > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Launch timeline (cont.)'); y = BODY_TOP }
-    slide.addText(shortDate(t.due!), { x: 0.5, y, w: 1.1, h: 0.3, fontSize: 12, bold: true, color: DECK.LIGHT, valign: 'top' })
-    slide.addText(label, { x: 1.7, y, w: 11.1, h: 0.3 * estLines(label, 104), fontSize: 12.5, color: DECK.TEXT, valign: 'top' })
+    if (y + rowH > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Launch timeline (cont.)', deck); y = BODY_TOP }
+    slide.addText(shortDate(t.date), { x: 0.5, y, w: 1.1, h: 0.3, fontSize: 12, bold: true, color: deck.LIGHT, valign: 'top' })
+    slide.addText(label, {
+      x: 1.7, y, w: 11.1, h: 0.3 * estLines(label, 104),
+      fontSize: 12.5, bold: t.milestone, strike: t.done, color: t.done ? deck.SUB : deck.TEXT, valign: 'top',
+    })
     y += rowH
   }
 }
@@ -215,14 +247,14 @@ function buildTimelineSlide(pptx: any, project: Project) {
  * "Adoption": each named adoption metric as a labelled progress bar, paginated.
  * Mirrors the brief's adoption snapshot. Adds nothing when no metric is named.
  */
-function buildAdoptionSlide(pptx: any, project: Project) {
+function buildAdoptionSlide(pptx: any, project: Project, deck: Deck) {
   const metrics = project.stageData.adoption.metrics.filter((m) => m.name.trim())
   if (!metrics.length) return
 
-  let slide = addContentSlide(pptx, 'Real use')
+  let slide = addContentSlide(pptx, 'Real use', deck)
   let y = BODY_TOP
   for (const m of metrics) {
-    if (y + 0.95 > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Real use (cont.)'); y = BODY_TOP }
+    if (y + 0.95 > BODY_BOTTOM) { slide = addContentSlide(pptx, 'Real use (cont.)', deck); y = BODY_TOP }
     const c = parseFloat(m.current)
     const t = parseFloat(m.target)
     const has = isFinite(c) && isFinite(t) && t !== 0
@@ -230,10 +262,10 @@ function buildAdoptionSlide(pptx: any, project: Project) {
     const bar = p2 >= 80 ? '22C55E' : p2 >= 50 ? 'F59E0B' : 'EF4444'
     const status = p2 >= 80 ? { t: 'On track', c: '86EFAC' } : p2 >= 50 ? { t: 'Behind target', c: 'FCD34D' } : { t: 'Well behind', c: 'FCA5A5' }
 
-    slide.addText(m.name, { x: 0.5, y, w: 8.8, h: 0.3, fontSize: 13, color: DECK.TEXT, valign: 'top' })
-    if (m.current) slide.addText(`${m.current}${m.unit} / ${m.target}${m.unit}`, { x: 9.4, y, w: 3.4, h: 0.3, fontSize: 13, bold: true, color: DECK.LIGHT, align: 'right', valign: 'top' })
+    slide.addText(m.name, { x: 0.5, y, w: 8.8, h: 0.3, fontSize: 13, color: deck.TEXT, valign: 'top' })
+    if (m.current) slide.addText(`${m.current}${m.unit} / ${m.target}${m.unit}`, { x: 9.4, y, w: 3.4, h: 0.3, fontSize: 13, bold: true, color: deck.LIGHT, align: 'right', valign: 'top' })
     y += 0.4
-    slide.addShape('roundRect', { x: 0.5, y, w: 12.3, h: 0.15, rectRadius: 0.04, fill: { color: DECK.LINE } })
+    slide.addShape('roundRect', { x: 0.5, y, w: 12.3, h: 0.15, rectRadius: 0.04, fill: { color: deck.LINE } })
     if (has && p2 > 0) slide.addShape('roundRect', { x: 0.5, y, w: Math.max(0.15, (12.3 * p2) / 100), h: 0.15, rectRadius: 0.04, fill: { color: bar } })
     y += 0.26
     if (has) {
@@ -255,7 +287,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
-  const [busy, setBusy] = useState<null | 'pdf' | 'pptx'>(null)
+  const [busy, setBusy] = useState<null | 'pdf' | 'pptx' | 'image'>(null)
   const briefRef = useRef<HTMLDivElement>(null)
 
   const token = project.shareToken ?? null
@@ -291,50 +323,35 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
 
   const fileBase = () =>
     (project.name || 'status-brief').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'status-brief'
-  // Rasterise the brief once; both PDF and PPTX build from this canvas.
-  const captureBrief = async () => {
-    const el = briefRef.current
-    if (!el) return null
-    const { default: html2canvas } = await import('html2canvas-pro')
-    return html2canvas(el, { scale: 2, backgroundColor: '#11141f', useCORS: true })
-  }
 
-  // Option: render the brief to a one-click PDF download.
-  const downloadPdf = async () => {
+  // Option: render the brief to a one-click PDF download. Pages break between
+  // the brief's own sections (.bs), so no section is sliced through the middle.
+  const savePdf = async () => {
     if (busy) return
     commitAsk()
     setBusy('pdf')
     try {
-      const canvas = await captureBrief()
-      if (!canvas) return
-      const { default: jsPDF } = await import('jspdf')
-      const pdf = new jsPDF({ unit: 'pt', format: 'a4' })
-      const pageW = pdf.internal.pageSize.getWidth()
-      const pageH = pdf.internal.pageSize.getHeight()
-      const imgW = pageW
-      const imgH = (canvas.height * imgW) / canvas.width
-      const imgData = canvas.toDataURL('image/png')
-      // Paint the dark page background, then lay the (possibly tall) brief
-      // across as many pages as it needs by shifting it up one page each time.
-      let heightLeft = imgH
-      let position = 0
-      const fillPage = () => {
-        pdf.setFillColor(17, 20, 31) // #11141f, matches the brief
-        pdf.rect(0, 0, pageW, pageH, 'F')
-      }
-      fillPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-      heightLeft -= pageH
-      while (heightLeft > 0) {
-        position -= pageH
-        pdf.addPage()
-        fillPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgW, imgH)
-        heightLeft -= pageH
-      }
-      pdf.save(`${fileBase()}-status-brief.pdf`)
+      const el = briefRef.current
+      if (!el) return
+      await downloadPdf(el, `${fileBase()}-status-brief.pdf`, { breaks: breakPoints(el, '.bs') })
     } catch (err) {
       console.error('[adaptus] PDF generation failed', err)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  // Option: the brief as a single PNG, for pasting into a deck, a doc or a chat.
+  const saveImage = async () => {
+    if (busy) return
+    commitAsk()
+    setBusy('image')
+    try {
+      const el = briefRef.current
+      if (!el) return
+      await downloadPng(el, `${fileBase()}-status-brief.png`)
+    } catch (err) {
+      console.error('[adaptus] image export failed', err)
     } finally {
       setBusy(null)
     }
@@ -350,11 +367,13 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
       const pptx = new PptxGenJS()
       pptx.layout = 'LAYOUT_WIDE' // 13.33 x 7.5 in (16:9)
       // A native, editable deck that carries everything the link/PDF brief show:
-      // the summary, the full open-task list, the timeline, and adoption.
-      buildStatusSlide(pptx, previewProject)
-      buildTasksSlides(pptx, previewProject)
-      buildTimelineSlide(pptx, previewProject)
-      buildAdoptionSlide(pptx, previewProject)
+      // the summary, the full open-task list, the timeline, and adoption, all in
+      // the project's own brand colour and carrying its logo.
+      const deck = deckPalette(previewProject)
+      buildStatusSlide(pptx, previewProject, deck)
+      buildTasksSlides(pptx, previewProject, deck)
+      buildTimelineSlide(pptx, previewProject, deck)
+      buildAdoptionSlide(pptx, previewProject, deck)
       await pptx.writeFile({ fileName: `${fileBase()}-status-brief.pptx` })
     } catch (err) {
       console.error('[adaptus] PPTX generation failed', err)
@@ -391,14 +410,19 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
           </div>
         ) : (
           <>
-            {/* Three ways to share, side by side, at the top. */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '22px' }}>
+            {/* Four ways to share, side by side, at the top. */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '22px' }}>
               <button type="button" onClick={shareLinkAction} className="share-option">
                 <Link2 size={20} color="#5B86A3" />
                 <span className="share-option-title">{token ? 'Copy link' : 'Shareable link'}</span>
                 <span className="share-option-sub">A no-login web link to forward.</span>
               </button>
-              <button type="button" onClick={downloadPdf} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pdf' ? 0.55 : 1 }}>
+              <button type="button" onClick={saveImage} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'image' ? 0.55 : 1 }}>
+                {busy === 'image' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <ImageIcon size={20} color="#5B86A3" />}
+                <span className="share-option-title">Image</span>
+                <span className="share-option-sub">{busy === 'image' ? 'Building your image…' : 'A PNG to paste anywhere.'}</span>
+              </button>
+              <button type="button" onClick={savePdf} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pdf' ? 0.55 : 1 }}>
                 {busy === 'pdf' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <FileDown size={20} color="#5B86A3" />}
                 <span className="share-option-title">PDF</span>
                 <span className="share-option-sub">{busy === 'pdf' ? 'Building your PDF…' : 'Download the brief as a PDF.'}</span>
@@ -416,7 +440,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               className="cq-textarea"
               rows={3}
               value={ask}
-              placeholder="The one clear ask that gets a reply, e.g., “Email all staff before launch, and join the launch meeting.”"
+              placeholder="The one clear ask that gets a reply. Example: “Email all staff before launch, and join the launch meeting.”"
               style={{ marginBottom: '20px' }}
               onChange={(e) => setAsk(e.target.value)}
               onBlur={commitAsk}
@@ -445,6 +469,9 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 </button>
               </>
             )}
+
+            {/* The user's own logo + colour, carried by every report below. */}
+            <BrandingPanel project={project} onUpdate={onUpdate} />
 
             {/* White-label toggle: make the brief look fully the user's own. */}
             <label

@@ -68,6 +68,13 @@ export function Label({ children }: { children: ReactNode }) {
   return <div className="cq-lbl">{children}</div>
 }
 
+/**
+ * Label a field's sample answer as an example. Worked examples ride in the
+ * placeholder, and a greyed-out sentence sitting in a field reads as something
+ * already filled in unless it says outright that it's an example.
+ */
+export const asExample = (text: string) => (text.trim() ? `Example: ${text.trim()}` : '')
+
 interface TextInputProps {
   value: string
   onCommit: (v: string) => void

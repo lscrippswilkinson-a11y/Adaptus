@@ -1,6 +1,6 @@
 import { useStageEditor } from '@/state/AppContext'
 import type { ResistanceItem, Severity } from '@/types'
-import { FieldCoach, InsightCallout, Label, TextArea, TextInput } from '@/components/ui'
+import { asExample, FieldCoach, InsightCallout, Label, TextArea, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { useWizardMode } from '@/state/WizardModeContext'
 import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
@@ -62,7 +62,7 @@ export function ResistanceStage() {
           <ChipPicker value={item.type} options={RESISTANCE_TYPES} onChange={(v) => setItem(item.id, { type: v })} />
           <div style={{ marginTop: '18px' }}>
             <Label>Which group is this coming from?</Label>
-            <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder="e.g., Sales Team, Middle Managers" />
+            <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder="Example: Sales Team, Middle Managers" />
           </div>
           {data.items.length > 1 && <RemoveItemButton label="Remove this item" onClick={() => delItem(item.id)} />}
         </div>
@@ -95,7 +95,7 @@ export function ResistanceStage() {
           <h2 style={headline}>How will you address it?</h2>
           <div style={whyStyle}>{w.intervention.why}</div>
           <Label>Your response: who does what, by when?</Label>
-          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="e.g., Town hall + demo, then one-on-one coaching..." />
+          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="Example: Town hall + demo, then one-on-one coaching..." />
           {mode === 'guided' && isLast && highSeverityNote && (
             <InsightCallout tone={highSeverityNote.tone} style={{ marginTop: '16px' }}>{highSeverityNote.text}</InsightCallout>
           )}
@@ -113,7 +113,7 @@ export function ResistanceStage() {
     summary: data.generalPlan || undefined,
     node: (
       <FieldCoach label={coaching.resistance.fields.generalPlan.label} why={coaching.resistance.fields.generalPlan.why}>
-        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder={coaching.resistance.fields.generalPlan.example} rows={4} />
+        <TextArea value={data.generalPlan} onCommit={(v) => update({ generalPlan: v })} placeholder={asExample(coaching.resistance.fields.generalPlan.example)} rows={4} />
       </FieldCoach>
     ),
   })

@@ -1,9 +1,10 @@
 import { Printer } from 'lucide-react'
 import { useActiveProject, useStageEditor } from '@/state/AppContext'
-import { FieldCoach, TextArea } from '@/components/ui'
+import { asExample, FieldCoach, TextArea } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { avgRisk, preparedness, riskLabel } from '@/lib/format'
+import { brandOf, brandVars } from '@/lib/brand'
 
 const longDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 const prepColor = (p: number) => (p >= 80 ? '#22c55e' : p >= 50 ? '#f59e0b' : '#ef4444')
@@ -16,6 +17,7 @@ export function ReportStage() {
   const sd = project.stageData
   const prep = preparedness(project)
   const avg = avgRisk(sd.risk.items)
+  const brand = brandOf(project)
   const metrics = sd.adoption.metrics.filter((m) => m.name)
   const onTarget = metrics.filter((m) => {
     const c = parseFloat(m.current)
@@ -38,7 +40,7 @@ export function ReportStage() {
       summary: closeout.wins,
       node: (
         <FieldCoach label={fc.wins.label} why={fc.wins.why}>
-          <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder={fc.wins.example} rows={3} />
+          <TextArea value={closeout.wins} onCommit={(v) => update({ wins: v })} placeholder={asExample(fc.wins.example)} rows={3} />
         </FieldCoach>
       ),
     },
@@ -49,7 +51,7 @@ export function ReportStage() {
       summary: closeout.lessons,
       node: (
         <FieldCoach label={fc.lessons.label} why={fc.lessons.why}>
-          <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder={fc.lessons.example} rows={3} />
+          <TextArea value={closeout.lessons} onCommit={(v) => update({ lessons: v })} placeholder={asExample(fc.lessons.example)} rows={3} />
         </FieldCoach>
       ),
     },
@@ -60,7 +62,7 @@ export function ReportStage() {
       summary: closeout.shoutouts,
       node: (
         <FieldCoach label={fc.shoutouts.label} why={fc.shoutouts.why}>
-          <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder={fc.shoutouts.example} rows={2} />
+          <TextArea value={closeout.shoutouts} onCommit={(v) => update({ shoutouts: v })} placeholder={asExample(fc.shoutouts.example)} rows={2} />
         </FieldCoach>
       ),
     },
@@ -80,9 +82,10 @@ export function ReportStage() {
 
       {/* The printable report */}
       <div className="print-area">
-        <div className="brief-wrap">
+        <div className="brief-wrap" style={brandVars(brand)}>
           <div className="brief-hdr">
             <div className="brief-badge">{prep.pct}% prepared</div>
+            {brand.logo && <img className="brief-logo" src={brand.logo} alt="" />}
             <h1>{project.name}</h1>
             <div className="bm">{project.type || 'Change project'} · Launch Success Report · {longDate(new Date())}</div>
           </div>

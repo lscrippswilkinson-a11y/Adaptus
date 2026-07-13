@@ -73,13 +73,13 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     tasks.push({ key: `cl:${item}`, label: item, group: 'Launch readiness', done: m.launchChecklist.includes(item), source: 'checklist', item }),
   )
   p.stageData.testing.items.forEach((t) =>
-    tasks.push({ key: `te:${t.id}`, label: t.name || 'Untitled test', group: 'Testing', done: t.status === 'Passed', source: 'testing', refId: t.id }),
+    tasks.push({ key: `te:${t.id}`, label: t.name || 'Untitled test', group: 'Testing', done: t.status === 'Passed', source: 'testing', refId: t.id, owner: t.owner }),
   )
   p.stageData.dependencies.items.forEach((d) =>
-    tasks.push({ key: `de:${d.id}`, label: d.name || 'Untitled dependency', group: 'Dependencies', done: d.status === 'Ready', source: 'dependencies', refId: d.id }),
+    tasks.push({ key: `de:${d.id}`, label: d.name || 'Untitled dependency', group: 'Dependencies', done: d.status === 'Ready', source: 'dependencies', refId: d.id, owner: d.owner, due: d.neededBy }),
   )
   p.stageData.training.items.forEach((t) =>
-    tasks.push({ key: `tr:${t.id}`, label: t.title || 'Untitled training', group: 'Training', done: t.done, source: 'training', refId: t.id }),
+    tasks.push({ key: `tr:${t.id}`, label: t.title || 'Untitled training', group: 'Training', done: t.done, source: 'training', refId: t.id, owner: t.owner, due: t.date }),
   )
   m.customTasks.forEach((c) =>
     tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: c.group || 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
@@ -88,8 +88,10 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   // Planning items with no completion field of their own, tracked via the
   // dashboard's checkoff map, so checking them here doesn't alter the plan.
   const ck = m.checkoff ?? {}
+  // These are the backer's own commitments, so they're owned by the backer.
+  const backer = p.stageData.sponsor.noSponsor ? '' : p.stageData.sponsor.name.trim()
   p.stageData.sponsor.sponsorActions.forEach((a) =>
-    tasks.push({ key: `sp:${a.id}`, label: a.text || 'Sponsor action', group: 'Sponsor commitments', done: a.done, source: 'sponsor', refId: a.id }),
+    tasks.push({ key: `sp:${a.id}`, label: a.text || 'Sponsor action', group: 'Sponsor commitments', done: a.done, source: 'sponsor', refId: a.id, owner: backer }),
   )
   p.stageData.stakeholders.rows.forEach((r) => {
     if (!r.name.trim()) return
@@ -115,10 +117,78 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   })
 
   // Drop tasks the user removed from the dashboard, then attach owner + due date.
+  // A task starts with whatever owner/date its planning section already carries,
+  // so the dashboard reflects what the user typed rather than asking again; an
+  // entry made on the dashboard overrides it, including one deliberately blanked.
   const hidden = new Set(m.hiddenTasks ?? [])
   const owners = m.taskOwners ?? {}
   const dues = m.taskDueDates ?? {}
-  return tasks.filter((t) => !hidden.has(t.key)).map((t) => ({ ...t, owner: owners[t.key], due: dues[t.key] }))
+  return tasks
+    .filter((t) => !hidden.has(t.key))
+    .map((t) => ({ ...t, owner: owners[t.key] ?? t.owner ?? '', due: dues[t.key] ?? t.due ?? '' }))
+}
+
+/** A dated post-launch commitment, for the tail of the launch timeline. */
+export interface PostLaunchEntry {
+  key: string
+  date: string
+  label: string
+  group: string
+}
+
+/**
+ * The dated things that happen *after* go-live: the sustainment review points
+ * and each adoption metric's next check. They belong on the timeline, so the plan
+ * doesn't look like it stops the day it ships, but deliberately NOT in
+ * collectLaunchTasks: Launch Preparedness measures readiness to launch, and
+ * folding post-launch work into it would make a ready project look unready.
+ */
+export function collectPostLaunchEntries(p: Project): PostLaunchEntry[] {
+  const s = p.stageData.sustainment
+  const entries: PostLaunchEntry[] = []
+  const reviews: [string, string][] = [
+    [s.checkpoint30, '30-day review'],
+    [s.checkpoint60, '60-day review'],
+    [s.checkpoint90, '90-day review'],
+  ]
+  reviews.forEach(([date, label], i) => {
+    if (date) entries.push({ key: `su:${i}`, date, label, group: 'Keep it going' })
+  })
+  p.stageData.adoption.metrics.forEach((m) => {
+    if (m.checkBy) entries.push({ key: `ad:${m.id}`, date: m.checkBy, label: `Measure: ${m.name.trim() || 'adoption metric'}`, group: 'Real use' })
+  })
+  return entries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+}
+
+/** One entry on the launch timeline: a dated task, the go-live, or a post-launch review. */
+export interface TimelineEntry {
+  key: string
+  date: string
+  label: string
+  group: string
+  owner: string
+  done: boolean
+  milestone: boolean
+  /** A post-launch review: context only, nothing to tick off, never "overdue". */
+  postLaunch: boolean
+}
+
+/**
+ * The whole launch timeline in date order: every dated task, the go-live
+ * milestone, and the post-launch reviews. One builder, used by the dashboard,
+ * the shared brief and the exported deck, so the timeline a recipient sees is
+ * the same one the user sees.
+ */
+export function buildTimeline(p: Project): TimelineEntry[] {
+  const goLive = p.stageData.milestones.goLiveDate || p.targetDate
+  const entries: TimelineEntry[] = [
+    ...collectLaunchTasks(p)
+      .filter((t) => !!t.due)
+      .map((t) => ({ key: t.key, date: t.due!, label: t.label, group: t.group, owner: t.owner ?? '', done: t.done, milestone: false, postLaunch: false })),
+    ...collectPostLaunchEntries(p).map((e) => ({ key: e.key, date: e.date, label: e.label, group: e.group, owner: '', done: false, milestone: false, postLaunch: true })),
+    ...(goLive ? [{ key: 'go-live', date: goLive, label: 'Go-live', group: '', owner: '', done: false, milestone: true, postLaunch: false }] : []),
+  ]
+  return entries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 }
 
 /** Launch Preparedness: share of aggregated launch tasks that are done. */

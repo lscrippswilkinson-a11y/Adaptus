@@ -1,5 +1,6 @@
 import type { Project } from '@/types'
-import { avgRisk, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+import { avgRisk, buildTimeline, collectLaunchTasks, preparedness, riskColor, riskLabel, type PrepTask } from '@/lib/format'
+import { alpha, brandOf, brandVars, shade } from '@/lib/brand'
 
 // Friendlier labels for a couple of task groups on the exec-facing brief.
 const GROUP_LABELS: Record<string, string> = { 'Launch readiness': 'Go-live checklist', 'Your tasks': 'Additional tasks', 'Stakeholders': 'Key people', 'Resistance': 'Pushback', 'Dependencies': 'Things you’re waiting on', 'Impacted groups': 'Who’s affected', 'Sponsor commitments': 'Backer commitments' }
@@ -26,6 +27,8 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
   const sd = project.stageData
   const prep = preparedness(project)
   const avg = avgRisk(sd.risk.items)
+  // The user's own logo + colour, or the Adaptus default when unbranded.
+  const brand = brandOf(project)
 
   const goLive = sd.milestones.goLiveDate
     ? new Date(sd.milestones.goLiveDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -55,24 +58,31 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
     return acc
   }, [])
 
-  // Open tasks that have a due date, in chronological order — the launch timeline.
-  const dueByDate = openTasks
-    .filter((t) => t.due)
-    .sort((a, b) => (a.due! < b.due! ? -1 : a.due! > b.due! ? 1 : 0))
+  // The full launch timeline (dated tasks + go-live + post-launch reviews), the
+  // same builder the dashboard uses.
+  const timeline = buildTimeline(project)
 
   return (
-    <div className="brief-wrap">
+    <div className="brief-wrap" style={brandVars(brand)}>
       <div
         className="brief-hdr"
-        style={{ background: 'radial-gradient(130% 150% at 88% -25%, rgba(255,255,255,0.20), rgba(255,255,255,0) 55%), linear-gradient(135deg,#6B97B4 0%,#3E6580 58%,#2C4A5F 100%)' }}
+        style={{
+          background: `radial-gradient(130% 150% at 88% -25%, ${alpha(brand.fg, 0.2)}, ${alpha(brand.fg, 0)} 55%), linear-gradient(135deg, ${shade(brand.color, 0.16)} 0%, ${shade(brand.color, -0.15)} 58%, ${shade(brand.color, -0.35)} 100%)`,
+        }}
       >
-        {branded && (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.9)', marginBottom: '14px' }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', fontSize: '12px' }}>✦</span>
-            Adaptus
-          </div>
+        {/* The user's own logo takes the header mark; the Adaptus one only shows
+            when they haven't uploaded theirs (and haven't white-labelled). */}
+        {brand.logo ? (
+          <img className="brief-logo" src={brand.logo} alt="" />
+        ) : (
+          branded && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--brand-fg, #fff)', marginBottom: '14px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '6px', background: 'var(--brand-fg-15)', border: '1px solid var(--brand-fg-25)', fontSize: '12px' }}>✦</span>
+              Adaptus
+            </div>
+          )
         )}
-        <div className="brief-badge" style={{ borderColor: 'rgba(255,255,255,0.35)' }}>
+        <div className="brief-badge">
           {statusWord(prep.pct)} · {prep.pct}% ready
         </div>
         <h1>{project.name || 'Change project'}</h1>
@@ -125,21 +135,27 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
         </div>
 
         {/* 2b: Actions with due dates, in chronological order — the launch timeline. */}
-        {dueByDate.length > 0 && (
+        {/* The launch timeline: every dated item, the go-live, and the reviews
+            that follow it. Not truncated, this is the plan the recipient is
+            being asked to act on, and it's the same timeline the dashboard shows. */}
+        {timeline.length > 0 && (
           <div className="bs">
-            <div className="bst">Coming up, by date</div>
-            {dueByDate.slice(0, 8).map((t) => (
-              <div key={t.key} className="bai">
-                <div style={{ width: '52px', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: '#B8D0DE' }}>{shortDate(t.due!)}</div>
-                <div style={{ flex: 1 }}>
-                  {t.label}
-                  {t.owner && <span style={{ color: 'rgba(255,255,255,0.5)' }}> · {t.owner}</span>}
+            <div className="bst">Timeline</div>
+            {timeline.map((t) => (
+              <div key={t.key} className="bai" style={t.milestone ? { fontWeight: 700 } : undefined}>
+                <div style={{ width: '52px', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: 'var(--brand-soft, #B8D0DE)' }}>{shortDate(t.date)}</div>
+                <div style={{ flex: 1, opacity: t.done ? 0.55 : 1 }}>
+                  {t.milestone ? '🚀 ' : ''}
+                  <span style={{ textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                  {(t.owner || t.postLaunch) && (
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      {t.owner ? ` · ${t.owner}` : ''}
+                      {t.postLaunch ? ' · after launch' : ''}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
-            {dueByDate.length > 8 && (
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', marginLeft: '24px', marginTop: '2px' }}>+{dueByDate.length - 8} more</div>
-            )}
           </div>
         )}
 

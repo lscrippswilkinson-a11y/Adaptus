@@ -67,10 +67,10 @@ export function StakeholdersStage() {
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
           <Label>Full name</Label>
-          <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder="e.g., Elena Torres" />
+          <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder="Example: Elena Torres" />
           <div style={{ marginTop: '14px' }}>
             <Label>Title / role (optional)</Label>
-            <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder="e.g., Managing Partner" />
+            <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder="Example: Managing Partner" />
           </div>
           {data.rows.length > 1 && <RemoveItemButton label="Remove this person" onClick={() => delRow(r.id)} />}
         </div>
@@ -118,7 +118,7 @@ export function StakeholdersStage() {
           <h2 style={headline}>What will you do to move {r.name.trim() || 'them'} toward Advocate?</h2>
           <div style={whyStyle}>{w.action.why}</div>
           <Label>What you’ll do</Label>
-          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="e.g., a quick one-to-one before the big meeting..." />
+          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="Example: a quick one-to-one before the big meeting..." />
           {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}
           {mode === 'guided' && isLast && coalition && <InsightCallout tone={coalition.tone} style={{ marginTop: '12px' }}>{coalition.text}</InsightCallout>}
           {isLast && <AddAnotherButton label="Add another person" onAdd={addRow} />}

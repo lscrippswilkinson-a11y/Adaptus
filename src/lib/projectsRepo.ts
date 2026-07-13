@@ -20,6 +20,23 @@ interface ProjectRow {
 /** The public-safe subset returned by the get_shared_project RPC (no owner). */
 type SharedRow = Omit<ProjectRow, 'owner_id' | 'description' | 'share_token'>
 
+/**
+ * Project fields that aren't stage slices and have no column of their own ride
+ * inside the stage_data JSONB under `__meta`. That keeps them working with no
+ * migration, and, because get_shared_project returns stage_data wholesale, they
+ * reach anonymous viewers of a shared brief for free.
+ *
+ * businessType lives here: it had no column and no mapping, so the organization
+ * type a user picked was silently dropped on every save and every project came
+ * back as the default profile after a reload.
+ */
+interface StageDataMeta {
+  businessType?: string
+}
+
+const metaOf = (stageData: unknown): StageDataMeta =>
+  ((stageData as Record<string, unknown> | null)?.__meta as StageDataMeta | undefined) ?? {}
+
 function rowToProject(r: ProjectRow | SharedRow): Project {
   // Run through migrateProject so any stageData fields added since the row was
   // written are backfilled to the current shape.
@@ -27,6 +44,7 @@ function rowToProject(r: ProjectRow | SharedRow): Project {
     id: r.id,
     name: r.name,
     type: r.type,
+    businessType: metaOf(r.stage_data).businessType ?? '',
     description: 'description' in r ? r.description : '',
     targetDate: r.target_date ?? '',
     createdAt: r.created_at,
@@ -47,7 +65,7 @@ function editableColumns(p: Project) {
     target_date: p.targetDate,
     current_stage: p.currentStage,
     completed_stages: p.completedStages,
-    stage_data: p.stageData,
+    stage_data: { ...p.stageData, __meta: { businessType: p.businessType ?? '' } satisfies StageDataMeta },
     share_token: p.shareToken ?? null,
   }
 }

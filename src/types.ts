@@ -157,6 +157,8 @@ export interface TrainingItem {
   audience: string
   format: string
   owner: string
+  /** When it runs (ISO yyyy-mm-dd). Optional: rows saved before this existed have none. */
+  date?: string
   done: boolean
 }
 export interface TrainingData {
@@ -234,6 +236,8 @@ export interface AdoptionMetric {
   target: string
   current: string
   unit: string
+  /** When you'll next measure it (ISO yyyy-mm-dd). Optional: older rows have none. */
+  checkBy?: string
 }
 export interface AdoptionData {
   metrics: AdoptionMetric[]
@@ -258,10 +262,31 @@ export interface ExecutiveData {
   ask: string
   /** White-label the shared brief: hide all "Adaptus" branding + the CTA. */
   hideBranding: boolean
+  /**
+   * The user's own branding, applied to every report they hand out. The logo is
+   * a downscaled data URL (not a file reference) so it travels inside the
+   * project JSON, reaching anonymous brief viewers and the PDF/PPT exports
+   * without a storage bucket or a fetch that could fail.
+   */
+  brandLogo: string
+  /** Logo width ÷ height, so exports can size it without re-measuring. */
+  brandLogoRatio: number
+  /** Accent colour as #RRGGBB; empty means the Adaptus default. */
+  brandColor: string
 }
 
 export interface SustainmentData {
   reinforcementOwner: string
+  /**
+   * The 30/60/90-day review dates (ISO yyyy-mm-dd), empty until set.
+   */
+  checkpoint30: string
+  checkpoint60: string
+  checkpoint90: string
+  /**
+   * Legacy free-text checkpoints, from before the pickers above existed. Kept so
+   * nothing a user typed is lost, and surfaced in the stage when it has content.
+   */
   checkpointDates: string
   metrics: string
   risks: string

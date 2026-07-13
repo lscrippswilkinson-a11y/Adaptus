@@ -130,7 +130,7 @@ export function GroupsStage() {
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
           <Label>Group name</Label>
-          <TextInput value={g.name} onCommit={(v) => setGroup(g.id, { name: v })} placeholder="e.g., Billing team" />
+          <TextInput value={g.name} onCommit={(v) => setGroup(g.id, { name: v })} placeholder="Example: Billing team" />
           {(() => {
             // Quick-add chips for common groups in this kind of organization, hiding any already used.
             const used = new Set(data.groups.map((x) => x.name.trim().toLowerCase()))
@@ -155,7 +155,7 @@ export function GroupsStage() {
           })()}
           <div style={{ marginTop: '14px' }}>
             <Label>About how many people? (optional)</Label>
-            <TextInput value={g.size} onCommit={(v) => setGroup(g.id, { size: v })} placeholder="e.g., 18" />
+            <TextInput value={g.size} onCommit={(v) => setGroup(g.id, { size: v })} placeholder="Example: 18" />
           </div>
           {data.groups.length > 1 && <RemoveItemButton label="Remove this group" onClick={() => delGroup(g.id)} />}
         </div>

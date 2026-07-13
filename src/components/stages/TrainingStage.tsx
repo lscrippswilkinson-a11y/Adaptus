@@ -1,13 +1,20 @@
 import { ChevronRight, Trash2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { TrainingItem } from '@/types'
-import { InsightCallout, Label, TextInput } from '@/components/ui'
+import { asExample, InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { useWizardMode } from '@/state/WizardModeContext'
 import { AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
 import { coaching, type Insight } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
+
+/** Screens per activity in the guided flow: title, audience, format, owner, date. */
+const STEPS_PER_ITEM = 5
+
+/** "12 Jun 2026" from an ISO yyyy-mm-dd, for reading back a chosen date. */
+export const longDate = (iso: string) =>
+  new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
 /**
  * The "training summary" hub: the home base of the guided training flow. Lists
@@ -47,8 +54,13 @@ function TrainingHub({
       {items.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {items.map((t, i) => {
-            // One line summarising the whole activity: audience, format, owner.
-            const detail = [t.audience.trim() && `For ${t.audience.trim()}`, t.format, t.owner.trim() && `led by ${t.owner.trim()}`]
+            // One line summarising the whole activity: audience, format, owner, date.
+            const detail = [
+              t.audience.trim() && `For ${t.audience.trim()}`,
+              t.format,
+              t.owner.trim() && `led by ${t.owner.trim()}`,
+              t.date && longDate(t.date),
+            ]
               .filter(Boolean)
               .join('  ·  ')
             return (
@@ -56,7 +68,7 @@ function TrainingHub({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     type="button"
-                    onClick={() => editItem(i * 4)}
+                    onClick={() => editItem(i * STEPS_PER_ITEM)}
                     style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
                   >
                     <span style={{ minWidth: 0 }}>
@@ -100,13 +112,15 @@ export function TrainingStage() {
   const { mode } = useWizardMode()
   const w = coaching.training.wizard
   const note = coaching.training.managersFirst
-  // Training-format options are tailored to the project's business type.
-  const formats = getBusinessProfile(project?.businessType).trainingFormats
+  // Format options and worked examples are tailored to the project's business type.
+  const profile = getBusinessProfile(project?.businessType)
+  const formats = profile.trainingFormats
+  const ex = profile.examples.training
 
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
-  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: formats[0], owner: '', done: false }] })
+  const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: formats[0], owner: '', date: '', done: false }] })
 
   const steps: WizardStep[] = []
 
@@ -125,7 +139,7 @@ export function TrainingStage() {
           <h2 style={headline}>{w.title.label}</h2>
           <div style={whyStyle}>{w.title.why}</div>
           <Label>Training title</Label>
-          <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder="e.g., Hands-on Clio time-entry workshop" />
+          <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder={asExample(ex.title)} />
           {data.items.length > 1 && <RemoveItemButton label="Remove this activity" onClick={() => delItem(t.id)} />}
         </div>
       ),
@@ -142,7 +156,7 @@ export function TrainingStage() {
           <h2 style={headline}>{w.audience.label}</h2>
           <div style={whyStyle}>{w.audience.why}</div>
           <Label>Audience</Label>
-          <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder="e.g., All timekeepers" />
+          <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder={asExample(ex.audience)} />
         </div>
       ),
     })
@@ -163,19 +177,42 @@ export function TrainingStage() {
       ),
     })
 
-    // Screen 4: owner. Last screen of the item → "Done" returns to the hub.
+    // Screen 4: owner
     steps.push({
       id: `${t.id}-owner`,
       title: `${what}: owner`,
       isFilled: !!t.title.trim(),
       summary: t.owner ? `led by ${t.owner}` : undefined,
-      itemLast: true,
       node: (
         <div>
           <h2 style={headline}>{w.owner.label}</h2>
           <div style={whyStyle}>{w.owner.why}</div>
           <Label>Owner</Label>
-          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Who delivers it?" />
+          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder={asExample(ex.owner)} />
+        </div>
+      ),
+    })
+
+    // Screen 5: when it runs. Last screen of the item → "Done" returns to the hub.
+    steps.push({
+      id: `${t.id}-date`,
+      title: `${what}: when`,
+      isFilled: !!t.title.trim(),
+      summary: t.date ? longDate(t.date) : undefined,
+      emptyLabel: 'No date set',
+      itemLast: true,
+      node: (
+        <div>
+          <h2 style={headline}>{w.date.label}</h2>
+          <div style={whyStyle}>{w.date.why}</div>
+          <Label>Date</Label>
+          <input
+            type="date"
+            className="cq-input"
+            value={t.date ?? ''}
+            onChange={(e) => setItem(t.id, { date: e.target.value })}
+            style={{ maxWidth: '220px' }}
+          />
         </div>
       ),
     })

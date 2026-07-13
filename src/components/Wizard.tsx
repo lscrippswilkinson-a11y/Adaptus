@@ -86,7 +86,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
           className="cq-input"
           autoFocus
           value={draft.name}
-          placeholder="e.g., Salesforce CRM Rollout Q3"
+          placeholder="Example: Salesforce CRM Rollout Q3"
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           onKeyDown={(e) => {
             if (e.key === 'Enter') create()

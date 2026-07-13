@@ -61,7 +61,7 @@ export function TestingStage() {
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
           <Label>What are you testing?</Label>
-          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="e.g., 5 real users try it on their own work" />
+          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="Example: 5 real users try it on their own work" />
           <div style={{ marginTop: '18px' }}>
             <GuidedLabel>What kind of test is it?</GuidedLabel>
             <ChipPicker value={t.type} options={TEST_TYPES} onChange={(v) => setItem(t.id, { type: v })} />
@@ -82,7 +82,7 @@ export function TestingStage() {
           <h2 style={headline}>Who runs it?</h2>
           <div style={whyStyle}>{w.owner.why}</div>
           <Label>Owner: who runs it?</Label>
-          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="e.g., IT - Sam" />
+          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Example: IT - Sam" />
         </div>
       ),
     })

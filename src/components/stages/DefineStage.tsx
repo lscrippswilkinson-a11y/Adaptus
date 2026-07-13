@@ -1,5 +1,5 @@
 import { useStageEditor } from '@/state/AppContext'
-import { FieldCoach, TextArea } from '@/components/ui'
+import { asExample, FieldCoach, TextArea } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
@@ -19,7 +19,7 @@ export function DefineStage() {
       emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach label={f.statement.label} why={f.statement.why}>
-          <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder={ex.statement} rows={3} />
+          <TextArea value={data.statement} onCommit={(v) => update({ statement: v })} placeholder={asExample(ex.statement)} rows={3} />
         </FieldCoach>
       ),
     },
@@ -31,7 +31,7 @@ export function DefineStage() {
       emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach label={f.successLooks.label} why={f.successLooks.why}>
-          <TextArea value={data.successLooks} onCommit={(v) => update({ successLooks: v })} placeholder={ex.successLooks} rows={3} />
+          <TextArea value={data.successLooks} onCommit={(v) => update({ successLooks: v })} placeholder={asExample(ex.successLooks)} rows={3} />
         </FieldCoach>
       ),
     },
@@ -43,7 +43,7 @@ export function DefineStage() {
       emptyLabel: 'Not answered yet',
       node: (
         <FieldCoach label={f.whyNow.label} why={f.whyNow.why}>
-          <TextArea value={data.whyNow} onCommit={(v) => update({ whyNow: v })} placeholder={ex.whyNow} rows={3} />
+          <TextArea value={data.whyNow} onCommit={(v) => update({ whyNow: v })} placeholder={asExample(ex.whyNow)} rows={3} />
         </FieldCoach>
       ),
     },

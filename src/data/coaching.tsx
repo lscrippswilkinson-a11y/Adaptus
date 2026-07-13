@@ -358,6 +358,10 @@ export const coaching = {
         label: 'Who runs it?',
         why: 'Give it an owner. A training with no one accountable for delivering it tends not to happen; naming the owner is what turns a good intention into a session that’s actually booked.',
       },
+      date: {
+        label: 'When does it run?',
+        why: 'Put it in the calendar. Training that stays “sometime before launch” gets squeezed out by the week it’s meant to happen in, and people arrive at go-live never having touched the thing. A date also lands this on your launch timeline, so you can see whether it leaves people enough room to practise before the change hits.',
+      },
     },
     managersFirst: {
       tone: 'info',
@@ -510,6 +514,10 @@ export const coaching = {
         label: 'What’s the target, and where are you now?',
         why: 'Set the number that means “this is working,” and record where you stand today. The gap between the two is your adoption story; watching it close (or not) tells you whether the change is actually landing.',
       },
+      checkBy: {
+        label: 'When will you next measure it?',
+        why: 'A number you only look at when someone asks isn’t really being tracked. Pick the date you’ll go and check it, and it lands on your timeline after go-live, so the plan keeps going once the change has shipped.',
+      },
     },
     fields: {
       notes: {
@@ -625,9 +633,8 @@ export const coaching = {
       } satisfies FieldCopy,
       checkpointDates: {
         label: 'When will you formally check that it’s sticking?',
-        why: 'Put real dates in the calendar now: 30, 60, and 90 days after go-live is a good rhythm. If you wait until you ‘notice a problem,’ you’ll usually notice too late. Scheduled check-ins force you to look while there’s still time to fix things.',
-        example:
-          '30-day review: June 15 · 60-day: July 15 · 90-day: Aug 15. At each one we look at who’s entering their own time and what’s still tripping people up.',
+        why: 'Put real dates in the calendar now: 30, 60, and 90 days after go-live is a good rhythm. If you wait until you ‘notice a problem,’ you’ll usually notice too late. Scheduled check-ins force you to look while there’s still time to fix things. Each date you set lands on your launch timeline, after go-live, so the plan doesn’t just stop the day it ships.',
+        example: '',
       } satisfies FieldCopy,
       metrics: {
         label: 'How will you know the change is actually sticking?',
