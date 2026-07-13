@@ -90,7 +90,7 @@ export const BUSINESS_TYPES: BusinessProfile[] = [
   {
     id: 'generic',
     name: 'Standard Template',
-    blurb: 'Not sure, or none of the below? A plan that works for any organization.',
+    blurb: 'Select Standard to dive right in, or select a tailored template for your business.',
     channels: CHANNELS,
     suggestedGroups: ['Frontline staff', 'Team leads', 'Managers', 'Admin / back office', 'Finance', 'IT'],
     sponsorActions: SPONSOR_ACTIONS,
