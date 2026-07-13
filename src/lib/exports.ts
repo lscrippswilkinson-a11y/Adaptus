@@ -51,19 +51,6 @@ function toRgb(color: string): [number, number, number] {
   return [nums[0] ?? 17, nums[1] ?? 20, nums[2] ?? 31]
 }
 
-function triggerDownload(url: string, filename: string) {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-}
-
-/** Save a rendered node as a PNG. */
-export async function downloadPng(el: HTMLElement, filename: string, background = REPORT_BG) {
-  const canvas = await captureNode(el, background)
-  triggerDownload(canvas.toDataURL('image/png'), filename)
-}
-
 /**
  * Offsets (in CSS px, relative to `el`) where a page may safely break: the
  * bottom edge of each element matching `selector`, minus any that would cut

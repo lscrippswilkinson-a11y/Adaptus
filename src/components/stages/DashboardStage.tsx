@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Check, ChevronDown, ChevronRight, FileDown, Image as ImageIcon, Link2, Loader2, Share2 } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, ChevronRight, FileDown, Link2, Loader2, Presentation, Share2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import { useShare } from '@/state/ShareContext'
 import { AddButton, DelButton, TextInput } from '@/components/ui'
 import { buildTimeline, collectLaunchTasks, preparedness, type PrepTask } from '@/lib/format'
-import { breakPoints, downloadPdf, downloadPng, nodeBackground } from '@/lib/exports'
+import { breakPoints, downloadPdf, nodeBackground } from '@/lib/exports'
+import { downloadDeck } from '@/lib/deck'
 import { uid } from '@/lib/id'
 
 // Green once meaningfully on track (>70%), amber mid, red low, green reads as
@@ -104,7 +105,7 @@ export function DashboardStage() {
   const [groupOpen, setGroupOpen] = useState<Record<string, boolean>>({})
   // Quick timeline export (the card is captured straight from the DOM).
   const timelineRef = useRef<HTMLDivElement>(null)
-  const [tlBusy, setTlBusy] = useState<null | 'image' | 'pdf'>(null)
+  const [tlBusy, setTlBusy] = useState<null | 'pptx' | 'pdf'>(null)
   const [copiedLink, setCopiedLink] = useState(false)
   if (!project) return null
 
@@ -201,16 +202,19 @@ export function DashboardStage() {
 
   const fileBase = (project.name || 'launch').replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '') || 'launch'
 
-  // Export just the timeline, as it appears here. Pages break between date
-  // groups, so a date's items are never split across two pages.
-  const exportTimeline = async (kind: 'image' | 'pdf') => {
+  // Export just the timeline. The PDF is captured from this card as it appears
+  // here (pages break between date groups, so a date's items are never split
+  // across pages); the deck is built as native, editable slides.
+  const exportTimeline = async (kind: 'pptx' | 'pdf') => {
     const el = timelineRef.current
     if (!el || tlBusy) return
     setTlBusy(kind)
     try {
-      const background = nodeBackground(el)
-      if (kind === 'image') await downloadPng(el, `${fileBase}-timeline.png`, background)
-      else await downloadPdf(el, `${fileBase}-timeline.pdf`, { breaks: breakPoints(el, '[data-tl-row]'), background })
+      if (kind === 'pptx') await downloadDeck(project, `${fileBase}-timeline.pptx`, 'timeline')
+      else {
+        const background = nodeBackground(el)
+        await downloadPdf(el, `${fileBase}-timeline.pdf`, { breaks: breakPoints(el, '[data-tl-row]'), background })
+      }
     } catch (err) {
       console.error('[adaptus] timeline export failed', err)
     } finally {
@@ -453,8 +457,8 @@ export function DashboardStage() {
               <button type="button" onClick={timelineLink} className="tl-export" title="Copy a shareable link to this plan">
                 {copiedLink ? <Check size={13} /> : <Link2 size={13} />} {copiedLink ? 'Copied' : 'Link'}
               </button>
-              <button type="button" onClick={() => exportTimeline('image')} disabled={!!tlBusy} className="tl-export">
-                {tlBusy === 'image' ? <Loader2 size={13} className="spin" /> : <ImageIcon size={13} />} Image
+              <button type="button" onClick={() => exportTimeline('pptx')} disabled={!!tlBusy} className="tl-export">
+                {tlBusy === 'pptx' ? <Loader2 size={13} className="spin" /> : <Presentation size={13} />} PowerPoint
               </button>
               <button type="button" onClick={() => exportTimeline('pdf')} disabled={!!tlBusy} className="tl-export">
                 {tlBusy === 'pdf' ? <Loader2 size={13} className="spin" /> : <FileDown size={13} />} PDF
