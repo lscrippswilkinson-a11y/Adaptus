@@ -124,7 +124,12 @@ export type CommsPhase = 'before' | 'launch' | 'after'
 export interface CommsTouchpoint {
   id: number
   phase: CommsPhase
-  /** Timing, in the user's words, e.g. "6 weeks out", "Go-live day". */
+  /**
+   * When it goes out (ISO yyyy-mm-dd, from a date picker). It's what puts the
+   * touchpoint on the launch timeline. Rows saved before this was a date, and
+   * example schedules loaded before then, may still hold a phrase like
+   * "6 weeks out"; those simply carry no date.
+   */
   when: string
   audience: string
   channel: string

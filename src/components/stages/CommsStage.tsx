@@ -220,6 +220,10 @@ export function CommsStage() {
     }
   }, [data.keyMessages, defineSeed, update])
 
+  // The example schedule is dated relative to go-live (or the target date set at
+  // project creation, which is what the countdown falls back to as well).
+  const goLiveDate = project?.stageData.milestones.goLiveDate || project?.targetDate || ''
+
   // The project's business type tailors the channel options and the example schedule.
   const profile = getBusinessProfile(project?.businessType)
   const activeChannels = profile.channels
@@ -258,7 +262,28 @@ export function CommsStage() {
   const setTouchpoint = (id: number, patch: Partial<CommsTouchpoint>) =>
     setSchedule(schedule.map((t) => (t.id === id ? { ...t, ...patch } : t)))
   const delTouchpoint = (id: number) => setSchedule(schedule.filter((t) => t.id !== id))
-  const loadExample = () => setSchedule([...schedule, ...profile.examples.comms.schedule.map((e) => ({ ...e, id: uid() }))])
+  /**
+   * The example schedule times its touchpoints in words ("6 weeks out", "Week
+   * 2"), but `when` is a date picker, so those phrases land as an unreadable,
+   * undated value: blank in the field, and invisible on the launch timeline.
+   * Turn each one into a real date, measured from go-live.
+   */
+  const exampleDate = (e: Omit<CommsTouchpoint, 'id'>): string => {
+    if (!goLiveDate) return ''
+    const n = parseInt(e.when.match(/\d+/)?.[0] ?? '', 10)
+    const count = Number.isFinite(n) ? n : 1
+    const w = e.when.toLowerCase()
+    let offset: number
+    if (e.phase === 'before') offset = w.includes('month') ? -30 * count : -7 * count
+    else if (e.phase === 'launch') offset = w.includes('week') ? 2 : 0 // "Launch week" vs "Go-live day"
+    else offset = w.includes('month') ? 30 * count : 7 * count
+    const d = new Date(goLiveDate + 'T00:00:00')
+    d.setDate(d.getDate() + offset)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
+  const loadExample = () =>
+    setSchedule([...schedule, ...profile.examples.comms.schedule.map((e) => ({ ...e, id: uid(), when: exampleDate(e) }))])
 
   const steps: WizardStep[] = [
     {

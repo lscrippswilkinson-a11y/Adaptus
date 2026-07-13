@@ -43,6 +43,9 @@ export function totalXp(projects: Project[]): number {
 
 export type TaskSource = 'checklist' | 'testing' | 'dependencies' | 'training' | 'custom' | 'checkoff' | 'sponsor'
 
+/** A yyyy-mm-dd value, as a date input produces. */
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
 /** A single launch-readiness task aggregated from across the planning sections. */
 export interface PrepTask {
   key: string
@@ -100,7 +103,15 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   })
   p.stageData.comms.schedule.forEach((c) => {
     const key = `cm:${c.id}`
-    tasks.push({ key, label: `${c.when || 'Touchpoint'}: ${c.audience || '-'}`, group: 'Communications', done: !!ck[key], source: 'checkoff' })
+    // `when` is a date picker, but older rows (and the loaded example schedule)
+    // hold a phrase like "6 weeks out". A real date becomes the task's due date,
+    // which is what puts the touchpoint on the timeline; a phrase stays in the
+    // label, where it at least still says when it's meant to happen.
+    const dated = ISO_DATE.test(c.when)
+    const label = dated
+      ? `${c.channel || 'Touchpoint'}: ${c.audience || 'All staff'}`
+      : `${c.when || 'Touchpoint'}: ${c.audience || '-'}`
+    tasks.push({ key, label, group: 'Communications', done: !!ck[key], source: 'checkoff', due: dated ? c.when : undefined })
   })
   p.stageData.risk.items.forEach((r) => {
     const key = `rk:${r.id}`
