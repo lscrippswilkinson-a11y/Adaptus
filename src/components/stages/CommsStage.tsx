@@ -200,12 +200,14 @@ export function CommsStage() {
   const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
 
   // A starting message pre-generated from the user's "Define the Change" answers.
+  // Each answer becomes its own paragraph: run together, three separate answers
+  // read as one long run-on wall of text that nobody wants to edit.
   const defineSeed = (() => {
     const parts: string[] = []
     if (define?.statement?.trim()) parts.push(define.statement.trim())
     if (define?.whyNow?.trim()) parts.push(define.whyNow.trim())
     if (define?.successLooks?.trim()) parts.push(`What good looks like: ${define.successLooks.trim()}`)
-    return parts.join(' ')
+    return parts.join('\n\n')
   })()
 
   // Default the core message to that pre-generated draft, once, if it's still empty.
@@ -253,7 +255,9 @@ export function CommsStage() {
       id: 'keyMessages',
       title: 'Core message',
       isFilled: !!data.keyMessages.trim(),
-      summary: data.keyMessages,
+      // pre-wrap so the paragraph breaks survive into the review read-back
+      // instead of collapsing back into one block.
+      summary: data.keyMessages ? <span style={{ whiteSpace: 'pre-wrap' }}>{data.keyMessages}</span> : undefined,
       node: (
         <Card>
           <Label>{coaching.comms.fields.keyMessages.label}</Label>
