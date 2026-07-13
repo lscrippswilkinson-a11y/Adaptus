@@ -4,7 +4,7 @@ import type { TrainingItem } from '@/types'
 import { asExample, InsightCallout, Label, TextInput } from '@/components/ui'
 import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { useWizardMode } from '@/state/WizardModeContext'
-import { AddItemButton, ChipPicker, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
+import { AddItemButton, GuidedLabel, RemoveItemButton, headline, whyStyle } from '@/components/guided'
 import { coaching, type Insight } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
@@ -117,6 +117,14 @@ export function TrainingStage() {
   const formats = profile.trainingFormats
   const ex = profile.examples.training
 
+  // The dropdown's options: the template's formats alphabetised, plus whatever
+  // this activity is currently set to, so a hand-typed format doesn't vanish
+  // from the list (which would leave the select showing nothing).
+  const formatOptions = (current: string) => {
+    const sorted = [...formats].sort((a, b) => a.localeCompare(b))
+    return current && !sorted.includes(current) ? [...sorted, current] : sorted
+  }
+
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
     update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
   const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
@@ -172,7 +180,29 @@ export function TrainingStage() {
           <h2 style={headline}>{w.format.label}</h2>
           <div style={whyStyle}>{w.format.why}</div>
           <GuidedLabel>Format</GuidedLabel>
-          <ChipPicker value={t.format} options={formats} onChange={(v) => setItem(t.id, { format: v })} />
+          {/* The template's formats, alphabetised. A format typed by hand stays
+              in the list (formatOptions folds it in), so the dropdown always
+              shows what's actually set. */}
+          <select
+            className="cq-select"
+            value={t.format}
+            onChange={(e) => setItem(t.id, { format: e.target.value })}
+          >
+            <option value="">Choose a format…</option>
+            {formatOptions(t.format).map((f) => (
+              <option key={f} value={f}>{f}</option>
+            ))}
+          </select>
+
+          {/* None of the presets fit every organisation, so let people name their own. */}
+          <div style={{ marginTop: '16px' }}>
+            <Label>Or enter your own</Label>
+            <TextInput
+              value={t.format}
+              onCommit={(v) => setItem(t.id, { format: v })}
+              placeholder="Example: Lunch-and-learn, buddy shadowing"
+            />
+          </div>
         </div>
       ),
     })
