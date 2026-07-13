@@ -37,7 +37,10 @@ export function SponsorStage() {
   const delAction = (id: number) => update({ sponsorActions: actions.filter((a) => a.id !== id) })
 
   // Pre-set actions become quick-add suggestions; hide ones already on the list.
-  const suggestions = profile.sponsorActions.filter((s) => !actions.some((a) => a.text === s))
+  // Alphabetical, so a long dropdown is scannable rather than arbitrary.
+  const suggestions = profile.sponsorActions
+    .filter((s) => !actions.some((a) => a.text === s))
+    .sort((a, b) => a.localeCompare(b))
 
   const f = coaching.sponsor.fields
   const noSponsor = data.noSponsor

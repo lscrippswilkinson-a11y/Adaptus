@@ -196,7 +196,9 @@ export function CommsStage() {
   const groupNames = groups.map((g) => g.name.trim()).filter(Boolean)
   // Audience dropdown options: the groups identified in "Identify Groups" first,
   // then a few common cross-cutting audiences that aren't usually listed as groups.
-  const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])]
+  const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])].sort((a, b) =>
+    a.localeCompare(b),
+  )
 
   // A starting message pre-generated from the user's "Define the Change" answers.
   // Each answer becomes its own paragraph: run together, three separate answers
@@ -223,8 +225,11 @@ export function CommsStage() {
   const activeChannels = profile.channels
   const hasManagerCascade = activeChannels.some((c) => c.name === 'Manager Cascade')
   // Only offer what isn't already on the list; and keep the "best for" guidance
-  // for the channels the user has chosen.
-  const suggestedChannels = activeChannels.filter((c) => !data.channels.includes(c.name))
+  // for the channels the user has chosen. Alphabetical, so a long dropdown is
+  // scannable rather than arbitrary.
+  const suggestedChannels = activeChannels
+    .filter((c) => !data.channels.includes(c.name))
+    .sort((a, b) => a.name.localeCompare(b.name))
   const chosenInfo = activeChannels.filter((c) => data.channels.includes(c.name))
 
   const toggleChannel = (ch: string) => {
@@ -247,7 +252,9 @@ export function CommsStage() {
   // Only offer the channels the user actually selected above, but keep a
   // since-deselected channel visible on a touchpoint that still uses it.
   const channelOptionsFor = (current: string) =>
-    current && !data.channels.includes(current) ? [current, ...data.channels] : data.channels
+    (current && !data.channels.includes(current) ? [current, ...data.channels] : data.channels)
+      .slice()
+      .sort((a, b) => a.localeCompare(b))
   const setTouchpoint = (id: number, patch: Partial<CommsTouchpoint>) =>
     setSchedule(schedule.map((t) => (t.id === id ? { ...t, ...patch } : t)))
   const delTouchpoint = (id: number) => setSchedule(schedule.filter((t) => t.id !== id))
