@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
 import type { CommsPhase, CommsTouchpoint } from '@/types'
 import { AddButton, Card, DelButton, InsightCallout, Label, Select, TextArea, TextInput } from '@/components/ui'
@@ -223,6 +222,10 @@ export function CommsStage() {
   const profile = getBusinessProfile(project?.businessType)
   const activeChannels = profile.channels
   const hasManagerCascade = activeChannels.some((c) => c.name === 'Manager Cascade')
+  // Only offer what isn't already on the list; and keep the "best for" guidance
+  // for the channels the user has chosen.
+  const suggestedChannels = activeChannels.filter((c) => !data.channels.includes(c.name))
+  const chosenInfo = activeChannels.filter((c) => data.channels.includes(c.name))
 
   const toggleChannel = (ch: string) => {
     const cur = new Set(data.channels)
@@ -351,64 +354,36 @@ export function CommsStage() {
           </div>
         )}
 
-        {/* The preset list is now optional inspiration, not the only way in. */}
-        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '3px' }}>
-          Common channels — tap to add
-        </div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', lineHeight: 1.5, marginBottom: '12px' }}>
-          Just ideas to get you started, each plays to a different strength.
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          {activeChannels.map((ch) => {
-            const sel = data.channels.includes(ch.name)
-            return (
-              <button
-                key={ch.name}
-                type="button"
-                onClick={() => toggleChannel(ch.name)}
-                aria-pressed={sel}
-                style={{
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                  textAlign: 'left',
-                  width: '100%',
-                  background: sel ? 'rgba(91,134,163,0.12)' : 'rgba(var(--fg),0.02)',
-                  border: `1.5px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.1)'}`,
-                  borderRadius: '12px',
-                  padding: '14px 16px',
-                  paddingRight: '40px',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                <span
-                  aria-hidden
-                  style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    width: '20px',
-                    height: '20px',
-                    borderRadius: '50%',
-                    border: `2px solid ${sel ? '#5B86A3' : 'rgba(var(--fg),0.22)'}`,
-                    background: sel ? '#5B86A3' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {sel && <Check size={12} strokeWidth={3} color="var(--on-accent)" />}
-                </span>
-                <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{ch.name}</span>
-                <span style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.72)', lineHeight: 1.5 }}>
-                  <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>Best for:</span> {ch.best}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        {/* The preset list for this business type, as an add-one dropdown. Picking
+            a channel adds it to the chips above and the select resets, so it
+            always reads as an "add" control rather than a field holding a value.
+            Already-chosen channels drop out of the list. */}
+        {suggestedChannels.length > 0 && (
+          <select
+            className="cq-select"
+            value=""
+            onChange={(e) => {
+              if (e.target.value) toggleChannel(e.target.value)
+            }}
+          >
+            <option value="">Add a common channel…</option>
+            {suggestedChannels.map((ch) => (
+              <option key={ch.name} value={ch.name}>{ch.name}</option>
+            ))}
+          </select>
+        )}
+        {/* The channel cards carried a "best for" line each; keep that coaching
+            for whatever the user has actually picked, now that the cards are gone. */}
+        {chosenInfo.length > 0 && (
+          <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
+            {chosenInfo.map((ch) => (
+              <div key={ch.name} style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.65)', lineHeight: 1.5 }}>
+                <span style={{ fontWeight: 700, color: 'var(--text)' }}>{ch.name}:</span>{' '}
+                <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>best for</span> {ch.best}
+              </div>
+            ))}
+          </div>
+        )}
         {hasManagerCascade && !data.channels.includes('Manager Cascade') && (
           <InsightCallout tone={coaching.comms.managerCascade.tone} style={{ marginTop: '12px' }}>
             {coaching.comms.managerCascade.text}
