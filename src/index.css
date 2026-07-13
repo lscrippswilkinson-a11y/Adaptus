@@ -468,22 +468,21 @@ option {
 .bs:last-child {
   margin-bottom: 0;
 }
+/* The rule line beside a section header used to be a flex-stretched ::after.
+   html2canvas is unreliable with pseudo-elements inside a flex container, and
+   it was laying that line out first, pushing every header's text to the right
+   in the PDF and the deck. A border under the header draws the same rule with
+   no pseudo-element, so the exports match the screen. */
 .bst {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--brand-soft, #5B86A3);
+  text-align: left;
+  padding-bottom: 7px;
   margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.bst::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--brand-line, rgba(91, 134, 163, 0.2));
+  border-bottom: 1px solid var(--brand-line, rgba(91, 134, 163, 0.2));
 }
 .bsg {
   display: grid;
