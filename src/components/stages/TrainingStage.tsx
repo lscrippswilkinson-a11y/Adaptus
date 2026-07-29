@@ -8,13 +8,14 @@ import { AddItemButton, GuidedLabel, RemoveItemButton, headline, whyStyle } from
 import { coaching, type Insight } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
+import { getLang, htmlLang, t, tp } from '@/i18n'
 
 /** Screens per activity in the guided flow: title, audience, format, owner, date. */
 const STEPS_PER_ITEM = 5
 
 /** "12 Jun 2026" from an ISO yyyy-mm-dd, for reading back a chosen date. */
 export const longDate = (iso: string) =>
-  new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  new Date(iso + 'T00:00:00').toLocaleDateString(htmlLang(getLang()), { month: 'short', day: 'numeric', year: 'numeric' })
 
 /**
  * The "training summary" hub: the home base of the guided training flow. Lists
@@ -41,11 +42,11 @@ function TrainingHub({
   return (
     <div>
       <h2 style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 800, color: 'var(--text)' }}>
-        {items.length ? 'Your training activities' : 'Add your first activity'}
+        {items.length ? t('Your training activities') : t('Add your first activity')}
       </h2>
       <p style={{ margin: '0 0 18px', fontSize: '14px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
         {items.length
-          ? 'These are the training activities for this change. Tap one to edit it, add another below, or mark this step complete to continue.'
+          ? t('These are the training activities for this change. Tap one to edit it, add another below, or mark this step complete to continue.')
           : coaching.training.wizard.title.why}
       </p>
 
@@ -53,18 +54,18 @@ function TrainingHub({
 
       {items.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {items.map((t, i) => {
+          {items.map((row, i) => {
             // One line summarising the whole activity: audience, format, owner, date.
             const detail = [
-              t.audience.trim() && `For ${t.audience.trim()}`,
-              t.format,
-              t.owner.trim() && `led by ${t.owner.trim()}`,
-              t.date && longDate(t.date),
+              row.audience.trim() && tp('For {audience}', { audience: row.audience.trim() }),
+              row.format && t(row.format),
+              row.owner.trim() && tp('led by {owner}', { owner: row.owner.trim() }),
+              row.date && longDate(row.date),
             ]
               .filter(Boolean)
               .join('  ·  ')
             return (
-              <div key={t.id} style={{ border: '1px solid rgba(var(--fg),0.1)', borderRadius: '14px', padding: '14px 16px', background: 'rgba(var(--fg),0.02)' }}>
+              <div key={row.id} style={{ border: '1px solid rgba(var(--fg),0.1)', borderRadius: '14px', padding: '14px 16px', background: 'rgba(var(--fg),0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <button
                     type="button"
@@ -73,21 +74,21 @@ function TrainingHub({
                   >
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
-                        {t.title.trim() || `Activity ${i + 1}`}
+                        {row.title.trim() || tp('Activity {n}', { n: i + 1 })}
                       </span>
                       {detail && (
                         <span style={{ display: 'block', fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '3px' }}>{detail}</span>
                       )}
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
-                      Edit <ChevronRight size={14} />
+                      {t('Edit')} <ChevronRight size={14} />
                     </span>
                   </button>
                   {items.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => onRemove(t.id)}
-                      aria-label="Remove training activity"
+                      onClick={() => onRemove(row.id)}
+                      aria-label={t('Remove training activity')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.35)', padding: '2px', flexShrink: 0, display: 'inline-flex' }}
                     >
                       <Trash2 size={15} />
@@ -101,7 +102,7 @@ function TrainingHub({
       )}
 
       <div style={{ marginTop: items.length ? '16px' : 0 }}>
-        <AddItemButton label={items.length ? 'Add another training activity' : 'Add your first training activity'} onClick={onAdd} />
+        <AddItemButton label={items.length ? t('Add another training activity') : t('Add your first training activity')} onClick={onAdd} />
       </div>
     </div>
   )
@@ -126,81 +127,81 @@ export function TrainingStage() {
   }
 
   const setItem = (id: number, patch: Partial<TrainingItem>) =>
-    update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
-  const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
+    update({ items: data.items.map((row) => (row.id === id ? { ...row, ...patch } : row)) })
+  const delItem = (id: number) => update({ items: data.items.filter((row) => row.id !== id) })
   const addItem = () => update({ items: [...data.items, { id: uid(), title: '', audience: '', format: formats[0], owner: '', date: '', done: false }] })
 
   const steps: WizardStep[] = []
 
-  data.items.forEach((t, i) => {
-    const what = t.title.trim() || `Activity ${i + 1}`
+  data.items.forEach((row, i) => {
+    const what = row.title.trim() || tp('Activity {n}', { n: i + 1 })
 
     // Screen 1: title. First screen of the item → Back returns to the hub.
     steps.push({
-      id: `${t.id}-title`,
-      title: `${what}: what`,
-      isFilled: !!t.title.trim(),
-      summary: t.title || undefined,
+      id: `${row.id}-title`,
+      title: tp('{activity}: what', { activity: what }),
+      isFilled: !!row.title.trim(),
+      summary: row.title || undefined,
       itemFirst: true,
       node: (
         <div>
           <h2 style={headline}>{w.title.label}</h2>
           <div style={whyStyle}>{w.title.why}</div>
-          <Label>Training title</Label>
-          <TextInput value={t.title} onCommit={(v) => setItem(t.id, { title: v })} placeholder={asExample(ex.title)} />
-          {data.items.length > 1 && <RemoveItemButton label="Remove this activity" onClick={() => delItem(t.id)} />}
+          <Label>{t('Training title')}</Label>
+          <TextInput value={row.title} onCommit={(v) => setItem(row.id, { title: v })} placeholder={asExample(t(ex.title))} />
+          {data.items.length > 1 && <RemoveItemButton label={t('Remove this activity')} onClick={() => delItem(row.id)} />}
         </div>
       ),
     })
 
     // Screen 2: audience
     steps.push({
-      id: `${t.id}-audience`,
-      title: `${what}: audience`,
-      isFilled: !!t.title.trim(),
-      summary: t.audience || undefined,
+      id: `${row.id}-audience`,
+      title: tp('{activity}: audience', { activity: what }),
+      isFilled: !!row.title.trim(),
+      summary: row.audience || undefined,
       node: (
         <div>
           <h2 style={headline}>{w.audience.label}</h2>
           <div style={whyStyle}>{w.audience.why}</div>
-          <Label>Audience</Label>
-          <TextInput value={t.audience} onCommit={(v) => setItem(t.id, { audience: v })} placeholder={asExample(ex.audience)} />
+          <Label>{t('Audience')}</Label>
+          <TextInput value={row.audience} onCommit={(v) => setItem(row.id, { audience: v })} placeholder={asExample(t(ex.audience))} />
         </div>
       ),
     })
 
     // Screen 3: format
     steps.push({
-      id: `${t.id}-format`,
-      title: `${what}: format`,
-      isFilled: !!t.title.trim(),
-      summary: t.format || undefined,
+      id: `${row.id}-format`,
+      title: tp('{activity}: format', { activity: what }),
+      isFilled: !!row.title.trim(),
+      summary: row.format ? t(row.format) : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.format.label}</h2>
           <div style={whyStyle}>{w.format.why}</div>
-          <GuidedLabel>Format</GuidedLabel>
+          <GuidedLabel>{t('Format')}</GuidedLabel>
           {/* The template's formats, alphabetised. A format typed by hand stays
               in the list (formatOptions folds it in), so the dropdown always
               shows what's actually set. */}
           <select
             className="cq-select"
-            value={t.format}
-            onChange={(e) => setItem(t.id, { format: e.target.value })}
+            value={row.format}
+            onChange={(e) => setItem(row.id, { format: e.target.value })}
           >
-            <option value="">Choose a format…</option>
-            {formatOptions(t.format).map((f) => (
-              <option key={f} value={f}>{f}</option>
+            <option value="">{t('Choose a format…')}</option>
+            {formatOptions(row.format).map((f) => (
+              <option key={f} value={f}>{t(f)}</option>
             ))}
           </select>
 
           {/* None of the presets fit every organisation, so let people name their own. */}
           <div style={{ marginTop: '16px' }}>
-            <Label>Or enter your own</Label>
+            <Label>{t('Or enter your own')}</Label>
             <TextInput
-              value={t.format}
-              onCommit={(v) => setItem(t.id, { format: v })}
-              placeholder="Example: Lunch-and-learn, buddy shadowing"
+              value={row.format}
+              onCommit={(v) => setItem(row.id, { format: v })}
+              placeholder={t('Example: Lunch-and-learn, buddy shadowing')}
             />
           </div>
         </div>
@@ -209,38 +210,38 @@ export function TrainingStage() {
 
     // Screen 4: owner
     steps.push({
-      id: `${t.id}-owner`,
-      title: `${what}: owner`,
-      isFilled: !!t.title.trim(),
-      summary: t.owner ? `led by ${t.owner}` : undefined,
+      id: `${row.id}-owner`,
+      title: tp('{activity}: owner', { activity: what }),
+      isFilled: !!row.title.trim(),
+      summary: row.owner ? tp('led by {owner}', { owner: row.owner }) : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.owner.label}</h2>
           <div style={whyStyle}>{w.owner.why}</div>
-          <Label>Owner</Label>
-          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder={asExample(ex.owner)} />
+          <Label>{t('Owner')}</Label>
+          <TextInput value={row.owner} onCommit={(v) => setItem(row.id, { owner: v })} placeholder={asExample(t(ex.owner))} />
         </div>
       ),
     })
 
     // Screen 5: when it runs. Last screen of the item → "Done" returns to the hub.
     steps.push({
-      id: `${t.id}-date`,
-      title: `${what}: when`,
-      isFilled: !!t.title.trim(),
-      summary: t.date ? longDate(t.date) : undefined,
-      emptyLabel: 'No date set',
+      id: `${row.id}-date`,
+      title: tp('{activity}: when', { activity: what }),
+      isFilled: !!row.title.trim(),
+      summary: row.date ? longDate(row.date) : undefined,
+      emptyLabel: t('No date set'),
       itemLast: true,
       node: (
         <div>
           <h2 style={headline}>{w.date.label}</h2>
           <div style={whyStyle}>{w.date.why}</div>
-          <Label>Date</Label>
+          <Label>{t('Date')}</Label>
           <input
             type="date"
             className="cq-input"
-            value={t.date ?? ''}
-            onChange={(e) => setItem(t.id, { date: e.target.value })}
+            value={row.date ?? ''}
+            onChange={(e) => setItem(row.id, { date: e.target.value })}
             style={{ maxWidth: '220px' }}
           />
         </div>

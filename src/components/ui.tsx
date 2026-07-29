@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react'
 import { Plus, X } from 'lucide-react'
+import { t, tp } from '@/i18n'
 
 /**
  * Lets an ancestor switch FieldCoach into a larger "hero" presentation, used by
@@ -73,7 +74,7 @@ export function Label({ children }: { children: ReactNode }) {
  * placeholder, and a greyed-out sentence sitting in a field reads as something
  * already filled in unless it says outright that it's an example.
  */
-export const asExample = (text: string) => (text.trim() ? `Example: ${text.trim()}` : '')
+export const asExample = (text: string) => (text.trim() ? tp('Example: {text}', { text: text.trim() }) : '')
 
 interface TextInputProps {
   value: string
@@ -152,9 +153,11 @@ export function Select({ value, options, onChange, style, placeholder }: SelectP
           {placeholder}
         </option>
       )}
+      {/* Values stay canonical English (that's what gets persisted); only the
+          text the user reads is translated. */}
       {options.map((o) => (
         <option key={o} value={o}>
-          {o}
+          {t(o)}
         </option>
       ))}
     </select>
@@ -178,7 +181,7 @@ export function AddButton({ label, onClick, style }: { label: string; onClick: (
 
 export function DelButton({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" className="cq-btn-del" onClick={onClick} aria-label="Delete" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+    <button type="button" className="cq-btn-del" onClick={onClick} aria-label={t('Delete')} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
       <X size={16} />
     </button>
   )

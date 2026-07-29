@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import type { CSSProperties } from 'react'
 import type { Project } from '@/types'
 
@@ -118,10 +119,10 @@ export const bare = (hex: string) => hex.replace('#', '').toUpperCase()
 export function downscaleLogo(file: File, maxEdge = 480): Promise<{ dataUrl: string; ratio: number }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onerror = () => reject(new Error('Could not read that file.'))
+    reader.onerror = () => reject(new Error(t('Could not read that file.')))
     reader.onload = () => {
       const img = new Image()
-      img.onerror = () => reject(new Error('That file isn’t an image we can read.'))
+      img.onerror = () => reject(new Error(t('That file isn’t an image we can read.')))
       img.onload = () => {
         const scale = Math.min(1, maxEdge / Math.max(img.width, img.height))
         const w = Math.max(1, Math.round(img.width * scale))
@@ -130,7 +131,7 @@ export function downscaleLogo(file: File, maxEdge = 480): Promise<{ dataUrl: str
         canvas.width = w
         canvas.height = h
         const ctx = canvas.getContext('2d')
-        if (!ctx) return reject(new Error('Could not process that image.'))
+        if (!ctx) return reject(new Error(t('Could not process that image.')))
         ctx.drawImage(img, 0, 0, w, h)
         const png = file.type === 'image/png'
         resolve({

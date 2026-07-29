@@ -6,6 +6,7 @@ import { useWizardMode } from '@/state/WizardModeContext'
 import { AddAnotherButton, AddItemButton, LevelPicker, RemoveItemButton, headline, whyStyle, type LevelOption } from '@/components/guided'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const INFLUENCE_LEVELS: LevelOption<Influence>[] = [
   { value: 'High', label: 'High influence', desc: 'Can approve, block, or mobilize others; when they speak, people listen.' },
@@ -37,20 +38,20 @@ export function StakeholdersStage() {
   if (data.rows.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first key person',
+      title: t('Add your first key person'),
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <AddItemButton label="Add your first key person" onClick={addRow} />
+          <AddItemButton label={t('Add your first key person')} onClick={addRow} />
         </div>
       ),
     })
   }
 
   data.rows.forEach((r, i) => {
-    const who = r.name.trim() || `Person ${i + 1}`
+    const who = r.name.trim() || tp('Person {n}', { n: i + 1 })
     const isLast = i === data.rows.length - 1
     const influenceLabel = INFLUENCE_LEVELS.find((o) => o.value === r.influence)?.label ?? r.influence
     const supportLabel = SUPPORT_LEVELS.find((o) => o.value === r.support)?.label ?? r.support
@@ -59,20 +60,20 @@ export function StakeholdersStage() {
     // Screen 1: name & role
     steps.push({
       id: `${r.id}-name`,
-      title: `${who}: name & role`,
+      title: tp('{person}: name & role', { person: who }),
       isFilled: !!r.name.trim(),
       summary: r.name ? (r.role ? `${r.name}, ${r.role}` : r.name) : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <Label>Full name</Label>
-          <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder="Example: Elena Torres" />
+          <Label>{t('Full name')}</Label>
+          <TextInput value={r.name} onCommit={(v) => setRow(r.id, { name: v })} placeholder={t('Example: Elena Torres')} />
           <div style={{ marginTop: '14px' }}>
-            <Label>Title / role (optional)</Label>
-            <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder="Example: Managing Partner" />
+            <Label>{t('Title / role (optional)')}</Label>
+            <TextInput value={r.role} onCommit={(v) => setRow(r.id, { role: v })} placeholder={t('Example: Managing Partner')} />
           </div>
-          {data.rows.length > 1 && <RemoveItemButton label="Remove this person" onClick={() => delRow(r.id)} />}
+          {data.rows.length > 1 && <RemoveItemButton label={t('Remove this person')} onClick={() => delRow(r.id)} />}
         </div>
       ),
     })
@@ -80,12 +81,12 @@ export function StakeholdersStage() {
     // Screen 2: influence
     steps.push({
       id: `${r.id}-influence`,
-      title: `${who}: influence`,
+      title: tp('{person}: influence', { person: who }),
       isFilled: !!r.name.trim(),
-      summary: influenceLabel,
+      summary: t(influenceLabel),
       node: (
         <div>
-          <h2 style={headline}>How much sway does {r.name.trim() || 'this person'} have?</h2>
+          <h2 style={headline}>{tp('How much sway does {person} have?', { person: r.name.trim() || t('this person') })}</h2>
           <div style={whyStyle}>{w.influence.why}</div>
           <LevelPicker value={r.influence} options={INFLUENCE_LEVELS} onChange={(v) => setRow(r.id, { influence: v })} />
         </div>
@@ -95,12 +96,12 @@ export function StakeholdersStage() {
     // Screen 3: current support
     steps.push({
       id: `${r.id}-support`,
-      title: `${who}: support`,
+      title: tp('{person}: support', { person: who }),
       isFilled: !!r.name.trim(),
-      summary: supportLabel,
+      summary: t(supportLabel),
       node: (
         <div>
-          <h2 style={headline}>Where does {r.name.trim() || 'this person'} stand on the change today?</h2>
+          <h2 style={headline}>{tp('Where does {person} stand on the change today?', { person: r.name.trim() || t('this person') })}</h2>
           <div style={whyStyle}>{w.support.why}</div>
           <LevelPicker value={r.support} options={SUPPORT_LEVELS} onChange={(v) => setRow(r.id, { support: v })} />
         </div>
@@ -110,18 +111,18 @@ export function StakeholdersStage() {
     // Screen 4: engagement action (+ live insight, coalition tally on the last)
     steps.push({
       id: `${r.id}-action`,
-      title: `${who}: your next move`,
+      title: tp('{person}: your next move', { person: who }),
       isFilled: !!r.action.trim(),
       summary: r.action || undefined,
       node: (
         <div>
-          <h2 style={headline}>What will you do to move {r.name.trim() || 'them'} toward Advocate?</h2>
+          <h2 style={headline}>{tp('What will you do to move {person} toward Advocate?', { person: r.name.trim() || t('them') })}</h2>
           <div style={whyStyle}>{w.action.why}</div>
-          <Label>What you’ll do</Label>
-          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder="Example: a quick one-to-one before the big meeting..." />
+          <Label>{t('What you’ll do')}</Label>
+          <TextInput value={r.action} onCommit={(v) => setRow(r.id, { action: v })} placeholder={t('Example: a quick one-to-one before the big meeting...')} />
           {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}
           {mode === 'guided' && isLast && coalition && <InsightCallout tone={coalition.tone} style={{ marginTop: '12px' }}>{coalition.text}</InsightCallout>}
-          {isLast && <AddAnotherButton label="Add another person" onAdd={addRow} />}
+          {isLast && <AddAnotherButton label={t('Add another person')} onAdd={addRow} />}
         </div>
       ),
     })

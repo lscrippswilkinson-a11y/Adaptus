@@ -7,6 +7,7 @@ import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, 
 import { RESISTANCE_TYPES } from '@/data/constants'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const SEVERITY_LEVELS: LevelOption<Severity>[] = [
   { value: 'High', label: 'High', desc: 'Could stall or sink the rollout if ignored, needs a real, specific response.' },
@@ -32,39 +33,39 @@ export function ResistanceStage() {
   if (data.items.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first source',
+      title: t('Add your first source'),
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.source.label}</h2>
           <div style={whyStyle}>{w.source.why}</div>
-          <AddItemButton label="Add your first source of pushback" onClick={addItem} />
+          <AddItemButton label={t('Add your first source of pushback')} onClick={addItem} />
         </div>
       ),
     })
   }
 
   data.items.forEach((item, i) => {
-    const who = item.group.trim() || item.type
+    const who = item.group.trim() || t(item.type)
     const isLast = i === data.items.length - 1
 
     // Screen 1: type + affected group
     steps.push({
       id: `${item.id}-source`,
-      title: `${who}: source`,
+      title: tp('{source}: source', { source: who }),
       isFilled: !!item.group.trim(),
-      summary: `${item.type}${item.group ? `, ${item.group}` : ''}`,
+      summary: item.group ? `${t(item.type)}, ${item.group}` : t(item.type),
       node: (
         <div>
           <h2 style={headline}>{w.source.label}</h2>
           <div style={whyStyle}>{w.source.why}</div>
-          <GuidedLabel>What’s the likely reason?</GuidedLabel>
+          <GuidedLabel>{t('What’s the likely reason?')}</GuidedLabel>
           <ChipPicker value={item.type} options={RESISTANCE_TYPES} onChange={(v) => setItem(item.id, { type: v })} />
           <div style={{ marginTop: '18px' }}>
-            <Label>Which group is this coming from?</Label>
-            <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder="Example: Sales Team, Middle Managers" />
+            <Label>{t('Which group is this coming from?')}</Label>
+            <TextInput value={item.group} onCommit={(v) => setItem(item.id, { group: v })} placeholder={t('Example: Sales Team, Middle Managers')} />
           </div>
-          {data.items.length > 1 && <RemoveItemButton label="Remove this item" onClick={() => delItem(item.id)} />}
+          {data.items.length > 1 && <RemoveItemButton label={t('Remove this item')} onClick={() => delItem(item.id)} />}
         </div>
       ),
     })
@@ -72,12 +73,12 @@ export function ResistanceStage() {
     // Screen 2: severity
     steps.push({
       id: `${item.id}-severity`,
-      title: `${who}: severity`,
+      title: tp('{source}: severity', { source: who }),
       isFilled: !!item.group.trim(),
-      summary: `${item.severity} severity`,
+      summary: tp('{level} severity', { level: t(item.severity) }),
       node: (
         <div>
-          <h2 style={headline}>How serious is this pushback?</h2>
+          <h2 style={headline}>{t('How serious is this pushback?')}</h2>
           <div style={whyStyle}>{w.severity.why}</div>
           <LevelPicker value={item.severity} options={SEVERITY_LEVELS} onChange={(v) => setItem(item.id, { severity: v })} />
         </div>
@@ -87,19 +88,19 @@ export function ResistanceStage() {
     // Screen 3: intervention (+ high-severity note on the last)
     steps.push({
       id: `${item.id}-intervention`,
-      title: `${who}: your response`,
+      title: tp('{source}: your response', { source: who }),
       isFilled: !!item.intervention.trim(),
       summary: item.intervention || undefined,
       node: (
         <div>
-          <h2 style={headline}>How will you address it?</h2>
+          <h2 style={headline}>{t('How will you address it?')}</h2>
           <div style={whyStyle}>{w.intervention.why}</div>
-          <Label>Your response: who does what, by when?</Label>
-          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder="Example: Town hall + demo, then one-on-one coaching..." />
+          <Label>{t('Your response: who does what, by when?')}</Label>
+          <TextInput value={item.intervention} onCommit={(v) => setItem(item.id, { intervention: v })} placeholder={t('Example: Town hall + demo, then one-on-one coaching...')} />
           {mode === 'guided' && isLast && highSeverityNote && (
             <InsightCallout tone={highSeverityNote.tone} style={{ marginTop: '16px' }}>{highSeverityNote.text}</InsightCallout>
           )}
-          {isLast && <AddAnotherButton label="Add another source of pushback" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label={t('Add another source of pushback')} onAdd={addItem} />}
         </div>
       ),
     })
@@ -108,7 +109,7 @@ export function ResistanceStage() {
   // Final step: the general (ongoing) resistance plan, independent of the items.
   steps.push({
     id: 'generalPlan',
-    title: 'Ongoing plan',
+    title: t('Ongoing plan'),
     isFilled: !!data.generalPlan.trim(),
     summary: data.generalPlan || undefined,
     node: (

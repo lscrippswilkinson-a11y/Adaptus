@@ -7,6 +7,7 @@ import { breakPoints, downloadPdf } from '@/lib/exports'
 import { downloadDeck } from '@/lib/deck'
 import { StatusBrief } from '@/components/StatusBrief'
 import { BrandingPanel } from '@/components/BrandingPanel'
+import { t } from '@/i18n'
 
 /** The width the brief is laid out and exported at: 8.5in of letter paper at 96dpi. */
 const EXPORT_W = 816
@@ -129,15 +130,15 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
         style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '32px 36px', width: '560px', maxWidth: '92vw' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>Share</div>
-        <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Status brief for leadership</h2>
+        <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>{t('Share')}</div>
+        <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>{t('Status brief for leadership')}</h2>
         <p style={{ margin: '0 0 22px', fontSize: '13px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
-          A read-only, one-glance summary anyone can open, no login. Forward it to your senior backer or leadership.
+          {t('A read-only, one-glance summary anyone can open, no login. Forward it to your senior backer or leadership.')}
         </p>
 
         {!hasSupabase ? (
           <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '10px', padding: '14px 16px', fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>
-            Sharing needs the cloud. It’ll work on the deployed site once Supabase is configured.
+            {t('Sharing needs the cloud. It’ll work on the deployed site once Supabase is configured.')}
           </div>
         ) : (
           <>
@@ -145,18 +146,18 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '22px' }}>
               <button type="button" onClick={shareLinkAction} className="share-option">
                 <Link2 size={20} color="#5B86A3" />
-                <span className="share-option-title">{token ? 'Copy link' : 'Shareable link'}</span>
-                <span className="share-option-sub">A no-login web link to forward.</span>
+                <span className="share-option-title">{token ? t('Copy link') : t('Shareable link')}</span>
+                <span className="share-option-sub">{t('A no-login web link to forward.')}</span>
               </button>
               <button type="button" onClick={savePdf} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pdf' ? 0.55 : 1 }}>
                 {busy === 'pdf' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <FileDown size={20} color="#5B86A3" />}
-                <span className="share-option-title">PDF</span>
-                <span className="share-option-sub">{busy === 'pdf' ? 'Building your PDF…' : 'Download the brief as a PDF.'}</span>
+                <span className="share-option-title">{t('PDF')}</span>
+                <span className="share-option-sub">{busy === 'pdf' ? t('Building your PDF…') : t('Download the brief as a PDF.')}</span>
               </button>
               <button type="button" onClick={downloadPptx} disabled={!!busy} className="share-option" style={{ opacity: busy && busy !== 'pptx' ? 0.55 : 1 }}>
                 {busy === 'pptx' ? <Loader2 size={20} color="#5B86A3" className="spin" /> : <Presentation size={20} color="#5B86A3" />}
-                <span className="share-option-title">PowerPoint</span>
-                <span className="share-option-sub">{busy === 'pptx' ? 'Building your deck…' : 'Export the full brief as slides.'}</span>
+                <span className="share-option-title">{t('PowerPoint')}</span>
+                <span className="share-option-sub">{busy === 'pptx' ? t('Building your deck…') : t('Export the full brief as slides.')}</span>
               </button>
             </div>
 
@@ -165,7 +166,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 shouldn't sit below the fields that only tune what it says. */}
             {token && (
               <>
-                <div className="cq-lbl">Share link</div>
+                <div className="cq-lbl">{t('Share link')}</div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                   <input type="text" className="cq-input" readOnly value={shareUrl} onFocus={(e) => e.target.select()} style={{ flex: 1, minWidth: 0 }} />
                   <button
@@ -173,7 +174,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                     onClick={copy}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0, background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '0 16px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}
                   >
-                    {copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy</>}
+                    {copied ? <><Check size={15} /> {t('Copied')}</> : <><Copy size={15} /> {t('Copy')}</>}
                   </button>
                 </div>
                 <button
@@ -181,18 +182,18 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                   onClick={revoke}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: 'rgba(var(--fg),0.45)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '24px' }}
                 >
-                  <Trash2 size={13} /> Revoke link
+                  <Trash2 size={13} /> {t('Revoke link')}
                 </button>
               </>
             )}
 
             {/* The "what I need from you" ask */}
-            <div className="cq-lbl">What I need from leadership</div>
+            <div className="cq-lbl">{t('What I need from leadership')}</div>
             <textarea
               className="cq-textarea"
               rows={3}
               value={ask}
-              placeholder="The one clear ask that gets a reply. Example: “Email all staff before launch, and join the launch meeting.”"
+              placeholder={t('The one clear ask that gets a reply. Example: “Email all staff before launch, and join the launch meeting.”')}
               style={{ marginBottom: '20px' }}
               onChange={(e) => setAsk(e.target.value)}
               onBlur={commitAsk}
@@ -212,9 +213,9 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 style={{ width: '18px', height: '18px', marginTop: '1px', accentColor: '#3E6580', cursor: 'pointer', flexShrink: 0 }}
               />
               <span>
-                <span style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>Remove Adaptus branding</span>
+                <span style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{t('Remove Adaptus branding')}</span>
                 <span style={{ display: 'block', fontSize: '12px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5, marginTop: '3px' }}>
-                  Hide the logo and the “Build your own” link so the brief looks entirely your own.
+                  {t('Hide the logo and the “Build your own” link so the brief looks entirely your own.')}
                 </span>
               </span>
             </label>
@@ -223,7 +224,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 letter-width brief scaled down to fit the modal, rather than a
                 narrow re-flow of it, so what's previewed is what's exported.
                 The id scopes the print stylesheet to the brief alone. */}
-            <div className="cq-lbl" style={{ marginBottom: '10px' }}>Preview</div>
+            <div className="cq-lbl" style={{ marginBottom: '10px' }}>{t('Preview')}</div>
             <div id="brief-print" ref={previewWrapRef} style={{ overflow: 'hidden', height: preview.height || undefined }}>
               <div ref={previewInnerRef} style={{ width: `${EXPORT_W}px`, transform: `scale(${preview.scale})`, transformOrigin: 'top left' }}>
                 <StatusBrief project={previewProject} />
@@ -248,7 +249,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             onClick={() => { commitAsk(); onClose() }}
             style={{ background: 'rgba(var(--fg),0.06)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '10px', padding: '10px 22px', color: 'var(--text)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Done
+            {t('Done')}
           </button>
         </div>
       </div>

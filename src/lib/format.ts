@@ -1,6 +1,7 @@
 import type { Project, RiskItem } from '@/types'
 import { ESSENTIAL_COUNT, ESSENTIAL_IDS } from '@/data/stages'
 import { LAUNCH_ITEMS } from '@/data/constants'
+import { t, tp } from '@/i18n'
 
 /** Completed essential steps for a project (advanced steps are optional bonus). */
 export function essentialsDone(project: Project): number {
@@ -22,7 +23,10 @@ export function riskColor(score: number): string {
   return score <= 3 ? '#22c55e' : score <= 6 ? '#f59e0b' : '#ef4444'
 }
 
-/** Label for a 1–10 risk score. */
+/**
+ * Label for a 1–10 risk score. Returns the canonical English word; callers pass
+ * it through `t()` at render time, the same as any other stored-value display.
+ */
 export function riskLabel(score: number): string {
   return score <= 3 ? 'Low' : score <= 6 ? 'Medium' : 'High'
 }
@@ -72,20 +76,24 @@ export interface PrepTask {
 export function collectLaunchTasks(p: Project): PrepTask[] {
   const m = p.stageData.milestones
   const tasks: PrepTask[] = []
+  // `label` is display text and gets translated here. `group` does NOT: the
+  // dashboard, the brief and the deck all key off it (GROUP_ORDER, labelFor),
+  // so it stays canonical English and is translated at the point of display.
+  // `item` is the persisted checklist value and stays English too.
   LAUNCH_ITEMS.forEach((item) =>
-    tasks.push({ key: `cl:${item}`, label: item, group: 'Launch readiness', done: m.launchChecklist.includes(item), source: 'checklist', item }),
+    tasks.push({ key: `cl:${item}`, label: t(item), group: 'Launch readiness', done: m.launchChecklist.includes(item), source: 'checklist', item }),
   )
-  p.stageData.testing.items.forEach((t) =>
-    tasks.push({ key: `te:${t.id}`, label: t.name || 'Untitled test', group: 'Testing', done: t.status === 'Passed', source: 'testing', refId: t.id, owner: t.owner }),
+  p.stageData.testing.items.forEach((row) =>
+    tasks.push({ key: `te:${row.id}`, label: row.name || t('Untitled test'), group: 'Testing', done: row.status === 'Passed', source: 'testing', refId: row.id, owner: row.owner }),
   )
   p.stageData.dependencies.items.forEach((d) =>
-    tasks.push({ key: `de:${d.id}`, label: d.name || 'Untitled dependency', group: 'Dependencies', done: d.status === 'Ready', source: 'dependencies', refId: d.id, owner: d.owner, due: d.neededBy }),
+    tasks.push({ key: `de:${d.id}`, label: d.name || t('Untitled dependency'), group: 'Dependencies', done: d.status === 'Ready', source: 'dependencies', refId: d.id, owner: d.owner, due: d.neededBy }),
   )
-  p.stageData.training.items.forEach((t) =>
-    tasks.push({ key: `tr:${t.id}`, label: t.title || 'Untitled training', group: 'Training', done: t.done, source: 'training', refId: t.id, owner: t.owner, due: t.date }),
+  p.stageData.training.items.forEach((row) =>
+    tasks.push({ key: `tr:${row.id}`, label: row.title || t('Untitled training'), group: 'Training', done: row.done, source: 'training', refId: row.id, owner: row.owner, due: row.date }),
   )
   m.customTasks.forEach((c) =>
-    tasks.push({ key: `cu:${c.id}`, label: c.label || 'Untitled task', group: c.group || 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
+    tasks.push({ key: `cu:${c.id}`, label: c.label || t('Untitled task'), group: c.group || 'Your tasks', done: c.done, source: 'custom', refId: c.id }),
   )
 
   // Planning items with no completion field of their own, tracked via the
@@ -94,12 +102,13 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
   // These are the backer's own commitments, so they're owned by the backer.
   const backer = p.stageData.sponsor.noSponsor ? '' : p.stageData.sponsor.name.trim()
   p.stageData.sponsor.sponsorActions.forEach((a) =>
-    tasks.push({ key: `sp:${a.id}`, label: a.text || 'Sponsor action', group: 'Sponsor commitments', done: a.done, source: 'sponsor', refId: a.id, owner: backer }),
+    tasks.push({ key: `sp:${a.id}`, label: a.text ? t(a.text) : t('Sponsor action'), group: 'Sponsor commitments', done: a.done, source: 'sponsor', refId: a.id, owner: backer }),
   )
   p.stageData.stakeholders.rows.forEach((r) => {
     if (!r.name.trim()) return
     const key = `sh:${r.id}`
-    tasks.push({ key, label: `Engage ${r.name}${r.role ? ` (${r.role})` : ''}`, group: 'Stakeholders', done: !!ck[key], source: 'checkoff' })
+    const who = r.role ? `${r.name} (${r.role})` : r.name
+    tasks.push({ key, label: tp('Engage {name}', { name: who }), group: 'Stakeholders', done: !!ck[key], source: 'checkoff' })
   })
   p.stageData.comms.schedule.forEach((c) => {
     const key = `cm:${c.id}`
@@ -109,22 +118,23 @@ export function collectLaunchTasks(p: Project): PrepTask[] {
     // label, where it at least still says when it's meant to happen.
     const dated = ISO_DATE.test(c.when)
     const label = dated
-      ? `${c.channel || 'Touchpoint'}: ${c.audience || 'All staff'}`
-      : `${c.when || 'Touchpoint'}: ${c.audience || '-'}`
+      ? `${c.channel ? t(c.channel) : t('Touchpoint')}: ${c.audience || t('All staff')}`
+      : `${c.when || t('Touchpoint')}: ${c.audience || '-'}`
     tasks.push({ key, label, group: 'Communications', done: !!ck[key], source: 'checkoff', due: dated ? c.when : undefined })
   })
   p.stageData.risk.items.forEach((r) => {
     const key = `rk:${r.id}`
-    tasks.push({ key, label: `Mitigate: ${r.description || 'risk'}`, group: 'Risks', done: !!ck[key], source: 'checkoff' })
+    tasks.push({ key, label: tp('Mitigate: {risk}', { risk: r.description || t('risk') }), group: 'Risks', done: !!ck[key], source: 'checkoff' })
   })
   p.stageData.resistance.items.forEach((r) => {
     const key = `rs:${r.id}`
-    tasks.push({ key, label: `Address: ${r.type}${r.group ? ` (${r.group})` : ''}`, group: 'Resistance', done: !!ck[key], source: 'checkoff' })
+    const what = r.group ? `${t(r.type)} (${r.group})` : t(r.type)
+    tasks.push({ key, label: tp('Address: {source}', { source: what }), group: 'Resistance', done: !!ck[key], source: 'checkoff' })
   })
   p.stageData.groups.groups.forEach((g) => {
     if (!g.name.trim()) return
     const key = `gr:${g.id}`
-    tasks.push({ key, label: `Prepare ${g.name}`, group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
+    tasks.push({ key, label: tp('Prepare {group}', { group: g.name }), group: 'Impacted groups', done: !!ck[key], source: 'checkoff' })
   })
 
   // Drop tasks the user removed from the dashboard, then attach owner + due date.
@@ -158,15 +168,15 @@ export function collectPostLaunchEntries(p: Project): PostLaunchEntry[] {
   const s = p.stageData.sustainment
   const entries: PostLaunchEntry[] = []
   const reviews: [string, string][] = [
-    [s.checkpoint30, '30-day review'],
-    [s.checkpoint60, '60-day review'],
-    [s.checkpoint90, '90-day review'],
+    [s.checkpoint30, t('30-day review')],
+    [s.checkpoint60, t('60-day review')],
+    [s.checkpoint90, t('90-day review')],
   ]
   reviews.forEach(([date, label], i) => {
     if (date) entries.push({ key: `su:${i}`, date, label, group: 'Keep it going' })
   })
   p.stageData.adoption.metrics.forEach((m) => {
-    if (m.checkBy) entries.push({ key: `ad:${m.id}`, date: m.checkBy, label: `Measure: ${m.name.trim() || 'adoption metric'}`, group: 'Real use' })
+    if (m.checkBy) entries.push({ key: `ad:${m.id}`, date: m.checkBy, label: tp('Measure: {metric}', { metric: m.name.trim() || t('adoption metric') }), group: 'Real use' })
   })
   return entries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 }
@@ -197,7 +207,7 @@ export function buildTimeline(p: Project): TimelineEntry[] {
       .filter((t) => !!t.due)
       .map((t) => ({ key: t.key, date: t.due!, label: t.label, group: t.group, owner: t.owner ?? '', done: t.done, milestone: false, postLaunch: false })),
     ...collectPostLaunchEntries(p).map((e) => ({ key: e.key, date: e.date, label: e.label, group: e.group, owner: '', done: false, milestone: false, postLaunch: true })),
-    ...(goLive ? [{ key: 'go-live', date: goLive, label: 'Go-live', group: '', owner: '', done: false, milestone: true, postLaunch: false }] : []),
+    ...(goLive ? [{ key: 'go-live', date: goLive, label: t('Go-live'), group: '', owner: '', done: false, milestone: true, postLaunch: false }] : []),
   ]
   return entries.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 }

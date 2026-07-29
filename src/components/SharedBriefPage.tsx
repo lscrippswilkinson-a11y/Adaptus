@@ -3,6 +3,8 @@ import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { fetchSharedProject } from '@/lib/projectsRepo'
 import { StatusBrief } from '@/components/StatusBrief'
+import { t } from '@/i18n'
+import { LanguageSelect } from '@/i18n/LanguageSelect'
 
 type State = { status: 'loading' } | { status: 'ok'; project: Project } | { status: 'missing' } | { status: 'error' }
 
@@ -42,7 +44,7 @@ export function SharedBriefPage({ token }: { token: string }) {
           on a narrow screen. */}
       <div style={{ width: '100%', maxWidth: '860px' }}>
         {state.status === 'loading' && (
-          <div style={{ textAlign: 'center', color: 'rgba(var(--fg),0.5)', fontSize: '14px', marginTop: '80px' }}>Loading…</div>
+          <div style={{ textAlign: 'center', color: 'rgba(var(--fg),0.5)', fontSize: '14px', marginTop: '80px' }}>{t('Loading…')}</div>
         )}
 
         {state.status === 'ok' && <StatusBrief project={state.project} publicView />}
@@ -51,21 +53,24 @@ export function SharedBriefPage({ token }: { token: string }) {
           <div style={{ textAlign: 'center', marginTop: '80px' }}>
             <div style={{ fontSize: '40px', marginBottom: '14px' }}>🔗</div>
             <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text)', margin: '0 0 8px' }}>
-              {state.status === 'missing' ? 'This link isn’t available' : 'Couldn’t load this brief'}
+              {state.status === 'missing' ? t('This link isn’t available') : t('Couldn’t load this brief')}
             </h1>
             <p style={{ fontSize: '14px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6, maxWidth: '420px', margin: '0 auto 24px' }}>
               {state.status === 'missing'
-                ? 'The share link may have been revoked, or the address is incorrect.'
-                : 'Something went wrong fetching this status brief. Please try again later.'}
+                ? t('The share link may have been revoked, or the address is incorrect.')
+                : t('Something went wrong fetching this status brief. Please try again later.')}
             </p>
             <a
               href="/"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', borderRadius: '999px', padding: '12px 24px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '14px', textDecoration: 'none' }}
             >
-              Build your own change plan →
+              {t('Build your own change plan →')}
             </a>
           </div>
         )}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
+          <LanguageSelect />
+        </div>
       </div>
     </div>
   )

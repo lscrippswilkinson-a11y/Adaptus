@@ -13,6 +13,9 @@ import { ShareModal } from '@/components/ShareModal'
 import { ShareCtx } from '@/state/ShareContext'
 import { CollaboratorsModal } from '@/components/CollaboratorsModal'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { useLanguage } from '@/i18n/LanguageContext'
+import { LanguageSelect } from '@/i18n/LanguageSelect'
+import { TSplit } from '@/i18n/TSplit'
 
 
 const navBoxKicker: CSSProperties = { display: 'block', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--accent-text)', marginBottom: '2px' }
@@ -33,6 +36,7 @@ const navBoxStyle = (side: 'left' | 'right'): CSSProperties => ({
 })
 
 export function Workspace({ project }: { project: Project }) {
+  const { t, tp } = useLanguage()
   const { state, dispatch } = useApp()
   // Whether the guided intro screen is showing, so we can hide the duplicate
   // stage title in the header (the big hero title carries it there).
@@ -122,14 +126,14 @@ export function Workspace({ project }: { project: Project }) {
           type="button"
           onClick={() => dispatch({ type: 'SET_VIEW', view: 'dashboard' })}
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', display: 'flex', alignItems: 'center', padding: '4px 8px', borderRadius: '6px', fontFamily: 'inherit' }}
-          aria-label="Back to dashboard"
+          aria-label={t('Back to dashboard')}
         >
           <ArrowLeft size={20} />
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
             <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '14px' }}>{project.name}</span>
-            <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.6)' }}>{p2}% of the essential steps done</span>
+            <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.6)' }}>{tp('{pct}% of the essential steps done', { pct: p2 })}</span>
           </div>
           <div style={{ height: '6px', background: 'rgba(var(--fg),0.16)', borderRadius: '3px', overflow: 'hidden', border: '1px solid rgba(var(--fg),0.08)' }}>
             <div style={{ height: '100%', background: 'linear-gradient(90deg,#5B86A3,#8FB3C7)', width: `${p2}%`, borderRadius: '3px', transition: 'width 0.5s' }} />
@@ -140,15 +144,16 @@ export function Workspace({ project }: { project: Project }) {
           onClick={() => setCollab(true)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '999px', padding: '7px 14px', color: 'rgba(var(--fg),0.7)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
         >
-          <Users size={14} /> {isOwner ? 'Collaborators' : 'People'}
+          <Users size={14} /> {isOwner ? t('Collaborators') : t('People')}
         </button>
         <button
           type="button"
           onClick={() => setSharing(true)}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '999px', padding: '7px 14px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
         >
-          <Share2 size={14} /> Share
+          <Share2 size={14} /> {t('Share')}
         </button>
+        <LanguageSelect />
         <ThemeToggle />
       </div>
 
@@ -164,7 +169,7 @@ export function Workspace({ project }: { project: Project }) {
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: pi === 0 ? '0 18px 8px' : '14px 18px 8px', fontSize: '10px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'rgba(var(--fg),0.6)' }}>
-                    <span>{pi + 1}. {phase.label}</span>
+                    <span>{pi + 1}. {t(phase.label)}</span>
                     <span style={{ color: '#5B86A3' }}>{doneCount}/{visible.length}</span>
                   </div>
                   {visible.map(({ s, i }) => {
@@ -201,13 +206,13 @@ export function Workspace({ project }: { project: Project }) {
                           ) : null}
                         </div>
                         <span style={{ flex: 1, fontSize: '12px', color: active ? 'var(--accent-text)' : isDone ? 'rgba(var(--fg),0.7)' : 'rgba(var(--fg),0.62)', fontWeight: active ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {s.label}
+                          {t(s.label)}
                         </span>
                         {openByStage[s.id] > 0 && (
-                          <span title={`${openByStage[s.id]} open feedback`} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', minWidth: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>{openByStage[s.id]}</span>
+                          <span title={tp('{count} open feedback', { count: openByStage[s.id] })} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', minWidth: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>{openByStage[s.id]}</span>
                         )}
                         {s.tier === 'advanced' && !openByStage[s.id] && (
-                          <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>opt</span>
+                          <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>{t('opt')}</span>
                         )}
                       </button>
                     )
@@ -242,21 +247,26 @@ export function Workspace({ project }: { project: Project }) {
               }}
             >
               <Sparkles size={showAdvanced ? 15 : 17} />
-              {showAdvanced ? 'Hide advanced steps' : `Show advanced steps (${advancedCount})`}
+              {showAdvanced ? t('Hide advanced steps') : tp('Show advanced steps ({count})', { count: advancedCount })}
             </button>
             <div
               className="adv-help"
               style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--surface-card)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '10px', padding: '12px 14px', fontSize: '11px', lineHeight: 1.55, color: 'rgba(var(--fg),0.6)', boxShadow: '0 8px 24px rgba(0,0,0,0.45)', zIndex: 5 }}
             >
-              Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.
+              {t('Extra, deeper steps — like mapping out key people, scoring what could go wrong, and testing before launch.')}
               <div style={{ marginTop: '8px' }}>
-                <span style={{ color: '#86efac', fontWeight: 600 }}>Add them</span> when the change is big or risky: lots
-                of people affected, you’re replacing an important system, or a rough rollout would really hurt. They help
-                you win people over, plan for problems, and avoid nasty surprises.
+                <TSplit
+                  source="{addThem} when the change is big or risky: lots of people affected, you’re replacing an important system, or a rough rollout would really hurt. They help you win people over, plan for problems, and avoid nasty surprises."
+                  slot="{addThem}"
+                  node={<span style={{ color: '#86efac', fontWeight: 600 }}>{t('Add them')}</span>}
+                />
               </div>
               <div style={{ marginTop: '6px' }}>
-                <span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>Skip them</span> for small, low-risk
-                changes only a few people touch — the core steps above are plenty.
+                <TSplit
+                  source="{skipThem} for small, low-risk changes only a few people touch — the core steps above are plenty."
+                  slot="{skipThem}"
+                  node={<span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>{t('Skip them')}</span>}
+                />
               </div>
             </div>
           </div>
@@ -268,24 +278,24 @@ export function Workspace({ project }: { project: Project }) {
             <div>
               {stage.tier === 'advanced' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
-                  <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>Optional</span>
+                  <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>{t('Optional')}</span>
                 </div>
               )}
               {/* The big hero title carries the name on the intro, so don't repeat it here. */}
-              {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{stage.label}</h2>}
+              {!onIntro && <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 700, color: 'var(--text)' }}>{t(stage.label)}</h2>}
             </div>
             {/* Top-right: a quiet "Complete" badge once the step is done. Steps now
                 complete automatically when you advance with Next, below. */}
             {done && (
               <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: '20px', padding: '8px 16px', color: '#86efac', fontSize: '13px', fontWeight: 600 }}>
-                <Check size={15} strokeWidth={3} /> Complete
+                <Check size={15} strokeWidth={3} /> {t('Complete')}
               </div>
             )}
           </div>
 
           {isViewer && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.25)', borderRadius: '10px', padding: '10px 14px', marginBottom: '18px', fontSize: '13px', color: 'var(--accent-text)' }}>
-              <Eye size={15} /> You have view-only access to this project.
+              <Eye size={15} /> {t('You have view-only access to this project.')}
             </div>
           )}
 
@@ -309,8 +319,8 @@ export function Workspace({ project }: { project: Project }) {
                 <button type="button" onClick={goPrev} style={navBoxStyle('left')}>
                   <ArrowLeft size={18} style={{ flexShrink: 0, color: 'var(--accent-text)' }} />
                   <span style={{ minWidth: 0 }}>
-                    <span style={navBoxKicker}>Previous</span>
-                    <span style={navBoxLabel}>{prevStage.label}</span>
+                    <span style={navBoxKicker}>{t('Previous')}</span>
+                    <span style={navBoxLabel}>{t(prevStage.label)}</span>
                   </span>
                 </button>
               ) : (
@@ -319,8 +329,8 @@ export function Workspace({ project }: { project: Project }) {
               {nextStage ? (
                 <button type="button" onClick={goNext} style={navBoxStyle('right')}>
                   <span style={{ minWidth: 0, textAlign: 'right' }}>
-                    <span style={navBoxKicker}>Next</span>
-                    <span style={navBoxLabel}>{nextStage.label}</span>
+                    <span style={navBoxKicker}>{t('Next')}</span>
+                    <span style={navBoxLabel}>{t(nextStage.label)}</span>
                   </span>
                   <ArrowRight size={18} style={{ flexShrink: 0, color: 'var(--accent-text)' }} />
                 </button>

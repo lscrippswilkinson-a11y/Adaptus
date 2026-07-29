@@ -1,4 +1,6 @@
 import { ArrowLeft, Shield, Lock, KeyRound, Users, Server, EyeOff, Trash2 } from 'lucide-react'
+import { t } from '@/i18n'
+import { LanguageSelect } from '@/i18n/LanguageSelect'
 
 /**
  * Public, no-login Security & Privacy page (/?page=security). Rendered ahead of the
@@ -55,19 +57,18 @@ export function SecurityPage() {
           onClick={goBack}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'none', border: 'none', color: 'rgba(var(--fg),0.6)', fontSize: '13.5px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '28px' }}
         >
-          <ArrowLeft size={16} /> Back to Adaptus
+          <ArrowLeft size={16} /> {t('Back to Adaptus')}
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
           <div style={{ width: '46px', height: '46px', borderRadius: '12px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Shield size={24} color="#fff" />
           </div>
-          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 800, color: 'rgba(var(--fg),0.92)' }}>How we protect your data</h1>
+          <h1 style={{ margin: 0, fontSize: '26px', fontWeight: 800, color: 'rgba(var(--fg),0.92)' }}>{t('How we protect your data')}</h1>
         </div>
 
         <p style={{ margin: '0 0 32px', fontSize: '15px', lineHeight: 1.65, color: 'rgba(var(--fg),0.62)' }}>
-          Adaptus holds sensitive details about your organization — who’s involved, what’s
-          changing, and where the resistance is. Here’s plainly how that information is kept safe.
+          {t('Adaptus holds sensitive details about your organization — who’s involved, what’s changing, and where the resistance is. Here’s plainly how that information is kept safe.')}
         </p>
 
         <div style={{ display: 'grid', gap: '12px' }}>
@@ -80,17 +81,21 @@ export function SecurityPage() {
                 <Icon size={20} />
               </div>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(var(--fg),0.9)', marginBottom: '4px' }}>{title}</div>
-                <div style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(var(--fg),0.6)' }}>{body}</div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: 'rgba(var(--fg),0.9)', marginBottom: '4px' }}>{t(title)}</div>
+                <div style={{ fontSize: '13.5px', lineHeight: 1.6, color: 'rgba(var(--fg),0.6)' }}>{t(body)}</div>
               </div>
             </div>
           ))}
         </div>
 
         <p style={{ margin: '30px 0 0', fontSize: '12.5px', lineHeight: 1.6, color: 'rgba(var(--fg),0.45)' }}>
-          Questions about your data, or want your account deleted? Email{' '}
+          {t('Questions about your data, or want your account deleted? Email')}{' '}
           <a href="mailto:l.scripps.wilkinson@gmail.com" style={{ color: 'var(--accent-text)' }}>l.scripps.wilkinson@gmail.com</a>.
         </p>
+
+        <div style={{ marginTop: '28px' }}>
+          <LanguageSelect />
+        </div>
       </div>
     </div>
   )

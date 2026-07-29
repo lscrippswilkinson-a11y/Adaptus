@@ -2,17 +2,18 @@ import { useState } from 'react'
 import { Check, MessageSquare, RotateCcw, Send, Trash2 } from 'lucide-react'
 import type { FeedbackItem, StageId } from '@/types'
 import { addFeedback, deleteFeedback, setFeedbackResolved } from '@/lib/projectsRepo'
+import { t, tp } from '@/i18n'
 
 /** Short relative time, e.g. "just now", "3h ago", "2d ago". */
 function ago(iso: string): string {
   const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
-  if (s < 60) return 'just now'
+  if (s < 60) return t('just now')
   const m = Math.round(s / 60)
-  if (m < 60) return `${m}m ago`
+  if (m < 60) return tp('{minutes}m ago', { minutes: m })
   const h = Math.round(m / 60)
-  if (h < 24) return `${h}h ago`
+  if (h < 24) return tp('{hours}h ago', { hours: h })
   const d = Math.round(h / 24)
-  return `${d}d ago`
+  return tp('{days}d ago', { days: d })
 }
 
 /**
@@ -82,18 +83,18 @@ export function FeedbackPanel({
     <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(var(--fg),0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
         <MessageSquare size={16} color="var(--accent-text)" />
-        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>Feedback on “{stageLabel}”</span>
+        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)' }}>{tp('Feedback on “{section}”', { section: t(stageLabel) })}</span>
         {open.length > 0 && (
-          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', padding: '1px 8px' }}>{open.length} open</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', padding: '1px 8px' }}>{tp('{count} open', { count: open.length })}</span>
         )}
       </div>
       <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.45)', marginBottom: '14px' }}>
-        Anyone you’ve shared this project with can leave review notes here.
+        {t('Anyone you’ve shared this project with can leave review notes here.')}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
         {shown.length === 0 ? (
-          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.4)', fontStyle: 'italic' }}>No open feedback on this section.</div>
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.4)', fontStyle: 'italic' }}>{t('No open feedback on this section.')}</div>
         ) : (
           shown.map((i) => {
             const mine = i.authorId === currentUserId
@@ -101,17 +102,17 @@ export function FeedbackPanel({
             return (
               <div key={i.id} style={{ background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.07)', borderRadius: '10px', padding: '10px 12px', opacity: i.resolved ? 0.55 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>{i.authorName}{mine ? ' (you)' : ''}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>{i.authorName}{mine ? t(' (you)') : ''}</span>
                   <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)' }}>{ago(i.createdAt)}</span>
-                  {i.resolved && <span style={{ fontSize: '10px', fontWeight: 700, color: '#86efac', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Resolved</span>}
+                  {i.resolved && <span style={{ fontSize: '10px', fontWeight: 700, color: '#86efac', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('Resolved')}</span>}
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
                     {canManage && (
-                      <button type="button" onClick={() => toggle(i)} title={i.resolved ? 'Reopen' : 'Resolve'} aria-label={i.resolved ? 'Reopen' : 'Resolve'} style={iconBtn}>
+                      <button type="button" onClick={() => toggle(i)} title={i.resolved ? t('Reopen') : t('Resolve')} aria-label={i.resolved ? t('Reopen') : t('Resolve')} style={iconBtn}>
                         {i.resolved ? <RotateCcw size={13} /> : <Check size={14} />}
                       </button>
                     )}
                     {canManage && (
-                      <button type="button" onClick={() => remove(i)} title="Delete" aria-label="Delete" style={{ ...iconBtn, color: 'rgba(252,165,165,0.8)' }}>
+                      <button type="button" onClick={() => remove(i)} title={t('Delete')} aria-label={t('Delete')} style={{ ...iconBtn, color: 'rgba(252,165,165,0.8)' }}>
                         <Trash2 size={13} />
                       </button>
                     )}
@@ -126,7 +127,7 @@ export function FeedbackPanel({
 
       {resolved.length > 0 && (
         <button type="button" onClick={() => setShowResolved((s) => !s)} style={{ background: 'none', border: 'none', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', padding: 0, marginBottom: '14px' }}>
-          {showResolved ? 'Hide resolved' : `Show ${resolved.length} resolved`}
+          {showResolved ? t('Hide resolved') : tp('Show {count} resolved', { count: resolved.length })}
         </button>
       )}
 
@@ -135,7 +136,7 @@ export function FeedbackPanel({
           className="cq-textarea"
           rows={2}
           value={draft}
-          placeholder="Leave feedback on this section…"
+          placeholder={t('Leave feedback on this section…')}
           style={{ flex: 1, resize: 'vertical' }}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) post() }}
@@ -146,7 +147,7 @@ export function FeedbackPanel({
           disabled={!draft.trim() || busy}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0, background: draft.trim() ? 'linear-gradient(135deg,#5B86A3,#3E6580)' : 'rgba(91,134,163,0.25)', border: 'none', borderRadius: '10px', padding: '10px 16px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13px', cursor: draft.trim() && !busy ? 'pointer' : 'default', fontFamily: 'inherit' }}
         >
-          <Send size={14} /> Post
+          <Send size={14} /> {t('Post')}
         </button>
       </div>
     </div>

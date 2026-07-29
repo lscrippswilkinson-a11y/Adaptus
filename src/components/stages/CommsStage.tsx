@@ -6,10 +6,13 @@ import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { getBusinessProfile } from '@/data/business'
 import { coaching } from '@/data/coaching'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const PHASES: CommsPhase[] = ['before', 'launch', 'after']
 
 type Repeat = NonNullable<CommsTouchpoint['repeat']>
+// Canonical English: these are the values stored on a touchpoint and mapped
+// back by REPEAT_FROM_LABEL. <Select> translates the text the user reads.
 const REPEAT_LABELS: Record<Repeat, string> = { once: 'Does not repeat', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }
 const REPEAT_FROM_LABEL = Object.fromEntries(Object.entries(REPEAT_LABELS).map(([k, v]) => [v, k])) as Record<string, Repeat>
 
@@ -49,13 +52,13 @@ const fillBtnStyle: React.CSSProperties = {
  * message, and a clear call to action, and assembles a copy-ready draft.
  */
 function TouchpointCard({
-  t,
+  point,
   channelOptions,
   audienceOptions,
   onChange,
   onDelete,
 }: {
-  t: CommsTouchpoint
+  point: CommsTouchpoint
   channelOptions: string[]
   audienceOptions: string[]
   onChange: (patch: Partial<CommsTouchpoint>) => void
@@ -63,20 +66,20 @@ function TouchpointCard({
 }) {
   const d = coaching.comms.draft
   // Open by default if the user has already started drafting this one.
-  const [open, setOpen] = useState(!!(t.greeting || t.context || t.cta || t.closer || t.draft))
+  const [open, setOpen] = useState(!!(point.greeting || point.context || point.cta || point.closer || point.draft))
   const [copied, setCopied] = useState(false)
   // The written-message drafter fits any email/memo channel, whatever the org profile calls it.
-  const isWritten = /email|memo/i.test(t.channel)
+  const isWritten = /email|memo/i.test(point.channel)
 
   const buildDraft = () =>
     onChange({
-      draft: d.assemble({ audience: t.audience, greeting: t.greeting, context: t.context, message: t.message, cta: t.cta, closer: t.closer }),
+      draft: d.assemble({ audience: point.audience, greeting: point.greeting, context: point.context, message: point.message, cta: point.cta, closer: point.closer }),
     })
 
   const copyDraft = async () => {
-    if (!t.draft) return
+    if (!point.draft) return
     try {
-      await navigator.clipboard.writeText(t.draft)
+      await navigator.clipboard.writeText(point.draft)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 1800)
     } catch {
@@ -90,45 +93,45 @@ function TouchpointCard({
         <input
           type="date"
           className="cq-input"
-          value={t.when}
+          value={point.when}
           onChange={(e) => onChange({ when: e.target.value })}
-          aria-label="When"
+          aria-label={t('When')}
           style={{ width: '160px', flexShrink: 0 }}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Audience options come from "Identify Groups"; keep any legacy free-text value selectable. */}
           <Select
-            value={t.audience}
-            options={t.audience && !audienceOptions.includes(t.audience) ? [t.audience, ...audienceOptions] : audienceOptions}
+            value={point.audience}
+            options={point.audience && !audienceOptions.includes(point.audience) ? [point.audience, ...audienceOptions] : audienceOptions}
             onChange={(v) => onChange({ audience: v })}
-            placeholder="Audience"
+            placeholder={t('Audience')}
             style={{ width: '100%' }}
           />
         </div>
         <div style={{ width: '160px', flexShrink: 0 }}>
-          <Select value={t.channel} options={channelOptions} onChange={(v) => onChange({ channel: v })} />
+          <Select value={point.channel} options={channelOptions} onChange={(v) => onChange({ channel: v })} />
         </div>
         <DelButton onClick={onDelete} />
       </div>
-      {t.when && (
+      {point.when && (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-          <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', flexShrink: 0 }}>Repeat</span>
+          <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', flexShrink: 0 }}>{t('Repeat')}</span>
           <div style={{ width: '180px' }}>
             <Select
-              value={REPEAT_LABELS[t.repeat ?? 'once']}
+              value={REPEAT_LABELS[point.repeat ?? 'once']}
               options={Object.values(REPEAT_LABELS)}
               onChange={(v) => onChange({ repeat: REPEAT_FROM_LABEL[v] })}
             />
           </div>
         </div>
       )}
-      <TextInput value={t.message} onCommit={(v) => onChange({ message: v })} placeholder="Key message: what this audience needs to know" />
+      <TextInput value={point.message} onCommit={(v) => onChange({ message: v })} placeholder={t('Key message: what this audience needs to know')} />
 
       {/* The full drafting helper only makes sense for written email; other channels are spoken/cascaded. */}
       {isWritten && (
         <div style={{ marginTop: '10px' }}>
           <button type="button" style={linkBtnStyle} onClick={() => setOpen((s) => !s)}>
-            {open ? '▾ Hide drafting help' : `✍️ ${d.label}`}
+            {open ? t('▾ Hide drafting help') : `✍️ ${d.label}`}
           </button>
         </div>
       )}
@@ -141,34 +144,34 @@ function TouchpointCard({
             <div>
               <Label>{d.greetingLabel}</Label>
               <div style={hintStyle}>{d.greetingHint}</div>
-              <TextArea value={t.greeting ?? ''} onCommit={(v) => onChange({ greeting: v })} placeholder={d.greetingPlaceholder} rows={2} />
+              <TextArea value={point.greeting ?? ''} onCommit={(v) => onChange({ greeting: v })} placeholder={d.greetingPlaceholder} rows={2} />
             </div>
             <div>
               <Label>{d.contextLabel}</Label>
-              <TextArea value={t.context ?? ''} onCommit={(v) => onChange({ context: v })} placeholder={d.contextPlaceholder} rows={2} />
+              <TextArea value={point.context ?? ''} onCommit={(v) => onChange({ context: v })} placeholder={d.contextPlaceholder} rows={2} />
             </div>
             <div>
               <Label>{d.messageLabel}</Label>
-              <TextArea value={t.message} onCommit={(v) => onChange({ message: v })} placeholder={d.messagePlaceholder} rows={2} />
+              <TextArea value={point.message} onCommit={(v) => onChange({ message: v })} placeholder={d.messagePlaceholder} rows={2} />
             </div>
             <div>
               <Label>{d.ctaLabel}</Label>
-              <TextArea value={t.cta ?? ''} onCommit={(v) => onChange({ cta: v })} placeholder={d.ctaPlaceholder} rows={2} />
+              <TextArea value={point.cta ?? ''} onCommit={(v) => onChange({ cta: v })} placeholder={d.ctaPlaceholder} rows={2} />
             </div>
             <div>
               <Label>{d.closerLabel}</Label>
               <div style={hintStyle}>{d.closerHint}</div>
-              <TextArea value={t.closer ?? ''} onCommit={(v) => onChange({ closer: v })} placeholder={d.closerPlaceholder} rows={2} />
+              <TextArea value={point.closer ?? ''} onCommit={(v) => onChange({ closer: v })} placeholder={d.closerPlaceholder} rows={2} />
             </div>
           </div>
 
           <div style={{ marginTop: '12px' }}>
             <button type="button" style={fillBtnStyle} onClick={buildDraft}>
-              {t.draft ? d.rebuild : d.build}
+              {point.draft ? d.rebuild : d.build}
             </button>
           </div>
 
-          {t.draft != null && t.draft !== '' && (
+          {point.draft != null && point.draft !== '' && (
             <div style={{ marginTop: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <Label>{d.draftLabel}</Label>
@@ -176,7 +179,7 @@ function TouchpointCard({
                   {copied ? d.copied : d.copy}
                 </button>
               </div>
-              <TextArea value={t.draft} onCommit={(v) => onChange({ draft: v })} rows={8} />
+              <TextArea value={point.draft} onCommit={(v) => onChange({ draft: v })} rows={8} />
             </div>
           )}
         </div>
@@ -196,7 +199,7 @@ export function CommsStage() {
   const groupNames = groups.map((g) => g.name.trim()).filter(Boolean)
   // Audience dropdown options: the groups identified in "Identify Groups" first,
   // then a few common cross-cutting audiences that aren't usually listed as groups.
-  const audienceOptions = [...new Set([...groupNames, 'All staff', 'Managers', 'Leadership team'])].sort((a, b) =>
+  const audienceOptions = [...new Set([...groupNames, t('All staff'), t('Managers'), t('Leadership team')])].sort((a, b) =>
     a.localeCompare(b),
   )
 
@@ -207,7 +210,7 @@ export function CommsStage() {
     const parts: string[] = []
     if (define?.statement?.trim()) parts.push(define.statement.trim())
     if (define?.whyNow?.trim()) parts.push(define.whyNow.trim())
-    if (define?.successLooks?.trim()) parts.push(`What good looks like: ${define.successLooks.trim()}`)
+    if (define?.successLooks?.trim()) parts.push(tp('What good looks like: {goal}', { goal: define.successLooks.trim() }))
     return parts.join('\n\n')
   })()
 
@@ -260,8 +263,8 @@ export function CommsStage() {
       .slice()
       .sort((a, b) => a.localeCompare(b))
   const setTouchpoint = (id: number, patch: Partial<CommsTouchpoint>) =>
-    setSchedule(schedule.map((t) => (t.id === id ? { ...t, ...patch } : t)))
-  const delTouchpoint = (id: number) => setSchedule(schedule.filter((t) => t.id !== id))
+    setSchedule(schedule.map((row) => (row.id === id ? { ...row, ...patch } : row)))
+  const delTouchpoint = (id: number) => setSchedule(schedule.filter((row) => row.id !== id))
   /**
    * The example schedule times its touchpoints in words ("6 weeks out", "Week
    * 2"), but `when` is a date picker, so those phrases land as an unreadable,
@@ -288,7 +291,7 @@ export function CommsStage() {
   const steps: WizardStep[] = [
     {
       id: 'keyMessages',
-      title: 'Core message',
+      title: t('Core message'),
       isFilled: !!data.keyMessages.trim(),
       // pre-wrap so the paragraph breaks survive into the review read-back
       // instead of collapsing back into one block.
@@ -298,24 +301,23 @@ export function CommsStage() {
           <Label>{coaching.comms.fields.keyMessages.label}</Label>
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
             {defineSeed
-              ? 'We’ve drafted a starting message from your “Define the Change” answers. Read it over, make it sound like you, and edit anything that’s off before you move ahead.'
-              : 'Write the one message everyone needs to walk away with. Keep it plain and short enough to repeat, then review it before you move ahead.'}
+              ? t('We’ve drafted a starting message from your “Define the Change” answers. Read it over, make it sound like you, and edit anything that’s off before you move ahead.')
+              : t('Write the one message everyone needs to walk away with. Keep it plain and short enough to repeat, then review it before you move ahead.')}
           </div>
-          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder="What must people understand, believe, and feel?" rows={16} />
+          <TextArea value={data.keyMessages} onCommit={(v) => update({ keyMessages: v })} placeholder={t('What must people understand, believe, and feel?')} rows={16} />
         </Card>
       ),
     },
     {
       id: 'channels',
-      title: 'Channels',
+      title: t('Channels'),
       isFilled: data.channels.length > 0,
-      summary: data.channels.length ? data.channels.join(', ') : undefined,
+      summary: data.channels.length ? data.channels.map(t).join(', ') : undefined,
       node: (
       <Card>
-        <Label>Communication channels</Label>
+        <Label>{t('Communication channels')}</Label>
         <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6, margin: '2px 0 14px' }}>
-          How will you get the word out? Add the channels your organization actually uses, whatever you call them. Most
-          changes need a few working together.
+          {t('How will you get the word out? Add the channels your organization actually uses, whatever you call them. Most changes need a few working together.')}
         </div>
 
         {/* Add your own channels first — don’t lock people into our preset list. */}
@@ -330,12 +332,12 @@ export function CommsStage() {
                 addCustomChannel()
               }
             }}
-            placeholder="Add a channel. Example: Town hall, Slack, Team huddle"
-            aria-label="Add a communication channel"
+            placeholder={t('Add a channel. Example: Town hall, Slack, Team huddle')}
+            aria-label={t('Add a communication channel')}
             style={{ flex: 1 }}
           />
           <button type="button" style={fillBtnStyle} onClick={addCustomChannel} disabled={!newChannel.trim()}>
-            Add
+            {t('Add')}
           </button>
         </div>
 
@@ -358,11 +360,11 @@ export function CommsStage() {
                   padding: '5px 6px 5px 13px',
                 }}
               >
-                {name}
+                {t(name)}
                 <button
                   type="button"
                   onClick={() => toggleChannel(name)}
-                  aria-label={`Remove ${name}`}
+                  aria-label={tp('Remove {channel}', { channel: t(name) })}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -398,9 +400,9 @@ export function CommsStage() {
               if (e.target.value) toggleChannel(e.target.value)
             }}
           >
-            <option value="">Add a common channel…</option>
+            <option value="">{t('Add a common channel…')}</option>
             {suggestedChannels.map((ch) => (
-              <option key={ch.name} value={ch.name}>{ch.name}</option>
+              <option key={ch.name} value={ch.name}>{t(ch.name)}</option>
             ))}
           </select>
         )}
@@ -410,8 +412,8 @@ export function CommsStage() {
           <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
             {chosenInfo.map((ch) => (
               <div key={ch.name} style={{ fontSize: '12.5px', color: 'rgba(var(--fg),0.65)', lineHeight: 1.5 }}>
-                <span style={{ fontWeight: 700, color: 'var(--text)' }}>{ch.name}:</span>{' '}
-                <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>best for</span> {ch.best}
+                <span style={{ fontWeight: 700, color: 'var(--text)' }}>{t(ch.name)}:</span>{' '}
+                <span style={{ fontWeight: 600, color: 'var(--accent-text)' }}>{t('best for')}</span> {t(ch.best)}
               </div>
             ))}
           </div>
@@ -431,9 +433,9 @@ export function CommsStage() {
     },
     {
       id: 'schedule',
-      title: 'Schedule',
+      title: t('Schedule'),
       isFilled: schedule.length > 0,
-      summary: schedule.length ? `${schedule.length} touchpoint${schedule.length === 1 ? '' : 's'} planned` : undefined,
+      summary: schedule.length ? tp(schedule.length === 1 ? '{count} touchpoint planned' : '{count} touchpoints planned', { count: schedule.length }) : undefined,
       node: (
       <Card>
         <Label>{coaching.comms.schedule.label}</Label>
@@ -441,7 +443,7 @@ export function CommsStage() {
         {groupNames.length > 0 && (
           <div style={{ background: 'rgba(91,134,163,0.08)', border: '1px solid rgba(91,134,163,0.22)', borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
             <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--accent-text)', marginBottom: '8px' }}>
-              Audiences to cover (from “Identify Groups”)
+              {t('Audiences to cover (from “Identify Groups”)')}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {groupNames.map((name) => (
@@ -451,37 +453,37 @@ export function CommsStage() {
               ))}
             </div>
             <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '9px', lineHeight: 1.5 }}>
-              Make sure each of these hears from you. Pick them from the Audience dropdown on each touchpoint below.
+              {t('Make sure each of these hears from you. Pick them from the Audience dropdown on each touchpoint below.')}
             </div>
           </div>
         )}
 
         {data.channels.length === 0 && (
           <InsightCallout tone="info" style={{ marginBottom: '16px' }}>
-            Pick your channels above first, each touchpoint’s channel dropdown only offers the channels you’ve chosen.
+            {t('Pick your channels above first, each touchpoint’s channel dropdown only offers the channels you’ve chosen.')}
           </InsightCallout>
         )}
 
         {PHASES.map((phase) => {
           const meta = coaching.comms.schedule.phases[phase]
-          const items = schedule.filter((t) => t.phase === phase)
+          const items = schedule.filter((row) => row.phase === phase)
           return (
             <div key={phase} style={{ marginBottom: '18px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px' }}>{meta.label}</div>
               <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', margin: '3px 0 10px', lineHeight: 1.5 }}>{meta.hint}</div>
 
-              {items.map((t) => (
+              {items.map((row) => (
                 <TouchpointCard
-                  key={t.id}
-                  t={t}
-                  channelOptions={channelOptionsFor(t.channel)}
+                  key={row.id}
+                  point={row}
+                  channelOptions={channelOptionsFor(row.channel)}
                   audienceOptions={audienceOptions}
-                  onChange={(patch) => setTouchpoint(t.id, patch)}
-                  onDelete={() => delTouchpoint(t.id)}
+                  onChange={(patch) => setTouchpoint(row.id, patch)}
+                  onDelete={() => delTouchpoint(row.id)}
                 />
               ))}
 
-              <AddButton label="+ Add touchpoint" onClick={() => addTouchpoint(phase)} />
+              <AddButton label={t('Add touchpoint')} onClick={() => addTouchpoint(phase)} />
             </div>
           )
         })}
@@ -492,7 +494,7 @@ export function CommsStage() {
             onClick={loadExample}
             style={{ background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '6px', padding: '8px 14px', color: 'var(--accent-text)', fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            Load an example schedule →
+            {t('Load an example schedule →')}
           </button>
         )}
       </Card>

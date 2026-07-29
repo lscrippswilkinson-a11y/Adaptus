@@ -7,11 +7,12 @@ import { buildTimeline, collectLaunchTasks, preparedness, type PrepTask } from '
 import { breakPoints, downloadPdf, nodeBackground } from '@/lib/exports'
 import { downloadDeck } from '@/lib/deck'
 import { uid } from '@/lib/id'
+import { getLang, htmlLang, t, tp } from '@/i18n'
 
 // Green once meaningfully on track (>70%), amber mid, red low, green reads as
 // good progress rather than a warning.
 const prepColor = (p: number) => (p >= 70 ? '#22c55e' : p >= 40 ? '#f59e0b' : '#ef4444')
-const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+const shortDate = (iso: string) => new Date(iso + 'T00:00:00').toLocaleDateString(htmlLang(getLang()), { month: 'short', day: 'numeric' })
 /** Today as a local yyyy-mm-dd string, for comparing against task due dates. */
 const todayISO = () => {
   const n = new Date()
@@ -34,7 +35,10 @@ const GROUP_ORDER = [
   'Your tasks',
 ]
 
-/** Display labels for task groups (keys above stay stable for the data layer). */
+/**
+ * Display labels for task groups. The keys above are the canonical English
+ * group names the data layer keys off, so only the label is translated.
+ */
 const GROUP_LABELS: Record<string, string> = {
   'Launch readiness': 'Go-live checklist', // avoid clashing with the "Launch Preparedness" score label
   'Your tasks': 'Additional tasks',
@@ -44,7 +48,7 @@ const GROUP_LABELS: Record<string, string> = {
   'Impacted groups': 'Who’s affected',
   'Sponsor commitments': 'Backer commitments',
 }
-const labelFor = (g: string) => GROUP_LABELS[g] ?? g
+const labelFor = (g: string) => t(GROUP_LABELS[g] ?? g)
 
 
 /** Live ticking countdown to the go-live date (handles today / past gracefully). */
@@ -57,7 +61,7 @@ function GoLiveCountdown({ date }: { date: string }) {
   }, [date])
 
   if (!date) {
-    return <div style={{ fontSize: '14px', color: 'rgba(var(--fg),0.4)', marginTop: '4px' }}>Set a target date to start the countdown →</div>
+    return <div style={{ fontSize: '14px', color: 'rgba(var(--fg),0.4)', marginTop: '4px' }}>{t('Set a target date to start the countdown →')}</div>
   }
 
   const target = new Date(date + 'T00:00:00')
@@ -67,11 +71,11 @@ function GoLiveCountdown({ date }: { date: string }) {
   targetDay.setHours(0, 0, 0, 0)
 
   if (targetDay.getTime() === today.getTime()) {
-    return <div style={{ fontSize: '22px', fontWeight: 800, color: '#22c55e', marginTop: '4px' }}>🚀 Go-live is today!</div>
+    return <div style={{ fontSize: '22px', fontWeight: 800, color: '#22c55e', marginTop: '4px' }}>{t('🚀 Go-live is today!')}</div>
   }
   if (targetDay.getTime() < today.getTime()) {
     const daysAgo = Math.round((today.getTime() - targetDay.getTime()) / 86400000)
-    return <div style={{ fontSize: '18px', fontWeight: 700, color: '#86efac', marginTop: '4px' }}>✅ Launched {daysAgo} day{daysAgo === 1 ? '' : 's'} ago</div>
+    return <div style={{ fontSize: '18px', fontWeight: 700, color: '#86efac', marginTop: '4px' }}>{tp(daysAgo === 1 ? '✅ Launched {days} day ago' : '✅ Launched {days} days ago', { days: daysAgo })}</div>
   }
 
   const ms = target.getTime() - Date.now()
@@ -80,7 +84,7 @@ function GoLiveCountdown({ date }: { date: string }) {
   const m = Math.floor((ms % 3600000) / 60000)
   const s = Math.floor((ms % 60000) / 1000)
   const urgent = d < 7
-  const boxes: [string, number][] = [['Days', d], ['Hrs', h], ['Min', m], ['Sec', s]]
+  const boxes: [string, number][] = [[t('Days'), d], [t('Hrs'), h], [t('Min'), m], [t('Sec'), s]]
   return (
     <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
       {boxes.map(([label, val]) => (
@@ -265,13 +269,13 @@ export function DashboardStage() {
             <Share2 size={22} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Share this plan with your team</div>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{t('Share this plan with your team')}</div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.85)', marginTop: '2px' }}>
-              Send a read-only brief to your backer or team so everyone sees the plan and where it stands.
+              {t('Send a read-only brief to your backer or team so everyone sees the plan and where it stands.')}
             </div>
           </div>
           <span style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(255,255,255,0.95)', color: '#1f3445', borderRadius: '10px', padding: '11px 18px', fontWeight: 700, fontSize: '14px' }}>
-            Share <ArrowRight size={17} />
+            {t('Share')} <ArrowRight size={17} />
           </span>
         </button>
       )}
@@ -280,11 +284,11 @@ export function DashboardStage() {
       <div className="cq-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
           <div>
-            <div className="cq-lbl">Go-live countdown</div>
+            <div className="cq-lbl">{t('Go-live countdown')}</div>
             <GoLiveCountdown date={goLiveDate} />
           </div>
           <div style={{ width: '180px', flexShrink: 0 }}>
-            <div className="cq-lbl">Target date</div>
+            <div className="cq-lbl">{t('Target date')}</div>
             <input type="date" className="cq-input" value={goLiveDate} onChange={(e) => updateMilestones({ goLiveDate: e.target.value })} />
           </div>
         </div>
@@ -292,24 +296,24 @@ export function DashboardStage() {
 
       {/* Next up: the soonest-due open tasks, so the team sees what's next at a glance. */}
       <div className="cq-card">
-        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Next up</div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Your next 5 actions by due date.</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>{t('Next up')}</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>{t('Your next 5 actions by due date.')}</div>
         {upcoming.length === 0 ? (
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.45)', fontStyle: 'italic' }}>
-            Add due dates to your launch tasks below to see what’s coming up next.
+            {t('Add due dates to your launch tasks below to see what’s coming up next.')}
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
-            {upcoming.map((t) => {
-              const overdue = !!t.due && t.due < today
+            {upcoming.map((task) => {
+              const overdue = !!task.due && task.due < today
               return (
-                <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px' }}>
-                  <div style={{ width: '54px', flexShrink: 0, fontSize: '13px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>{shortDate(t.due!)}</div>
+                <div key={task.key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 12px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px' }}>
+                  <div style={{ width: '54px', flexShrink: 0, fontSize: '13px', fontWeight: 700, color: overdue ? '#ef4444' : 'var(--accent-text)', fontVariantNumeric: 'tabular-nums' }}>{shortDate(task.due!)}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.label}</div>
-                    <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{labelFor(t.group)}{t.owner ? ` · ${t.owner}` : ''}</div>
+                    <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.label}</div>
+                    <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{labelFor(task.group)}{task.owner ? ` · ${task.owner}` : ''}</div>
                   </div>
-                  {overdue && <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>}
+                  {overdue && <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>{t('Overdue')}</span>}
                 </div>
               )
             })}
@@ -322,10 +326,10 @@ export function DashboardStage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div>
             <div style={{ fontSize: '40px', fontWeight: 800, color: prepColor(prep.pct), lineHeight: 1 }}>{prep.pct}%</div>
-            <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>Launch Preparedness</div>
+            <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>{t('Launch Preparedness')}</div>
           </div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginBottom: '6px' }}>{prep.done} of {prep.total} tasks complete</div>
+            <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginBottom: '6px' }}>{tp('{done} of {total} tasks complete', { done: prep.done, total: prep.total })}</div>
             <div style={{ height: '10px', background: 'rgba(var(--fg),0.08)', borderRadius: '5px', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${prep.pct}%`, background: prepColor(prep.pct), borderRadius: '5px', transition: 'width 0.4s' }} />
             </div>
@@ -336,14 +340,14 @@ export function DashboardStage() {
       {/* Aggregated task list */}
       <div className="cq-card">
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Launch tasks</div>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>{t('Launch tasks')}</div>
           {hiddenTasks.length > 0 && (
             <button type="button" onClick={restoreHidden} style={{ flexShrink: 0, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
-              ↩ Restore {hiddenTasks.length} removed
+              {tp('↩ Restore {count} removed', { count: hiddenTasks.length })}
             </button>
           )}
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>Pulled from your planning sections. Tick items off here or in their own section, your score updates either way. Removing a task here hides it from this list, your plan stays intact.</div>
+        <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '14px' }}>{t('Pulled from your planning sections. Tick items off here or in their own section, your score updates either way. Removing a task here hides it from this list, your plan stays intact.')}</div>
 
         {GROUP_ORDER.map((group, gi) => {
           // Order each group by due date (soonest first); undated tasks keep
@@ -383,57 +387,57 @@ export function DashboardStage() {
                 <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '1px' }}>{labelFor(group)}</span>
                 {total > 0 && (
                   <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 600, color: allDone ? '#86efac' : 'rgba(var(--fg),0.45)' }}>
-                    {allDone ? `✓ ${doneCount}/${total} complete` : `${doneCount}/${total}`}
+                    {allDone ? tp('✓ {done}/{total} complete', { done: doneCount, total }) : `${doneCount}/${total}`}
                   </span>
                 )}
               </button>
 
               {open && isCheckoff && (
-                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', fontStyle: 'italic', margin: '8px 0 0 22px' }}>Confirm when ready</div>
+                <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', fontStyle: 'italic', margin: '8px 0 0 22px' }}>{t('Confirm when ready')}</div>
               )}
 
               {open && (
                 <div style={{ marginTop: '12px', marginLeft: '22px' }}>
-                  {items.map((t) => {
-                    const isCustomRow = t.source === 'custom'
+                  {items.map((task) => {
+                    const isCustomRow = task.source === 'custom'
                     return (
-                      <div key={t.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
+                      <div key={task.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', background: 'rgba(var(--fg),0.02)', border: '1px solid rgba(var(--fg),0.06)', borderRadius: '8px', marginBottom: '6px' }}>
                         <button
                           type="button"
-                          onClick={() => toggle(t)}
-                          style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: t.done ? '#22c55e' : 'transparent', borderColor: t.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
+                          onClick={() => toggle(task)}
+                          style={{ width: '20px', height: '20px', borderRadius: '5px', border: '1.5px solid', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'var(--text)', background: task.done ? '#22c55e' : 'transparent', borderColor: task.done ? '#22c55e' : 'rgba(var(--fg),0.2)', fontFamily: 'inherit' }}
                         >
-                          {t.done ? '✓' : ''}
+                          {task.done ? '✓' : ''}
                         </button>
                         {isCustomRow ? (
                           <TextInput
-                            value={customById.get(t.refId!)?.label ?? ''}
-                            onCommit={(v) => setCustomLabel(t.refId!, v)}
-                            placeholder="Describe this task…"
+                            value={customById.get(task.refId!)?.label ?? ''}
+                            onCommit={(v) => setCustomLabel(task.refId!, v)}
+                            placeholder={t('Describe this task…')}
                             style={{ flex: 1, minWidth: 0 }}
                           />
                         ) : (
-                          <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: t.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: t.done ? 'line-through' : 'none' }}>{t.label}</span>
+                          <span style={{ flex: 1, minWidth: 0, fontSize: '13px', color: task.done ? 'rgba(var(--fg),0.4)' : 'rgba(var(--fg),0.85)', textDecoration: task.done ? 'line-through' : 'none' }}>{task.label}</span>
                         )}
                         <TextInput
-                          value={t.owner ?? ''}
-                          onCommit={(v) => setTaskOwner(t.key, v)}
-                          placeholder="Owner"
+                          value={task.owner ?? ''}
+                          onCommit={(v) => setTaskOwner(task.key, v)}
+                          placeholder={t('Owner')}
                           style={{ width: '130px', flexShrink: 0 }}
                         />
                         <input
                           type="date"
                           className="cq-input"
-                          value={t.due ?? ''}
-                          onChange={(e) => setTaskDue(t.key, e.target.value)}
-                          aria-label="Due date"
+                          value={task.due ?? ''}
+                          onChange={(e) => setTaskDue(task.key, e.target.value)}
+                          aria-label={t('Due date')}
                           style={{ width: '150px', flexShrink: 0 }}
                         />
-                        <DelButton onClick={() => removeTask(t)} />
+                        <DelButton onClick={() => removeTask(task)} />
                       </div>
                     )
                   })}
-                  <AddButton label="Add task" onClick={() => addTaskTo(group)} style={{ marginTop: '4px' }} />
+                  <AddButton label={t('Add task')} onClick={() => addTaskTo(group)} style={{ marginTop: '4px' }} />
                 </div>
               )}
             </div>
@@ -445,8 +449,8 @@ export function DashboardStage() {
       <div className="cq-card" ref={timelineRef}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>Timeline</div>
-            <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '16px' }}>Every launch item with a date, in order, plus your go-live.</div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'rgba(var(--fg),0.8)', marginBottom: '4px' }}>{t('Timeline')}</div>
+            <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)', marginBottom: '16px' }}>{t('Every launch item with a date, in order, plus your go-live.')}</div>
           </div>
 
           {/* Quick export, so the timeline can be handed out on its own without
@@ -454,21 +458,21 @@ export function DashboardStage() {
               themselves (data-export-hide), or the buttons end up in the image. */}
           {timeline.length > 0 && (
             <div data-export-hide style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-              <button type="button" onClick={timelineLink} className="tl-export" title="Copy a shareable link to this plan">
-                {copiedLink ? <Check size={13} /> : <Link2 size={13} />} {copiedLink ? 'Copied' : 'Link'}
+              <button type="button" onClick={timelineLink} className="tl-export" title={t('Copy a shareable link to this plan')}>
+                {copiedLink ? <Check size={13} /> : <Link2 size={13} />} {copiedLink ? t('Copied') : t('Link')}
               </button>
               <button type="button" onClick={() => exportTimeline('pptx')} disabled={!!tlBusy} className="tl-export">
-                {tlBusy === 'pptx' ? <Loader2 size={13} className="spin" /> : <Presentation size={13} />} PowerPoint
+                {tlBusy === 'pptx' ? <Loader2 size={13} className="spin" /> : <Presentation size={13} />} {t('PowerPoint')}
               </button>
               <button type="button" onClick={() => exportTimeline('pdf')} disabled={!!tlBusy} className="tl-export">
-                {tlBusy === 'pdf' ? <Loader2 size={13} className="spin" /> : <FileDown size={13} />} PDF
+                {tlBusy === 'pdf' ? <Loader2 size={13} className="spin" /> : <FileDown size={13} />} {t('PDF')}
               </button>
             </div>
           )}
         </div>
         {timeline.length === 0 ? (
           <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.45)', fontStyle: 'italic' }}>
-            No dated items yet, set due dates on your launch tasks above to build the timeline.
+            {t('No dated items yet, set due dates on your launch tasks above to build the timeline.')}
           </div>
         ) : (
           <div style={{ position: 'relative' }}>
@@ -493,9 +497,9 @@ export function DashboardStage() {
                             <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginTop: '1px' }}>{it.group}{it.owner ? ` · ${it.owner}` : ''}</div>
                           )}
                         </div>
-                        {it.done && <span style={{ flexShrink: 0, fontSize: '11px', color: '#86efac', fontWeight: 700 }}>✓ Done</span>}
+                        {it.done && <span style={{ flexShrink: 0, fontSize: '11px', color: '#86efac', fontWeight: 700 }}>{t('✓ Done')}</span>}
                         {!it.done && overdue && !it.milestone && !it.postLaunch && (
-                          <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>Overdue</span>
+                          <span style={{ flexShrink: 0, fontSize: '10.5px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 7px' }}>{t('Overdue')}</span>
                         )}
                       </div>
                     ))}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Project } from '@/types'
 import { CHANGE_TYPES } from '@/data/constants'
 import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE } from '@/data/business'
+import { t } from '@/i18n'
 
 const sideBtn: React.CSSProperties = {
   flex: 1,
@@ -37,37 +38,37 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '36px 44px', width: '500px', maxWidth: '90vw' }}>
         <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>
-          Edit project
+          {t('Edit project')}
         </div>
-        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Project details</h2>
+        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>{t('Project details')}</h2>
 
-        <div className="cq-lbl">Project name</div>
+        <div className="cq-lbl">{t('Project name')}</div>
         <input
           type="text"
           className="cq-input"
           autoFocus
           value={name}
-          placeholder="Example: Salesforce CRM Rollout Q3"
+          placeholder={t('Example: Salesforce CRM Rollout Q3')}
           style={{ marginBottom: '18px' }}
           onChange={(e) => setName(e.target.value)}
         />
 
-        <div className="cq-lbl">Change type</div>
+        <div className="cq-lbl">{t('Change type')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '6px 0 18px' }}>
-          {CHANGE_TYPES.map((t) => (
+          {CHANGE_TYPES.map((ct) => (
             <button
-              key={t}
+              key={ct}
               type="button"
-              className={'ch-btn' + (type === t ? ' sel' : '')}
+              className={'ch-btn' + (type === ct ? ' sel' : '')}
               style={{ fontSize: '12px' }}
-              onClick={() => setType(t)}
+              onClick={() => setType(ct)}
             >
-              {t}
+              {t(ct)}
             </button>
           ))}
         </div>
 
-        <div className="cq-lbl">Organization type</div>
+        <div className="cq-lbl">{t('Organization type')}</div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '6px 0 18px' }}>
           {BUSINESS_TYPES.map((b) => (
             <button
@@ -77,22 +78,22 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
               style={{ fontSize: '12px' }}
               onClick={() => setBusinessType(b.id)}
             >
-              {b.name}
+              {t(b.name)}
             </button>
           ))}
         </div>
 
-        <div className="cq-lbl">Brief description</div>
+        <div className="cq-lbl">{t('Brief description')}</div>
         <textarea
           className="cq-textarea"
           rows={4}
           value={description}
-          placeholder="What are you changing? Who's affected? What's the goal?"
+          placeholder={t("What are you changing? Who's affected? What's the goal?")}
           style={{ marginBottom: '18px' }}
           onChange={(e) => setDescription(e.target.value)}
         />
 
-        <div className="cq-lbl">Target completion date (optional)</div>
+        <div className="cq-lbl">{t('Target completion date (optional)')}</div>
         <input
           type="date"
           className="cq-input"
@@ -103,7 +104,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '26px' }}>
           <button type="button" style={{ ...sideBtn, color: 'rgba(var(--fg),0.4)' }} onClick={onClose}>
-            Cancel
+            {t('Cancel')}
           </button>
           <button
             type="button"
@@ -121,7 +122,7 @@ export function EditProjectModal({ project, onClose, onSave }: { project: Projec
               cursor: isValid ? 'pointer' : 'default',
             }}
           >
-            Save changes
+            {t('Save changes')}
           </button>
         </div>
       </div>

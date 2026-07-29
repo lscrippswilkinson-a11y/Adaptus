@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { FlaskConical, Mail, MailCheck, Lock } from 'lucide-react'
 import { useAuth } from '@/state/AuthContext'
+import { useT } from '@/i18n/LanguageContext'
+import { LanguageSelect } from '@/i18n/LanguageSelect'
+import { TSplit } from '@/i18n/TSplit'
 
 /** Temporarily hide Google sign-in so the only option is the emailed magic link. Flip to true to restore. */
 const GOOGLE_LOGIN_ENABLED = false
 
 /** Full-screen gate shown when Supabase is configured but no one is signed in. */
 export function SignIn() {
+  const t = useT()
   const { signInWithGoogle, sendMagicLink } = useAuth()
   const [email, setEmail] = useState('')
   const [sending, setSending] = useState(false)
@@ -16,7 +20,7 @@ export function SignIn() {
   const send = async () => {
     const e = email.trim()
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
-      setError('Enter a valid email address.')
+      setError(t('Enter a valid email address.'))
       return
     }
     setSending(true)
@@ -28,7 +32,7 @@ export function SignIn() {
   }
 
   return (
-    <div className="cq-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+    <div className="cq-root" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '18px', padding: '24px' }}>
       <div
         style={{
           width: '420px',
@@ -52,19 +56,23 @@ export function SignIn() {
             <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 14px' }}>
               <MailCheck size={40} color="#86efac" />
             </div>
-            <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>Check your email</p>
+            <p style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 700, color: '#fff' }}>{t('Check your email')}</p>
             <p style={{ margin: '0 0 14px', fontSize: '13.5px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
-              We sent a sign-in link to <strong style={{ color: '#fff' }}>{sentTo}</strong>. Click it to get in, no password needed.
+              <TSplit
+                source="We sent a sign-in link to {email}. Click it to get in, no password needed."
+                slot="{email}"
+                node={<strong style={{ color: '#fff' }}>{sentTo}</strong>}
+              />
             </p>
             <p style={{ margin: '0 0 24px', fontSize: '12px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
-              It can take a minute to arrive. If you don't see it, check your spam folder.
+              {t("It can take a minute to arrive. If you don't see it, check your spam folder.")}
             </p>
-            <button type="button" onClick={() => { setSentTo(''); setEmail('') }} style={textBtn}>Use a different email</button>
+            <button type="button" onClick={() => { setSentTo(''); setEmail('') }} style={textBtn}>{t('Use a different email')}</button>
           </>
         ) : (
           <>
             <p style={{ margin: '8px 0 26px', fontSize: '14px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.6 }}>
-              Sign in to access your change projects and collaborate with your team.
+              {t('Sign in to access your change projects and collaborate with your team.')}
             </p>
             {GOOGLE_LOGIN_ENABLED && (
               <>
@@ -73,12 +81,12 @@ export function SignIn() {
                   onClick={signInWithGoogle}
                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', background: '#fff', color: '#2c4a60', border: 'none', borderRadius: '10px', padding: '13px 20px', fontWeight: 700, fontSize: '14.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}
                 >
-                  <GoogleMark /> Continue with Google
+                  <GoogleMark /> {t('Continue with Google')}
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
                   <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
-                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>or</span>
+                  <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{t('or')}</span>
                   <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.2)' }} />
                 </div>
               </>
@@ -98,19 +106,20 @@ export function SignIn() {
               disabled={sending}
               style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '9px', width: '100%', background: 'rgba(255,255,255,0.14)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)', borderRadius: '10px', padding: '12px 20px', fontWeight: 700, fontSize: '14px', cursor: sending ? 'default' : 'pointer', opacity: sending ? 0.6 : 1, fontFamily: 'inherit' }}
             >
-              <Mail size={17} /> {sending ? 'Sending…' : 'Email me a sign-in link'}
+              <Mail size={17} /> {sending ? t('Sending…') : t('Email me a sign-in link')}
             </button>
             {error && <div style={{ marginTop: '12px', fontSize: '12.5px', color: '#fca5a5' }}>{error}</div>}
             <p style={{ margin: '18px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
-              {GOOGLE_LOGIN_ENABLED ? 'Works with any email, Google not required.' : 'No password needed. Works with any email address.'}
+              {GOOGLE_LOGIN_ENABLED ? t('Works with any email, Google not required.') : t('No password needed. Works with any email address.')}
             </p>
             <p style={{ margin: '14px 0 0', fontSize: '11.5px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <Lock size={12} style={{ flexShrink: 0 }} /> Your projects are private to your account and never sold.{' '}
-              <a href="?page=security" style={{ color: '#fff', textDecoration: 'underline', whiteSpace: 'nowrap' }}>How we protect your data</a>
+              <Lock size={12} style={{ flexShrink: 0 }} /> {t('Your projects are private to your account and never sold.')}{' '}
+              <a href="?page=security" style={{ color: '#fff', textDecoration: 'underline', whiteSpace: 'nowrap' }}>{t('How we protect your data')}</a>
             </p>
           </>
         )}
       </div>
+      <LanguageSelect />
     </div>
   )
 }

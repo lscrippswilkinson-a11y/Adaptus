@@ -5,6 +5,7 @@ import { STAGES } from '@/data/stages'
 import { useWizardMode } from '@/state/WizardModeContext'
 import { FieldCoachVariant, FlatContainers, StageIntro } from '@/components/ui'
 import { TipBox } from '@/components/TipBox'
+import { useLanguage, useT } from '@/i18n/LanguageContext'
 
 export interface WizardStep {
   /** Stable key, e.g. 'statement'. */
@@ -142,6 +143,7 @@ const ghostBtn: CSSProperties = {
 
 /** Segmented Guided / Summary toggle. */
 function ModeToggle() {
+  const t = useT()
   const { mode, setMode } = useWizardMode()
   const seg = (active: boolean): CSSProperties => ({
     border: 'none',
@@ -157,10 +159,10 @@ function ModeToggle() {
   return (
     <div style={{ display: 'inline-flex', gap: '3px', background: 'rgba(var(--fg),0.05)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '8px', padding: '3px' }}>
       <button type="button" style={seg(mode === 'guided')} onClick={() => setMode('guided')} aria-pressed={mode === 'guided'}>
-        Guided
+        {t('Guided')}
       </button>
       <button type="button" style={seg(mode === 'summary')} onClick={() => setMode('summary')} aria-pressed={mode === 'summary'}>
-        Summary
+        {t('Summary')}
       </button>
     </div>
   )
@@ -173,6 +175,7 @@ function ModeToggle() {
  * screen whenever the stage/project remounts.
  */
 export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, guidance = true, hub }: StageFlowProps) {
+  const { t, tp } = useLanguage()
   const { mode } = useWizardMode()
   const setShowComplete = useContext(StageGateCtx)
   const setOnIntro = useContext(StageScreenCtx)
@@ -185,7 +188,8 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
 
   const total = steps.length
   const onReview = step >= total
-  const title = STAGES.find((s) => s.id === stageId)?.label ?? ''
+  const stageLabel = STAGES.find((s) => s.id === stageId)?.label
+  const title = stageLabel ? t(stageLabel) : ''
 
   // Hub stages ignore the summary toggle; the hub IS their overview. But a
   // read-only viewer always gets the flat summary (all fields, no navigation).
@@ -279,7 +283,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
             {blurb}
           </div>
           <button type="button" style={pillBtn} onClick={() => go(hub ? total : 0)}>
-            Let’s go <ChevronRight size={18} />
+            {t('Let’s go')} <ChevronRight size={18} />
           </button>
         </div>
       </div>
@@ -295,7 +299,11 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
         <div style={{ margin: '4px 0 8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '7px' }}>
             <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--accent-text)', textTransform: 'uppercase' }}>
-              {onReview ? 'Review' : hub ? `Step ${itemPos} of ${itemLen}` : `Step ${current + 1} of ${total}`}
+              {onReview
+                ? t('Review')
+                : hub
+                  ? tp('Step {current} of {total}', { current: itemPos, total: itemLen })
+                  : tp('Step {current} of {total}', { current: current + 1, total })}
             </span>
             {!onReview && <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.6)' }}>{steps[current].title}</span>}
           </div>
@@ -313,7 +321,7 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
             <ReviewScreen steps={steps} onEdit={(i) => go(i)} />
             <div style={{ marginTop: '22px' }}>
               <button type="button" style={ghostBtn} onClick={() => go(total - 1)}>
-                <ChevronLeft size={16} /> Back to questions
+                <ChevronLeft size={16} /> {t('Back to questions')}
               </button>
             </div>
           </div>
@@ -329,10 +337,10 @@ export function StageFlow({ stageId, icon, blurb, extra, steps, guided = true, g
               scrolling; on short screens it just sits inline at the content end. */}
           <div style={{ position: 'sticky', bottom: 0, zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0 14px', background: 'var(--bg-base)' }}>
             <button type="button" style={ghostBtn} onClick={goPrev}>
-              <ChevronLeft size={16} /> {backIsHub ? 'Back to list' : 'Back'}
+              <ChevronLeft size={16} /> {backIsHub ? t('Back to list') : t('Back')}
             </button>
             <button type="button" style={pillBtn} onClick={goNext}>
-              {nextIsHub ? 'Done' : current === total - 1 ? 'Review' : 'Next'} <ChevronRight size={18} />
+              {nextIsHub ? t('Done') : current === total - 1 ? t('Review') : t('Next')} <ChevronRight size={18} />
             </button>
           </div>
         </>
@@ -365,12 +373,13 @@ function toRows(steps: WizardStep[]): ReviewRow[] {
 }
 
 function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: number) => void }) {
+  const t = useT()
   const rows = toRows(steps)
   return (
     <div>
-      <h3 style={{ margin: '0 0 4px', fontSize: '19px', fontWeight: 800, color: 'var(--text)' }}>Review your answers</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: '19px', fontWeight: 800, color: 'var(--text)' }}>{t('Review your answers')}</h3>
       <p style={{ margin: '0 0 18px', fontSize: '13px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.6 }}>
-        Here’s everything you entered. Click any item to change it, then mark the step complete below.
+        {t('Here’s everything you entered. Click any item to change it, then mark the step complete below.')}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {rows.map((row, i) => {
@@ -420,13 +429,13 @@ function ReviewScreen({ steps, onEdit }: { steps: WizardStep[]; onEdit: (i: numb
                     key={s.id}
                     style={{ fontSize: '13px', color: answered ? 'rgba(var(--fg),0.72)' : 'rgba(var(--fg),0.4)', lineHeight: 1.5, fontStyle: answered ? 'normal' : 'italic' }}
                   >
-                    {answered ? s.summary : s.emptyLabel ?? 'Not added yet'}
+                    {answered ? s.summary : s.emptyLabel ?? t('Not added yet')}
                   </div>
                 )
               })}
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
-              <Pencil size={12} /> Edit
+              <Pencil size={12} /> {t('Edit')}
             </span>
           </button>
           )

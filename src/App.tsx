@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { AppProvider, useApp } from '@/state/AppContext'
 import { AuthProvider, useAuth } from '@/state/AuthContext'
 import { ThemeProvider } from '@/state/ThemeContext'
+import { LanguageProvider, useT } from '@/i18n/LanguageContext'
 import { WizardModeProvider } from '@/state/WizardModeContext'
 import { hasSupabase } from '@/lib/supabase'
 import { SignIn } from '@/components/SignIn'
@@ -11,9 +12,10 @@ import { SharedBriefPage } from '@/components/SharedBriefPage'
 import { SecurityPage } from '@/components/SecurityPage'
 
 function Splash() {
+  const t = useT()
   return (
     <div className="cq-root" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(var(--fg),0.5)', fontSize: '14px' }}>
-      Loading…
+      {t('Loading…')}
     </div>
   )
 }
@@ -62,7 +64,9 @@ export default function App() {
   if (shareToken) {
     return (
       <ThemeProvider>
-        <SharedBriefPage token={shareToken} />
+        <LanguageProvider>
+          <SharedBriefPage token={shareToken} />
+        </LanguageProvider>
       </ThemeProvider>
     )
   }
@@ -72,18 +76,22 @@ export default function App() {
   if (params.get('page') === 'security') {
     return (
       <ThemeProvider>
-        <SecurityPage />
+        <LanguageProvider>
+          <SecurityPage />
+        </LanguageProvider>
       </ThemeProvider>
     )
   }
 
   return (
     <ThemeProvider>
-      <WizardModeProvider>
-        <AuthProvider>
-          <Gate />
-        </AuthProvider>
-      </WizardModeProvider>
+      <LanguageProvider>
+        <WizardModeProvider>
+          <AuthProvider>
+            <Gate />
+          </AuthProvider>
+        </WizardModeProvider>
+      </LanguageProvider>
     </ThemeProvider>
   )
 }

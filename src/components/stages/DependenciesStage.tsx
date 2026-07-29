@@ -7,6 +7,8 @@ import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, 
 import { coaching } from '@/data/coaching'
 import { DEPENDENCY_TYPES } from '@/data/constants'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
+import { longDate } from '@/components/stages/TrainingStage'
 
 const STATUS_LEVELS: LevelOption<DependencyStatus>[] = [
   { value: 'Not started', label: 'Not started', desc: 'Hasn’t been kicked off yet.' },
@@ -34,39 +36,39 @@ export function DependenciesStage() {
   if (data.items.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add the first thing you’re waiting on',
+      title: t('Add the first thing you’re waiting on'),
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <AddItemButton label="Add the first thing you’re waiting on" onClick={addItem} />
+          <AddItemButton label={t('Add the first thing you’re waiting on')} onClick={addItem} />
         </div>
       ),
     })
   }
 
   data.items.forEach((d, i) => {
-    const what = d.name.trim() || `Item ${i + 1}`
+    const what = d.name.trim() || tp('Item {n}', { n: i + 1 })
     const isLast = i === data.items.length - 1
 
     // Screen 1: name + type
     steps.push({
       id: `${d.id}-name`,
-      title: `${what}: what & type`,
+      title: tp('{item}: what & type', { item: what }),
       isFilled: !!d.name.trim(),
-      summary: d.name ? `${d.name} (${d.type})` : undefined,
+      summary: d.name ? `${d.name} (${t(d.type)})` : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <Label>What you’re waiting on</Label>
-          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder="Example: IT sets up everyone’s logins" />
+          <Label>{t('What you’re waiting on')}</Label>
+          <TextInput value={d.name} onCommit={(v) => setItem(d.id, { name: v })} placeholder={t('Example: IT sets up everyone’s logins')} />
           <div style={{ marginTop: '18px' }}>
-            <GuidedLabel>What kind is it?</GuidedLabel>
+            <GuidedLabel>{t('What kind is it?')}</GuidedLabel>
             <ChipPicker value={d.type} options={DEPENDENCY_TYPES} onChange={(v) => setItem(d.id, { type: v as DependencyType })} />
           </div>
-          {data.items.length > 1 && <RemoveItemButton label="Remove this item" onClick={() => delItem(d.id)} />}
+          {data.items.length > 1 && <RemoveItemButton label={t('Remove this item')} onClick={() => delItem(d.id)} />}
         </div>
       ),
     })
@@ -74,15 +76,15 @@ export function DependenciesStage() {
     // Screen 2: owner
     steps.push({
       id: `${d.id}-owner`,
-      title: `${what}: owner`,
+      title: tp('{item}: owner', { item: what }),
       isFilled: !!d.name.trim(),
       summary: d.owner || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who owns it?</h2>
+          <h2 style={headline}>{t('Who owns it?')}</h2>
           <div style={whyStyle}>{w.detail.why}</div>
-          <Label>Owner: who’s responsible?</Label>
-          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder="Example: IT - Priya" />
+          <Label>{t('Owner: who’s responsible?')}</Label>
+          <TextInput value={d.owner} onCommit={(v) => setItem(d.id, { owner: v })} placeholder={t('Example: IT - Priya')} />
         </div>
       ),
     })
@@ -90,14 +92,14 @@ export function DependenciesStage() {
     // Screen 3: needed by
     steps.push({
       id: `${d.id}-date`,
-      title: `${what}: needed by`,
+      title: tp('{item}: needed by', { item: what }),
       isFilled: !!d.name.trim(),
-      summary: d.neededBy ? `by ${d.neededBy}` : undefined,
+      summary: d.neededBy ? tp('by {date}', { date: longDate(d.neededBy) }) : undefined,
       node: (
         <div>
-          <h2 style={headline}>When do you need it?</h2>
+          <h2 style={headline}>{t('When do you need it?')}</h2>
           <div style={whyStyle}>{w.detail.why}</div>
-          <Label>Needed by</Label>
+          <Label>{t('Needed by')}</Label>
           <input type="date" className="cq-input" value={d.neededBy} onChange={(e) => setItem(d.id, { neededBy: e.target.value })} />
         </div>
       ),
@@ -106,18 +108,18 @@ export function DependenciesStage() {
     // Screen 3: status (+ at-risk note on the last)
     steps.push({
       id: `${d.id}-status`,
-      title: `${what}: status`,
+      title: tp('{item}: status', { item: what }),
       isFilled: !!d.name.trim(),
-      summary: d.status,
+      summary: t(d.status),
       node: (
         <div>
-          <h2 style={headline}>Where does it stand right now?</h2>
+          <h2 style={headline}>{t('Where does it stand right now?')}</h2>
           <div style={whyStyle}>{w.status.why}</div>
           <LevelPicker value={d.status} options={STATUS_LEVELS} onChange={(v) => setItem(d.id, { status: v })} />
           {mode === 'guided' && isLast && atRiskNote && (
             <InsightCallout tone={atRiskNote.tone} style={{ marginTop: '16px' }}>{atRiskNote.text}</InsightCallout>
           )}
-          {isLast && <AddAnotherButton label="Add another thing you’re waiting on" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label={t('Add another thing you’re waiting on')} onAdd={addItem} />}
         </div>
       ),
     })

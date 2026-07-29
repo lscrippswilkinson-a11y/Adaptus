@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Check, Plus, Trash2 } from 'lucide-react'
 import { useStageNav } from '@/components/StageFlow'
+import { t } from '@/i18n'
 
 /**
  * Shared building blocks for the per-item guided flows (one question per
@@ -76,8 +77,8 @@ export function LevelPicker<T extends string>({ value, options, onChange }: { va
               {sel && <Check size={12} strokeWidth={3} color="var(--on-accent)" />}
             </div>
             <div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)', marginBottom: '3px' }}>{o.label}</div>
-              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.7)', lineHeight: 1.5 }}>{o.desc}</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)', marginBottom: '3px' }}>{t(o.label)}</div>
+              <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.7)', lineHeight: 1.5 }}>{t(o.desc)}</div>
             </div>
           </button>
         )
@@ -130,7 +131,8 @@ export function ChipPicker({
             }}
           >
             {sel && <Check size={13} strokeWidth={3} color={accent} />}
-            {o}
+            {/* `o` is the stored, canonical value; only its label is translated. */}
+            {t(o)}
           </button>
         )
       })}

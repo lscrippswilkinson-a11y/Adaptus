@@ -5,6 +5,8 @@ import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
+import { TSplit } from '@/i18n/TSplit'
 
 export function SponsorStage() {
   const { project, data, update } = useStageEditor('sponsor')
@@ -23,11 +25,11 @@ export function SponsorStage() {
   const actions = data.sponsorActions
 
   const addAction = (text: string) => {
-    const t = text.trim()
-    if (!t) return
+    const trimmed = text.trim()
+    if (!trimmed) return
     // Skip exact duplicates so re-clicking a suggestion is a no-op.
-    if (actions.some((a) => a.text.toLowerCase() === t.toLowerCase())) return
-    update({ sponsorActions: [...actions, { id: uid(), text: t, done: false }] })
+    if (actions.some((a) => a.text.toLowerCase() === trimmed.toLowerCase())) return
+    update({ sponsorActions: [...actions, { id: uid(), text: trimmed, done: false }] })
   }
   // "Add another action" drops in a blank card the user then fills in,
   // mirroring how the Training and Groups review tabs add an item.
@@ -38,7 +40,10 @@ export function SponsorStage() {
 
   // Pre-set actions become quick-add suggestions; hide ones already on the list.
   // Alphabetical, so a long dropdown is scannable rather than arbitrary.
+  // Suggestions are inserted as the user's own free text, so they arrive
+  // translated rather than as canonical English.
   const suggestions = profile.sponsorActions
+    .map(t)
     .filter((s) => !actions.some((a) => a.text === s))
     .sort((a, b) => a.localeCompare(b))
 
@@ -56,15 +61,15 @@ export function SponsorStage() {
 
   const nameStep: WizardStep = {
     id: 'name',
-    title: 'Your backer',
+    title: t('Your backer'),
     reviewGroup,
     isFilled: noSponsor || !!data.name.trim(),
-    summary: noSponsor ? 'No senior backer — flagged as a risk' : data.name,
+    summary: noSponsor ? t('No senior backer — flagged as a risk') : data.name,
     node: (
       <FieldCoach label={f.name.label} why={f.name.why}>
         {!noSponsor && (
           <>
-            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={`Example: ${sponsorEx.name}`} />
+            <TextInput value={data.name} onCommit={(v) => update({ name: v })} placeholder={tp('Example: {text}', { text: t(sponsorEx.name) })} />
             {myName && data.name !== myName && (
               <button
                 type="button"
@@ -82,7 +87,7 @@ export function SponsorStage() {
                   fontFamily: 'inherit',
                 }}
               >
-                I’m the backer, use “{myName}”
+                {tp('I’m the backer, use “{name}”', { name: myName })}
               </button>
             )}
           </>
@@ -91,7 +96,7 @@ export function SponsorStage() {
         {/* Escape hatch: many real projects launch without a named sponsor. */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '9px', marginTop: '14px', cursor: 'pointer', fontSize: '13px', color: 'rgba(var(--fg),0.7)' }}>
           <input type="checkbox" checked={noSponsor} onChange={(e) => toggleNoSponsor(e.target.checked)} style={{ width: '17px', height: '17px', accentColor: '#ef4444', cursor: 'pointer', flexShrink: 0 }} />
-          We don’t have a senior backer (yet)
+          {t('We don’t have a senior backer (yet)')}
         </label>
 
         {noSponsor && (
@@ -107,10 +112,10 @@ export function SponsorStage() {
 
   const actionsStep: WizardStep = {
     id: 'actions',
-    title: 'Backer actions',
+    title: t('Backer actions'),
     reviewGroup,
     isFilled: namedActions.length > 0,
-    emptyLabel: 'No actions agreed yet',
+    emptyLabel: t('No actions agreed yet'),
     summary: namedActions.length ? (
       <ul style={{ margin: '2px 0 0', paddingLeft: '17px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {namedActions.map((a) => (
@@ -120,10 +125,13 @@ export function SponsorStage() {
     ) : undefined,
     node: (
       <Card>
-        <SectionTitle>What your backer will do</SectionTitle>
+        <SectionTitle>{t('What your backer will do')}</SectionTitle>
         <p style={{ fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.6, margin: '4px 0 0' }}>
-          Build this <strong>with your backer</strong>, not just for them. Each action you add becomes a checklist item
-          on your launch checklist, where you can give it an owner and a due date and check it off as it’s done.
+          <TSplit
+            source="Build this {withYourBacker}, not just for them. Each action you add becomes a checklist item on your launch checklist, where you can give it an owner and a due date and check it off as it’s done."
+            slot="{withYourBacker}"
+            node={<strong>{t('with your backer')}</strong>}
+          />
         </p>
 
         <div style={{ height: '14px' }} />
@@ -132,7 +140,7 @@ export function SponsorStage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
             {actions.map((a) => (
               <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder="Describe this action…" style={{ flex: 1, minWidth: 0 }} />
+                <TextInput value={a.text} onCommit={(v) => setActionText(a.id, v)} placeholder={t('Describe this action…')} style={{ flex: 1, minWidth: 0 }} />
                 <DelButton onClick={() => delAction(a.id)} />
               </div>
             ))}
@@ -151,7 +159,7 @@ export function SponsorStage() {
                 if (e.target.value) addAction(e.target.value)
               }}
             >
-              <option value="">Add a suggested action…</option>
+              <option value="">{t('Add a suggested action…')}</option>
               {suggestions.map((s) => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -159,7 +167,7 @@ export function SponsorStage() {
           </div>
         )}
 
-        <AddButton label={actions.length ? 'Add another action' : 'Add an action'} onClick={addBlankAction} />
+        <AddButton label={actions.length ? t('Add another action') : t('Add an action')} onClick={addBlankAction} />
       </Card>
     ),
   }

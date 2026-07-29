@@ -7,6 +7,7 @@ import { AddItemButton, LevelPicker, RemoveItemButton, headline, whyStyle, type 
 import { coaching } from '@/data/coaching'
 import { getBusinessProfile } from '@/data/business'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const IMPACT_LEVELS: LevelOption<Impact>[] = [
   { value: 'High', label: 'High impact', desc: 'Reshapes their daily work: new tools, new steps, or a changed role. They feel it constantly.' },
@@ -43,11 +44,11 @@ function GroupsHub({
   return (
     <div>
       <h2 style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: 800, color: 'var(--text)' }}>
-        {groups.length ? 'Your impacted groups' : 'Add your first group'}
+        {groups.length ? t('Your impacted groups') : t('Add your first group')}
       </h2>
       <p style={{ margin: '0 0 18px', fontSize: '14px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
         {groups.length
-          ? 'These are the groups this change touches. Tap one to edit it, add another below, or mark this step complete to continue.'
+          ? t('These are the groups this change touches. Tap one to edit it, add another below, or mark this step complete to continue.')
           : coaching.groups.wizard.name.why}
       </p>
 
@@ -65,22 +66,22 @@ function GroupsHub({
                   >
                     <span style={{ minWidth: 0 }}>
                       <span style={{ display: 'block', fontSize: '16px', fontWeight: 700, color: 'var(--text)' }}>
-                        {g.name.trim() || `Group ${i + 1}`}
-                        {g.size.trim() ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}>, {g.size.trim()} people</span> : null}
+                        {g.name.trim() || tp('Group {n}', { n: i + 1 })}
+                        {g.size.trim() ? <span style={{ fontWeight: 400, color: 'rgba(var(--fg),0.45)' }}>{tp(', {count} people', { count: g.size.trim() })}</span> : null}
                       </span>
                       <span style={{ display: 'block', fontSize: '13px', color: 'rgba(var(--fg),0.6)', marginTop: '3px' }}>
-                        Impact: {g.impact} <span style={{ color: 'rgba(var(--fg),0.3)' }}>|</span> Readiness: {g.readiness}
+                        {tp('Impact: {impact}', { impact: t(g.impact) })} <span style={{ color: 'rgba(var(--fg),0.3)' }}>|</span> {tp('Readiness: {readiness}', { readiness: t(g.readiness) })}
                       </span>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', flexShrink: 0, fontSize: '12px', fontWeight: 600, color: 'var(--accent-text)' }}>
-                      Edit <ChevronRight size={14} />
+                      {t('Edit')} <ChevronRight size={14} />
                     </span>
                   </button>
                   {groups.length > 1 && (
                     <button
                       type="button"
                       onClick={() => onRemove(g.id)}
-                      aria-label="Remove group"
+                      aria-label={t('Remove group')}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.35)', padding: '2px', flexShrink: 0, display: 'inline-flex' }}
                     >
                       <Trash2 size={15} />
@@ -95,7 +96,7 @@ function GroupsHub({
       )}
 
       <div style={{ marginTop: groups.length ? '16px' : 0 }}>
-        <AddItemButton label={groups.length ? 'Add another group' : 'Add your first group'} onClick={onAdd} />
+        <AddItemButton label={groups.length ? t('Add another group') : t('Add your first group')} onClick={onAdd} />
       </div>
     </div>
   )
@@ -115,13 +116,13 @@ export function GroupsStage() {
   const steps: WizardStep[] = []
 
   data.groups.forEach((g, i) => {
-    const name = g.name.trim() || `Group ${i + 1}`
+    const name = g.name.trim() || tp('Group {n}', { n: i + 1 })
     const insight = coaching.groups.insight(g)
 
     // Screen 1: name (+ rough size). First screen of the item → Back returns to the hub.
     steps.push({
       id: `${g.id}-name`,
-      title: `${name}: name & size`,
+      title: tp('{group}: name & size', { group: name }),
       isFilled: !!g.name.trim(),
       summary: g.name ? (g.size ? `${g.name} (~${g.size})` : g.name) : undefined,
       itemFirst: true,
@@ -129,15 +130,15 @@ export function GroupsStage() {
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <Label>Group name</Label>
-          <TextInput value={g.name} onCommit={(v) => setGroup(g.id, { name: v })} placeholder="Example: Billing team" />
+          <Label>{t('Group name')}</Label>
+          <TextInput value={g.name} onCommit={(v) => setGroup(g.id, { name: v })} placeholder={t('Example: Billing team')} />
           {(() => {
             // Quick-add chips for common groups in this kind of organization, hiding any already used.
             const used = new Set(data.groups.map((x) => x.name.trim().toLowerCase()))
-            const chips = suggestedGroups.filter((s) => !used.has(s.toLowerCase()))
+            const chips = suggestedGroups.map(t).filter((s) => !used.has(s.toLowerCase()))
             return chips.length > 0 ? (
               <div style={{ marginTop: '10px' }}>
-                <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginBottom: '6px' }}>Common groups, tap to use:</div>
+                <div style={{ fontSize: '11.5px', color: 'rgba(var(--fg),0.45)', marginBottom: '6px' }}>{t('Common groups, tap to use:')}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {chips.map((s) => (
                     <button
@@ -154,10 +155,10 @@ export function GroupsStage() {
             ) : null
           })()}
           <div style={{ marginTop: '14px' }}>
-            <Label>About how many people? (optional)</Label>
-            <TextInput value={g.size} onCommit={(v) => setGroup(g.id, { size: v })} placeholder="Example: 18" />
+            <Label>{t('About how many people? (optional)')}</Label>
+            <TextInput value={g.size} onCommit={(v) => setGroup(g.id, { size: v })} placeholder={t('Example: 18')} />
           </div>
-          {data.groups.length > 1 && <RemoveItemButton label="Remove this group" onClick={() => delGroup(g.id)} />}
+          {data.groups.length > 1 && <RemoveItemButton label={t('Remove this group')} onClick={() => delGroup(g.id)} />}
         </div>
       ),
     })
@@ -165,12 +166,12 @@ export function GroupsStage() {
     // Screen 2: impact
     steps.push({
       id: `${g.id}-impact`,
-      title: `${name}: impact`,
+      title: tp('{group}: impact', { group: name }),
       isFilled: !!g.name.trim(),
-      summary: impactLabelOf(g.impact),
+      summary: t(impactLabelOf(g.impact)),
       node: (
         <div>
-          <h2 style={headline}>How much does this change {g.name.trim() ? `the ${g.name.trim()}’s` : 'their'} day-to-day work?</h2>
+          <h2 style={headline}>{g.name.trim() ? tp('How much does this change the {group}’s day-to-day work?', { group: g.name.trim() }) : t('How much does this change their day-to-day work?')}</h2>
           <div style={whyStyle}>{w.impact.why}</div>
           <LevelPicker value={g.impact} options={IMPACT_LEVELS} onChange={(v) => setGroup(g.id, { impact: v })} />
         </div>
@@ -180,13 +181,13 @@ export function GroupsStage() {
     // Screen 3: readiness (+ the live insight). Last screen of the item → "Done" returns to the hub.
     steps.push({
       id: `${g.id}-readiness`,
-      title: `${name}: readiness`,
+      title: tp('{group}: readiness', { group: name }),
       isFilled: !!g.name.trim(),
-      summary: readyLabelOf(g.readiness),
+      summary: t(readyLabelOf(g.readiness)),
       itemLast: true,
       node: (
         <div>
-          <h2 style={headline}>How ready is {g.name.trim() ? `the ${g.name.trim()}` : 'this group'} for the change?</h2>
+          <h2 style={headline}>{g.name.trim() ? tp('How ready is the {group} for the change?', { group: g.name.trim() }) : t('How ready is this group for the change?')}</h2>
           <div style={whyStyle}>{w.readiness.why}</div>
           <LevelPicker value={g.readiness} options={READINESS_LEVELS} onChange={(v) => setGroup(g.id, { readiness: v })} />
           {insight && <InsightCallout tone={insight.tone} style={{ marginTop: '16px' }}>{insight.text}</InsightCallout>}

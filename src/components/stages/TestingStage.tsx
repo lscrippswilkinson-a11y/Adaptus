@@ -7,6 +7,7 @@ import { AddAnotherButton, AddItemButton, ChipPicker, GuidedLabel, LevelPicker, 
 import { coaching } from '@/data/coaching'
 import { TEST_TYPES } from '@/data/constants'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const STATUS_LEVELS: LevelOption<TestStatus>[] = [
   { value: 'Not started', label: 'Not started', desc: 'Haven’t run it yet.' },
@@ -21,12 +22,12 @@ export function TestingStage() {
   const w = coaching.testing.wizard
 
   const setItem = (id: number, patch: Partial<TestItem>) =>
-    update({ items: data.items.map((t) => (t.id === id ? { ...t, ...patch } : t)) })
-  const delItem = (id: number) => update({ items: data.items.filter((t) => t.id !== id) })
+    update({ items: data.items.map((row) => (row.id === id ? { ...row, ...patch } : row)) })
+  const delItem = (id: number) => update({ items: data.items.filter((row) => row.id !== id) })
   const addItem = () =>
     update({ items: [...data.items, { id: uid(), name: '', type: TEST_TYPES[0], owner: '', status: 'Not started', notes: '' }] })
 
-  const hasFailed = data.items.some((t) => t.status === 'Failed')
+  const hasFailed = data.items.some((row) => row.status === 'Failed')
   const failedNote = hasFailed ? coaching.testing.failed : null
 
   const steps: WizardStep[] = []
@@ -34,91 +35,91 @@ export function TestingStage() {
   if (data.items.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first test',
+      title: t('Add your first test'),
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <AddItemButton label="Add your first test" onClick={addItem} />
+          <AddItemButton label={t('Add your first test')} onClick={addItem} />
         </div>
       ),
     })
   }
 
-  data.items.forEach((t, i) => {
-    const what = t.name.trim() || `Test ${i + 1}`
+  data.items.forEach((row, i) => {
+    const what = row.name.trim() || tp('Test {n}', { n: i + 1 })
     const isLast = i === data.items.length - 1
 
     // Screen 1: name + type
     steps.push({
-      id: `${t.id}-name`,
-      title: `${what}: what & type`,
-      isFilled: !!t.name.trim(),
-      summary: t.name ? `${t.name} (${t.type})` : undefined,
+      id: `${row.id}-name`,
+      title: tp('{test}: what & type', { test: what }),
+      isFilled: !!row.name.trim(),
+      summary: row.name ? `${row.name} (${t(row.type)})` : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.name.label}</h2>
           <div style={whyStyle}>{w.name.why}</div>
-          <Label>What are you testing?</Label>
-          <TextInput value={t.name} onCommit={(v) => setItem(t.id, { name: v })} placeholder="Example: 5 real users try it on their own work" />
+          <Label>{t('What are you testing?')}</Label>
+          <TextInput value={row.name} onCommit={(v) => setItem(row.id, { name: v })} placeholder={t('Example: 5 real users try it on their own work')} />
           <div style={{ marginTop: '18px' }}>
-            <GuidedLabel>What kind of test is it?</GuidedLabel>
-            <ChipPicker value={t.type} options={TEST_TYPES} onChange={(v) => setItem(t.id, { type: v })} />
+            <GuidedLabel>{t('What kind of test is it?')}</GuidedLabel>
+            <ChipPicker value={row.type} options={TEST_TYPES} onChange={(v) => setItem(row.id, { type: v })} />
           </div>
-          {data.items.length > 1 && <RemoveItemButton label="Remove this test" onClick={() => delItem(t.id)} />}
+          {data.items.length > 1 && <RemoveItemButton label={t('Remove this test')} onClick={() => delItem(row.id)} />}
         </div>
       ),
     })
 
     // Screen 2: owner
     steps.push({
-      id: `${t.id}-owner`,
-      title: `${what}: owner`,
-      isFilled: !!t.name.trim(),
-      summary: t.owner || undefined,
+      id: `${row.id}-owner`,
+      title: tp('{test}: owner', { test: what }),
+      isFilled: !!row.name.trim(),
+      summary: row.owner || undefined,
       node: (
         <div>
-          <h2 style={headline}>Who runs it?</h2>
+          <h2 style={headline}>{t('Who runs it?')}</h2>
           <div style={whyStyle}>{w.owner.why}</div>
-          <Label>Owner: who runs it?</Label>
-          <TextInput value={t.owner} onCommit={(v) => setItem(t.id, { owner: v })} placeholder="Example: IT - Sam" />
+          <Label>{t('Owner: who runs it?')}</Label>
+          <TextInput value={row.owner} onCommit={(v) => setItem(row.id, { owner: v })} placeholder={t('Example: IT - Sam')} />
         </div>
       ),
     })
 
     // Screen 3: status
     steps.push({
-      id: `${t.id}-status`,
-      title: `${what}: status`,
-      isFilled: !!t.name.trim(),
-      summary: t.status || undefined,
+      id: `${row.id}-status`,
+      title: tp('{test}: status', { test: what }),
+      isFilled: !!row.name.trim(),
+      summary: row.status ? t(row.status) : undefined,
       node: (
         <div>
-          <h2 style={headline}>Where does it stand?</h2>
+          <h2 style={headline}>{t('Where does it stand?')}</h2>
           <div style={whyStyle}>{w.owner.why}</div>
-          <GuidedLabel>Status</GuidedLabel>
-          <LevelPicker value={t.status} options={STATUS_LEVELS} onChange={(v) => setItem(t.id, { status: v })} />
+          <GuidedLabel>{t('Status')}</GuidedLabel>
+          <LevelPicker value={row.status} options={STATUS_LEVELS} onChange={(v) => setItem(row.id, { status: v })} />
         </div>
       ),
     })
 
     // Screen 3: notes (+ failed note on the last)
     steps.push({
-      id: `${t.id}-notes`,
-      title: `${what}: notes`,
-      isFilled: !!t.notes.trim(),
-      summary: t.notes || undefined,
+      id: `${row.id}-notes`,
+      title: tp('{test}: notes', { test: what }),
+      isFilled: !!row.notes.trim(),
+      summary: row.notes || undefined,
       node: (
         <div>
-          <h2 style={headline}>What did you find?</h2>
+          <h2 style={headline}>{t('What did you find?')}</h2>
           <div style={whyStyle}>{w.notes.why}</div>
-          <Label>Notes</Label>
-          <TextInput value={t.notes} onCommit={(v) => setItem(t.id, { notes: v })} placeholder="What did you find? Any sign-off?" />
+          <Label>{t('Notes')}</Label>
+          <TextInput value={row.notes} onCommit={(v) => setItem(row.id, { notes: v })} placeholder={t('What did you find? Any sign-off?')} />
           {mode === 'guided' && isLast && failedNote && (
             <InsightCallout tone={failedNote.tone} style={{ marginTop: '16px' }}>{failedNote.text}</InsightCallout>
           )}
-          {isLast && <AddAnotherButton label="Add another test" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label={t('Add another test')} onAdd={addItem} />}
         </div>
       ),
     })

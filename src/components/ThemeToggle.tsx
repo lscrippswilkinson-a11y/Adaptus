@@ -1,5 +1,6 @@
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '@/state/ThemeContext'
+import { useLanguage } from '@/i18n/LanguageContext'
 
 /**
  * Flips between light and dark themes. `prominent` renders a labeled, accent
@@ -7,17 +8,21 @@ import { useTheme } from '@/state/ThemeContext'
  * it's a compact icon button for dense headers.
  */
 export function ThemeToggle({ prominent = false }: { prominent?: boolean }) {
+  const { t } = useLanguage()
   const { theme, toggle } = useTheme()
   const isDark = theme === 'dark'
-  const label = isDark ? 'Light mode' : 'Dark mode'
+  const label = isDark ? t('Light mode') : t('Dark mode')
+  // Some languages capitalize differently or don't case-fold the way English
+  // does, so the switch-to hint is its own entry rather than a lowercased label.
+  const hint = isDark ? t('Switch to light mode') : t('Switch to dark mode')
 
   if (prominent) {
     return (
       <button
         type="button"
         onClick={toggle}
-        title={`Switch to ${label.toLowerCase()}`}
-        aria-label={`Switch to ${label.toLowerCase()}`}
+        title={hint}
+        aria-label={hint}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -43,8 +48,8 @@ export function ThemeToggle({ prominent = false }: { prominent?: boolean }) {
     <button
       type="button"
       onClick={toggle}
-      title={`Switch to ${label.toLowerCase()}`}
-      aria-label={`Switch to ${label.toLowerCase()}`}
+      title={hint}
+      aria-label={hint}
       style={{
         display: 'inline-flex',
         alignItems: 'center',

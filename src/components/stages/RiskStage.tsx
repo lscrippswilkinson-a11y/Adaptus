@@ -8,6 +8,7 @@ import { coaching } from '@/data/coaching'
 import { RISK_CATS } from '@/data/constants'
 import { avgRisk, riskColor, riskLabel } from '@/lib/format'
 import { uid } from '@/lib/id'
+import { t, tp } from '@/i18n'
 
 const LIKELIHOOD = ['', 'Unlikely', 'Possible', 'Likely', 'Very Likely', 'Almost Certain']
 const IMPACT = ['', 'Minimal', 'Minor', 'Moderate', 'Major', 'Severe']
@@ -17,7 +18,7 @@ function Slider({ label, value, labels, onChange }: { label: string; value: numb
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
         <span className="cq-lbl">{label}</span>
-        <span style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600 }}>{labels[value]}</span>
+        <span style={{ fontSize: '12px', color: 'var(--accent-text)', fontWeight: 600 }}>{t(labels[value])}</span>
       </div>
       <input type="range" min={1} max={5} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} />
     </div>
@@ -31,12 +32,12 @@ function ScoreCard({ avg, count }: { avg: number; count: number }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div>
           <div style={{ fontSize: '34px', fontWeight: 800, color: riskColor(avg) }}>{avg}</div>
-          <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Risk Score</div>
+          <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('Risk Score')}</div>
         </div>
         <div style={{ width: '1px', height: '44px', background: 'rgba(var(--fg),0.08)' }} />
         <div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: riskColor(avg) }}>{riskLabel(avg)} Risk</div>
-          <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{count} item{count === 1 ? '' : 's'}</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: riskColor(avg) }}>{tp('{level} Risk', { level: t(riskLabel(avg)) })}</div>
+          <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.4)' }}>{tp(count === 1 ? '{count} item' : '{count} items', { count })}</div>
         </div>
         <div style={{ flex: 1, height: '8px', background: 'rgba(var(--fg),0.06)', borderRadius: '4px', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(avg / 10) * 100}%`, background: riskColor(avg), borderRadius: '4px', transition: 'width 0.5s' }} />
@@ -63,39 +64,39 @@ export function RiskStage() {
   if (data.items.length === 0) {
     steps.push({
       id: 'start',
-      title: 'Add your first risk',
+      title: t('Add your first risk'),
       isFilled: false,
       node: (
         <div>
           <h2 style={headline}>{w.describe.label}</h2>
           <div style={whyStyle}>{w.describe.why}</div>
-          <AddItemButton label="Add your first risk" onClick={addItem} />
+          <AddItemButton label={t('Add your first risk')} onClick={addItem} />
         </div>
       ),
     })
   }
 
   data.items.forEach((r, i) => {
-    const what = r.description.trim() || `Risk ${i + 1}`
+    const what = r.description.trim() || tp('Risk {n}', { n: i + 1 })
     const isLast = i === data.items.length - 1
 
     // Screen 1: category + description
     steps.push({
       id: `${r.id}-describe`,
-      title: `${what}: what`,
+      title: tp('{item}: what', { item: what }),
       isFilled: !!r.description.trim(),
-      summary: r.description ? `${r.category}: ${r.description}` : undefined,
+      summary: r.description ? `${t(r.category)}: ${r.description}` : undefined,
       node: (
         <div>
           <h2 style={headline}>{w.describe.label}</h2>
           <div style={whyStyle}>{w.describe.why}</div>
-          <GuidedLabel>What kind of risk is it?</GuidedLabel>
+          <GuidedLabel>{t('What kind of risk is it?')}</GuidedLabel>
           <ChipPicker value={r.category} options={RISK_CATS} onChange={(v) => setItem(r.id, { category: v })} />
           <div style={{ marginTop: '18px' }}>
-            <Label>Describe the risk</Label>
-            <TextInput value={r.description} onCommit={(v) => setItem(r.id, { description: v })} placeholder="Example: staff keep using the old system" />
+            <Label>{t('Describe the risk')}</Label>
+            <TextInput value={r.description} onCommit={(v) => setItem(r.id, { description: v })} placeholder={t('Example: staff keep using the old system')} />
           </div>
-          {data.items.length > 1 && <RemoveItemButton label="Remove this risk" onClick={() => delItem(r.id)} />}
+          {data.items.length > 1 && <RemoveItemButton label={t('Remove this risk')} onClick={() => delItem(r.id)} />}
         </div>
       ),
     })
@@ -103,14 +104,14 @@ export function RiskStage() {
     // Screen 2: likelihood
     steps.push({
       id: `${r.id}-likelihood`,
-      title: `${what}: likelihood`,
+      title: tp('{item}: likelihood', { item: what }),
       isFilled: !!r.description.trim(),
-      summary: LIKELIHOOD[r.likelihood],
+      summary: t(LIKELIHOOD[r.likelihood]),
       node: (
         <div>
-          <h2 style={headline}>How likely is it to happen?</h2>
+          <h2 style={headline}>{t('How likely is it to happen?')}</h2>
           <div style={whyStyle}>{w.rate.why}</div>
-          <Slider label="Likelihood" value={r.likelihood} labels={LIKELIHOOD} onChange={(v) => setItem(r.id, { likelihood: v })} />
+          <Slider label={t('Likelihood')} value={r.likelihood} labels={LIKELIHOOD} onChange={(v) => setItem(r.id, { likelihood: v })} />
         </div>
       ),
     })
@@ -118,14 +119,14 @@ export function RiskStage() {
     // Screen 3: impact
     steps.push({
       id: `${r.id}-impact`,
-      title: `${what}: impact`,
+      title: tp('{item}: impact', { item: what }),
       isFilled: !!r.description.trim(),
-      summary: `${IMPACT[r.impact]} impact`,
+      summary: tp('{level} impact', { level: t(IMPACT[r.impact]) }),
       node: (
         <div>
-          <h2 style={headline}>How bad would it be if it did?</h2>
+          <h2 style={headline}>{t('How bad would it be if it did?')}</h2>
           <div style={whyStyle}>{w.rate.why}</div>
-          <Slider label="Impact" value={r.impact} labels={IMPACT} onChange={(v) => setItem(r.id, { impact: v })} />
+          <Slider label={t('Impact')} value={r.impact} labels={IMPACT} onChange={(v) => setItem(r.id, { impact: v })} />
         </div>
       ),
     })
@@ -133,22 +134,22 @@ export function RiskStage() {
     // Screen 3: mitigation (+ overall score + insight on the last)
     steps.push({
       id: `${r.id}-mitigation`,
-      title: `${what}: mitigation`,
+      title: tp('{item}: mitigation', { item: what }),
       isFilled: !!r.mitigation.trim(),
       summary: r.mitigation || undefined,
       node: (
         <div>
-          <h2 style={headline}>What’s your plan if this happens?</h2>
+          <h2 style={headline}>{t('What’s your plan if this happens?')}</h2>
           <div style={whyStyle}>{w.mitigation.why}</div>
-          <Label>Mitigation plan: your fix if this happens</Label>
-          <TextInput value={r.mitigation} onCommit={(v) => setItem(r.id, { mitigation: v })} placeholder="Example: Run both systems in parallel for 2 weeks as a safety net" />
+          <Label>{t('Mitigation plan: your fix if this happens')}</Label>
+          <TextInput value={r.mitigation} onCommit={(v) => setItem(r.id, { mitigation: v })} placeholder={t('Example: Run both systems in parallel for 2 weeks as a safety net')} />
           {mode === 'guided' && isLast && avg !== null && (
             <div style={{ marginTop: '18px' }}>
               <ScoreCard avg={avg} count={data.items.length} />
               {scoreInsight && <InsightCallout tone={scoreInsight.tone} style={{ marginTop: '12px' }}>{scoreInsight.text}</InsightCallout>}
             </div>
           )}
-          {isLast && <AddAnotherButton label="Add another risk" onAdd={addItem} />}
+          {isLast && <AddAnotherButton label={t('Add another risk')} onAdd={addItem} />}
         </div>
       ),
     })

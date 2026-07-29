@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Rocket, X } from 'lucide-react'
 import { BUSINESS_TYPES, DEFAULT_BUSINESS_TYPE, TAILORED_BUSINESS_TYPES } from '@/data/business'
+import { t, tp } from '@/i18n'
 
 export interface ProjectDraft {
   name: string
@@ -47,7 +48,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t('Close')}
           style={{ position: 'absolute', top: '18px', right: '18px', zIndex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', border: 'none', color: 'rgba(var(--fg),0.45)', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           <X size={18} />
@@ -55,31 +56,31 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
 
         {/* Scrollable body so the modal never overflows the viewport on shorter screens. */}
         <div style={{ padding: '36px 44px', overflowY: 'auto' }}>
-        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Name your change</h2>
+        <h2 style={{ margin: '0 0 22px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>{t('Name your change')}</h2>
 
-        <div className="cq-lbl">Project name</div>
+        <div className="cq-lbl">{t('Project name')}</div>
         <input
           type="text"
           className="cq-input"
           autoFocus
           value={draft.name}
-          placeholder="Example: Salesforce CRM Rollout Q3"
+          placeholder={t('Example: Salesforce CRM Rollout Q3')}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           onKeyDown={(e) => {
             if (e.key === 'Enter') create()
           }}
         />
 
-        <div className="cq-lbl" style={{ marginTop: '20px', marginBottom: '8px' }}>Select a template</div>
+        <div className="cq-lbl" style={{ marginTop: '20px', marginBottom: '8px' }}>{t('Select a template')}</div>
         <select
           className="cq-select"
           value={draft.businessType}
           onChange={(e) => setDraft({ ...draft, businessType: e.target.value })}
         >
-          <option value={DEFAULT_BUSINESS_TYPE.id}>{DEFAULT_BUSINESS_TYPE.name}</option>
-          <optgroup label="Tailored templates">
+          <option value={DEFAULT_BUSINESS_TYPE.id}>{t(DEFAULT_BUSINESS_TYPE.name)}</option>
+          <optgroup label={t('Tailored templates')}>
             {TAILORED_BUSINESS_TYPES.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>{t(b.name)}</option>
             ))}
           </optgroup>
         </select>
@@ -87,26 +88,26 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
             dropdown the description is invisible until you open it, so keep it
             visible for whatever is currently selected. */}
         {selectedType && (
-          <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.5)', fontSize: '12px', lineHeight: 1.5 }}>{selectedType.blurb}</p>
+          <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.5)', fontSize: '12px', lineHeight: 1.5 }}>{t(selectedType.blurb)}</p>
         )}
 
-        <div className="cq-lbl" style={{ marginTop: '20px' }}>Launch date <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>(optional)</span></div>
+        <div className="cq-lbl" style={{ marginTop: '20px' }}>{t('Launch date')} <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>{t('(optional)')}</span></div>
         <input
           type="date"
           className="cq-input"
           value={draft.targetDate}
           onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })}
         />
-        <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.4)', fontSize: '12px' }}>If you already have a target go-live, add it. You can change it later.</p>
+        <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.4)', fontSize: '12px' }}>{t('If you already have a target go-live, add it. You can change it later.')}</p>
 
-        <div className="cq-lbl" style={{ marginTop: '20px' }}>Grant access <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>(optional)</span></div>
+        <div className="cq-lbl" style={{ marginTop: '20px' }}>{t('Grant access')} <span style={{ color: 'rgba(var(--fg),0.4)', fontWeight: 400 }}>{t('(optional)')}</span></div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <input
             type="email"
             className="cq-input"
             style={{ flex: 1 }}
             value={emailInput}
-            placeholder="teammate@company.com"
+            placeholder={t('teammate@company.com')}
             onChange={(e) => setEmailInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ',') {
@@ -131,10 +132,10 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
               cursor: canAddEmail ? 'pointer' : 'default',
             }}
           >
-            Add
+            {t('Add')}
           </button>
         </div>
-        <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.4)', fontSize: '12px' }}>They’ll join as editors and get access the next time they sign in.</p>
+        <p style={{ margin: '6px 0 0', color: 'rgba(var(--fg),0.4)', fontSize: '12px' }}>{t('They’ll join as editors and get access the next time they sign in.')}</p>
 
         {draft.invites.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
@@ -147,7 +148,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
                 <button
                   type="button"
                   onClick={() => removeEmail(email)}
-                  aria-label={`Remove ${email}`}
+                  aria-label={tp('Remove {email}', { email })}
                   style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '999px', background: 'transparent', border: 'none', color: 'rgba(var(--fg),0.5)', cursor: 'pointer', padding: 0 }}
                 >
                   <X size={13} />
@@ -178,7 +179,7 @@ export function Wizard({ onClose, onCreate }: { onClose: () => void; onCreate: (
               cursor: isValid ? 'pointer' : 'default',
             }}
           >
-            <Rocket size={16} /> Launch project
+            <Rocket size={16} /> {t('Launch project')}
           </button>
         </div>
         </div>

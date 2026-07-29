@@ -4,6 +4,7 @@ import { StageFlow, type WizardStep } from '@/components/StageFlow'
 import { coaching } from '@/data/coaching'
 import { longDate } from '@/components/stages/TrainingStage'
 import type { SustainmentData } from '@/types'
+import { t, tp } from '@/i18n'
 
 /** The three review points, 30/60/90 days after go-live. */
 const checkpoints: { key: 'checkpoint30' | 'checkpoint60' | 'checkpoint90'; label: string }[] = [
@@ -20,34 +21,34 @@ export function SustainmentStage() {
   const steps: WizardStep[] = [
     {
       id: 'reinforcementOwner',
-      title: 'Who keeps it alive',
+      title: t('Who keeps it alive'),
       isFilled: !!data.reinforcementOwner.trim(),
       summary: data.reinforcementOwner,
       node: (
         <FieldCoach label={f.reinforcementOwner.label} why={f.reinforcementOwner.why}>
           {/* One-liner: the field wants a name, so the short example is the one that fits. */}
-          <TextInput value={data.reinforcementOwner} onCommit={(v) => update({ reinforcementOwner: v })} placeholder="Example: Operations Manager, or a team lead" />
+          <TextInput value={data.reinforcementOwner} onCommit={(v) => update({ reinforcementOwner: v })} placeholder={t('Example: Operations Manager, or a team lead')} />
         </FieldCoach>
       ),
     },
     {
       id: 'checkpointDates',
-      title: 'Checkpoints',
+      title: t('Checkpoints'),
       isFilled: checkpoints.some((c) => !!data[c.key]),
-      summary: setCheckpoints.length ? setCheckpoints.map((c) => `${c.label}: ${longDate(data[c.key])}`).join('  ·  ') : undefined,
-      emptyLabel: 'No review dates set',
+      summary: setCheckpoints.length ? setCheckpoints.map((c) => `${t(c.label)}: ${longDate(data[c.key])}`).join('  ·  ') : undefined,
+      emptyLabel: t('No review dates set'),
       node: (
         <FieldCoach label={f.checkpointDates.label} why={f.checkpointDates.why}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
             {checkpoints.map((c) => (
               <div key={c.key} style={{ flex: '1 1 160px', minWidth: 0 }}>
-                <Label>{c.label}</Label>
+                <Label>{t(c.label)}</Label>
                 <input
                   type="date"
                   className="cq-input"
                   value={data[c.key]}
                   onChange={(e) => update({ [c.key]: e.target.value })}
-                  aria-label={`${c.label} date`}
+                  aria-label={tp('{checkpoint} date', { checkpoint: t(c.label) })}
                 />
               </div>
             ))}
@@ -57,7 +58,7 @@ export function SustainmentStage() {
               nothing a user wrote is lost, and they can copy the dates across. */}
           {data.checkpointDates.trim() && (
             <div style={{ marginTop: '14px', fontSize: '13px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
-              <span style={{ fontWeight: 600 }}>You noted earlier:</span> {data.checkpointDates}
+              <span style={{ fontWeight: 600 }}>{t('You noted earlier:')}</span> {data.checkpointDates}
             </div>
           )}
         </FieldCoach>
@@ -65,7 +66,7 @@ export function SustainmentStage() {
     },
     {
       id: 'metrics',
-      title: 'What you’ll watch',
+      title: t('What you’ll watch'),
       isFilled: !!data.metrics.trim(),
       summary: data.metrics,
       node: (
@@ -76,7 +77,7 @@ export function SustainmentStage() {
     },
     {
       id: 'risks',
-      title: 'What could pull it back',
+      title: t('What could pull it back'),
       isFilled: !!data.risks.trim(),
       summary: data.risks,
       node: (
@@ -87,7 +88,7 @@ export function SustainmentStage() {
     },
     {
       id: 'recognitionPlan',
-      title: 'Recognition',
+      title: t('Recognition'),
       isFilled: !!data.recognitionPlan.trim(),
       summary: data.recognitionPlan,
       node: (

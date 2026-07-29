@@ -12,6 +12,8 @@ import {
   revokeInviteLink,
   updateMemberRole,
 } from '@/lib/projectsRepo'
+import { t, tp } from '@/i18n'
+import { tr } from '@/i18n/rich'
 
 /**
  * Manage who can access a project: invite teammates by email at editor/viewer
@@ -41,7 +43,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
       setLinks(lks)
     } catch (err) {
       console.error('[adaptus] failed to load collaborators', err)
-      setError('Couldn’t load collaborators.')
+      setError(t('Couldn’t load collaborators.'))
     } finally {
       setLoading(false)
     }
@@ -54,7 +56,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
       await load()
     } catch (err) {
       console.error('[adaptus] create invite link failed', err)
-      setError('Couldn’t create an invite link.')
+      setError(t('Couldn’t create an invite link.'))
     }
   }
 
@@ -87,7 +89,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
   const invite = async () => {
     const e = email.trim().toLowerCase()
     if (!e || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
-      setError('Enter a valid email address.')
+      setError(t('Enter a valid email address.'))
       return
     }
     setBusy(true)
@@ -98,7 +100,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
       await load()
     } catch (err) {
       console.error('[adaptus] invite failed', err)
-      setError('Couldn’t send that invite.')
+      setError(t('Couldn’t send that invite.'))
     } finally {
       setBusy(false)
     }
@@ -137,59 +139,59 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.85)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 100, overflowY: 'auto', padding: '40px 20px' }} onClick={onClose}>
       <div style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', padding: '32px 36px', width: '540px', maxWidth: '92vw' }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>Collaborators</div>
-        <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>Share “{project.name || 'this project'}”</h2>
+        <div style={{ fontSize: '11px', color: '#5B86A3', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>{t('Collaborators')}</div>
+        <h2 style={{ margin: '0 0 6px', fontSize: '20px', fontWeight: 700, color: 'var(--text)' }}>{tp('Share “{project}”', { project: project.name || t('this project') })}</h2>
         <p style={{ margin: '0 0 22px', fontSize: '13px', color: 'rgba(var(--fg),0.6)', lineHeight: 1.6 }}>
-          Share a link or invite by email. <strong style={{ color: 'var(--text)' }}>Editors</strong> can change the plan; <strong style={{ color: 'var(--text)' }}>viewers</strong> can only read it.
+          {tr('Share a link or invite by email. **Editors** can change the plan; **viewers** can only read it.', { color: 'var(--text)' })}
         </p>
 
         {!hasSupabase ? (
           <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '10px', padding: '14px 16px', fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>
-            Collaboration needs the cloud. It’ll work on the deployed site once Supabase is configured.
+            {t('Collaboration needs the cloud. It’ll work on the deployed site once Supabase is configured.')}
           </div>
         ) : (
           <>
             {/* Invite link, the easy path: send it yourself, anyone can join. */}
             {isOwner && (
               <div style={{ marginBottom: '18px' }}>
-                <div className="cq-lbl">Invite link</div>
+                <div className="cq-lbl">{t('Invite link')}</div>
                 <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', margin: '2px 0 10px', lineHeight: 1.5 }}>
-                  Anyone who opens the link joins as the role you pick, send it however you like.
+                  {t('Anyone who opens the link joins as the role you pick, send it however you like.')}
                 </div>
                 {links.map((l) => (
                   <div key={l.id} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'capitalize', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '4px 8px', flexShrink: 0 }}>{l.role}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'capitalize', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.12)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '6px', padding: '4px 8px', flexShrink: 0 }}>{t(l.role === 'editor' ? 'Editor' : 'Viewer')}</span>
                     <input type="text" className="cq-input" readOnly value={linkUrl(l.token)} onFocus={(e) => e.target.select()} style={{ flex: 1, minWidth: 0, fontSize: '12px' }} />
-                    <button type="button" onClick={() => copyLink(l)} title="Copy link" aria-label="Copy link" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0, background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '8px', padding: '8px 12px', color: 'var(--accent-text)', fontWeight: 700, fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                      {copiedId === l.id ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+                    <button type="button" onClick={() => copyLink(l)} title={t('Copy link')} aria-label={t('Copy link')} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', flexShrink: 0, background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '8px', padding: '8px 12px', color: 'var(--accent-text)', fontWeight: 700, fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                      {copiedId === l.id ? <><Check size={14} /> {t('Copied')}</> : <><Copy size={14} /> {t('Copy')}</>}
                     </button>
-                    <button type="button" onClick={() => dropLink(l)} aria-label="Revoke link" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
+                    <button type="button" onClick={() => dropLink(l)} aria-label={t('Revoke link')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
                   </div>
                 ))}
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: links.length ? '4px' : 0 }}>
                   <select className="cq-select" value={linkRole} onChange={(e) => setLinkRole(e.target.value as Exclude<Role, 'owner'>)} style={{ width: 'auto' }}>
-                    <option value="viewer">Viewer</option>
-                    <option value="editor">Editor</option>
+                    <option value="viewer">{t('Viewer')}</option>
+                    <option value="editor">{t('Editor')}</option>
                   </select>
                   <button type="button" onClick={makeLink} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '9px 16px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <Link2 size={15} /> Create invite link
+                    <Link2 size={15} /> {t('Create invite link')}
                   </button>
                 </div>
               </div>
             )}
 
             {isOwner && (
-              <div className="cq-lbl" style={{ marginBottom: '8px' }}>Or invite by email</div>
+              <div className="cq-lbl" style={{ marginBottom: '8px' }}>{t('Or invite by email')}</div>
             )}
             {isOwner && (
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                <input type="email" className="cq-input" value={email} placeholder="teammate@company.com" style={{ flex: 1, minWidth: 0 }} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && invite()} />
+                <input type="email" className="cq-input" value={email} placeholder={t('teammate@company.com')} style={{ flex: 1, minWidth: 0 }} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && invite()} />
                 <select className="cq-select" value={role} onChange={(e) => setRole(e.target.value as Exclude<Role, 'owner'>)} style={{ width: 'auto' }}>
-                  <option value="editor">Editor</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="editor">{t('Editor')}</option>
+                  <option value="viewer">{t('Viewer')}</option>
                 </select>
                 <button type="button" onClick={invite} disabled={busy} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', flexShrink: 0, background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '0 16px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13px', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1, fontFamily: 'inherit' }}>
-                  <UserPlus size={15} /> Invite
+                  <UserPlus size={15} /> {t('Invite')}
                 </button>
               </div>
             )}
@@ -197,7 +199,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
 
             <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {loading ? (
-                <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.5)', padding: '8px 0' }}>Loading…</div>
+                <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.5)', padding: '8px 0' }}>{t('Loading…')}</div>
               ) : (
                 <>
                   {members.map((m) => (
@@ -210,17 +212,17 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
                         <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.email}</div>
                       </div>
                       {m.role === 'owner' ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: '#fcd34d', flexShrink: 0 }}><Crown size={13} /> Owner</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', fontWeight: 600, color: '#fcd34d', flexShrink: 0 }}><Crown size={13} /> {t('Owner')}</span>
                       ) : isOwner ? (
                         <>
                           <select className="cq-select" value={m.role} onChange={(e) => changeRole(m, e.target.value as Role)} style={{ width: 'auto', fontSize: '12px', padding: '5px 8px' }}>
-                            <option value="editor">Editor</option>
-                            <option value="viewer">Viewer</option>
+                            <option value="editor">{t('Editor')}</option>
+                            <option value="viewer">{t('Viewer')}</option>
                           </select>
-                          <button type="button" onClick={() => kick(m)} aria-label="Remove" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
+                          <button type="button" onClick={() => kick(m)} aria-label={t('Remove')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
                         </>
                       ) : (
-                        <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', textTransform: 'capitalize', flexShrink: 0 }}>{m.role}</span>
+                        <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.5)', flexShrink: 0 }}>{t(m.role === 'editor' ? 'Editor' : 'Viewer')}</span>
                       )}
                     </div>
                   ))}
@@ -232,10 +234,10 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inv.email}</div>
-                        <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.5)' }}>Invited · {inv.role} · pending</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(var(--fg),0.5)' }}>{tp('Invited · {role} · pending', { role: t(inv.role === 'editor' ? 'Editor' : 'Viewer') })}</div>
                       </div>
                       {isOwner && (
-                        <button type="button" onClick={() => unInvite(inv)} aria-label="Revoke invite" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
+                        <button type="button" onClick={() => unInvite(inv)} aria-label={t('Revoke invite')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(var(--fg),0.4)', flexShrink: 0, display: 'inline-flex' }}><Trash2 size={15} /></button>
                       )}
                     </div>
                   ))}
@@ -247,7 +249,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '22px' }}>
           <button type="button" onClick={onClose} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(var(--fg),0.06)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '10px', padding: '10px 22px', color: 'var(--text)', fontWeight: 600, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
-            <Check size={15} /> Done
+            <Check size={15} /> {t('Done')}
           </button>
         </div>
       </div>
