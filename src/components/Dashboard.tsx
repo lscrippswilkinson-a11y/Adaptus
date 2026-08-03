@@ -4,6 +4,7 @@ import {
   Check,
   FlaskConical,
   Lightbulb,
+  Lock,
   LogOut,
   Pencil,
   Plus,
@@ -14,6 +15,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useApp } from '@/state/AppContext'
+import { usePlan } from '@/state/PlanContext'
+import { FREE_PROJECT_LIMIT } from '@/lib/plan'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
 import { emptyProject } from '@/data/seed'
@@ -62,8 +66,10 @@ const primaryBtn: React.CSSProperties = {
 export function Dashboard() {
   const { t, tp } = useLanguage()
   const { state, dispatch, addProject } = useApp()
+  const { isPro, loading: planLoading } = usePlan()
   const { session, signOut } = useAuth()
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [upsell, setUpsell] = useState<string | null>(null)
   const [editing, setEditing] = useState<Project | null>(null)
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('recent')
@@ -76,6 +82,23 @@ export function Dashboard() {
 
   const completed = state.projects.filter(isComplete).length
   const total = state.projects.length
+
+  // Free plan: one project of your OWN. Projects someone else shared with you
+  // stay fully usable and don't count — you didn't create them.
+  const owned = state.projects.filter((p) => !p.role || p.role === 'owner').length
+  const atLimit = !isPro && !planLoading && owned >= FREE_PROJECT_LIMIT
+
+  /**
+   * Every "new project" affordance funnels through here, so there's one place
+   * the limit is enforced and one place the upsell is worded.
+   */
+  const startProject = () => {
+    if (atLimit) {
+      setUpsell(t('The free plan covers one change project. Upgrade to run as many as you’re leading, side by side.'))
+      return
+    }
+    setWizardOpen(true)
+  }
 
   const createProject = (draft: ProjectDraft) => {
     const project = { ...emptyProject(), name: draft.name, type: draft.type, businessType: draft.businessType, description: draft.description, targetDate: draft.targetDate }
@@ -133,8 +156,8 @@ export function Dashboard() {
               <LogOut size={15} /> {t('Sign out')}
             </button>
           )}
-          <button type="button" onClick={() => setWizardOpen(true)} style={primaryBtn}>
-            <Plus size={16} /> {t('New Project')}
+          <button type="button" onClick={startProject} style={primaryBtn} title={atLimit ? t('The free plan covers one project') : undefined}>
+            {atLimit ? <Lock size={15} /> : <Plus size={16} />} {t('New Project')}
           </button>
         </div>
        </div>
@@ -152,7 +175,7 @@ export function Dashboard() {
             </p>
             <button
               type="button"
-              onClick={() => setWizardOpen(true)}
+              onClick={startProject}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', background: '#fff', border: 'none', borderRadius: '12px', padding: '14px 24px', color: '#1f3445', fontWeight: 800, fontSize: '15.5px', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 6px 18px rgba(0,0,0,0.22)' }}
             >
               <Plus size={19} strokeWidth={2.5} /> {t('Create your first project')} <ArrowRight size={19} />
@@ -185,7 +208,7 @@ export function Dashboard() {
             ) : (
               <button
                 type="button"
-                onClick={() => setWizardOpen(true)}
+                onClick={startProject}
                 style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -263,6 +286,7 @@ export function Dashboard() {
         )}
       </div>
 
+      {upsell && <UpgradeModal reason={upsell} onClose={() => setUpsell(null)} />}
       {wizardOpen && <Wizard onClose={() => setWizardOpen(false)} onCreate={createProject} />}
       {editing && (
         <EditProjectModal

@@ -21,16 +21,22 @@ const hx = (c: string) => c.replace('#', '')
 // derived per-project from the user's brand colour (see deckPalette).
 const DECK = { BG: '11141F', BAND: '2C4A5F', PANEL: '1B2130', LINE: '2A3242', MUTED: 'AEB9C4', SUB: '8593A0', LIGHT: 'B8D0DE', TEXT: 'E8EDF2' }
 
-/** The deck palette for a project: the shared dark base, re-accented in its brand colour. */
-function deckPalette(project: Project) {
-  const brand = brandOf(project)
+/**
+ * The deck palette for a project: the shared dark base, re-accented in its brand
+ * colour. `pro` gates the branding — an unentitled project resolves back to the
+ * Adaptus accent with no logo and keeps the "Made with Adaptus" line.
+ */
+function deckPalette(project: Project, pro: boolean) {
+  const brand = brandOf(project, pro)
   return {
     ...DECK,
+    ACCENT: bare(brand.color),
     BAND: bare(shade(brand.color, -0.35)),
     LIGHT: bare(shade(brand.color, 0.45)),
     BAND_FG: bare(brand.fg === '#FFFFFF' ? '#FFFFFF' : '#11141F'),
     logo: brand.logo,
     logoRatio: brand.logoRatio,
+    whiteLabel: brand.whiteLabel,
   }
 }
 type Deck = ReturnType<typeof deckPalette>
@@ -87,7 +93,7 @@ function buildStatusSlide(pptx: any, project: Project, deck: Deck) {
   const advocates = named.filter((r) => r.support === 'Advocate').length
   const resistant = named.filter((r) => r.support === 'Resistant').length
   const ask = sd.executive.ask?.trim()
-  const branded = !sd.executive.hideBranding
+  const branded = !deck.whiteLabel
 
   const PANEL = deck.PANEL, MUTED = deck.MUTED, LIGHT = deck.LIGHT, TEXT = deck.TEXT
   const slide = pptx.addSlide()
@@ -158,7 +164,7 @@ function buildStatusSlide(pptx: any, project: Project, deck: Deck) {
   const askY = colY + 1.45
   slide.addText(t('WHAT I NEED FROM YOU'), { x: rx, y: askY, w: 5.83, h: 0.3, fontSize: 12, bold: true, color: LIGHT, charSpacing: 1 })
   if (ask) {
-    slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: bare(brandOf(project).color), width: 1 } })
+    slide.addShape('roundRect', { x: rx, y: askY + 0.42, w: 5.83, h: 1.75, rectRadius: 0.05, fill: { color: '17263A' }, line: { color: deck.ACCENT, width: 1 } })
     slide.addText(ask, { x: rx + 0.25, y: askY + 0.55, w: 5.33, h: 1.5, fontSize: 12.5, color: TEXT, valign: 'top' })
   } else {
     slide.addText(t('Add a clear ask — it’s the line that gets your backer to reply.'), { x: rx, y: askY + 0.42, w: 5.83, h: 0.4, fontSize: 12, italic: true, color: MUTED })
@@ -283,8 +289,8 @@ function buildAdoptionSlide(pptx: any, project: Project, deck: Deck) {
 }
 
 /** Build every slide of the status brief: summary, open tasks, timeline, adoption. */
-export function buildBriefDeck(pptx: any, project: Project) {
-  const deck = deckPalette(project)
+export function buildBriefDeck(pptx: any, project: Project, pro: boolean) {
+  const deck = deckPalette(project, pro)
   buildStatusSlide(pptx, project, deck)
   buildTasksSlides(pptx, project, deck)
   buildTimelineSlide(pptx, project, deck)
@@ -292,19 +298,20 @@ export function buildBriefDeck(pptx: any, project: Project) {
 }
 
 /** Build the timeline on its own, for the dashboard's quick export. */
-export function buildTimelineDeck(pptx: any, project: Project) {
-  buildTimelineSlide(pptx, project, deckPalette(project))
+export function buildTimelineDeck(pptx: any, project: Project, pro: boolean) {
+  buildTimelineSlide(pptx, project, deckPalette(project, pro))
 }
 
 /**
  * Write a .pptx for a project. `kind` picks what goes in it: the full brief, or
- * just the timeline.
+ * just the timeline. `pro` gates the exporter's branding, same as every other
+ * report surface.
  */
-export async function downloadDeck(project: Project, filename: string, kind: 'brief' | 'timeline' = 'brief') {
+export async function downloadDeck(project: Project, filename: string, kind: 'brief' | 'timeline' = 'brief', pro = false) {
   const { default: PptxGenJS } = await import('pptxgenjs')
   const pptx = new PptxGenJS()
   pptx.layout = 'LAYOUT_WIDE' // 13.33 x 7.5 in (16:9)
-  if (kind === 'timeline') buildTimelineDeck(pptx, project)
-  else buildBriefDeck(pptx, project)
+  if (kind === 'timeline') buildTimelineDeck(pptx, project, pro)
+  else buildBriefDeck(pptx, project, pro)
   await pptx.writeFile({ fileName: filename })
 }

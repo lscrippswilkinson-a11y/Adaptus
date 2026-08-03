@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Copy, Crown, Link2, Mail, Trash2, UserPlus } from 'lucide-react'
+import { Check, Copy, Crown, Link2, Lock, Mail, Trash2, UserPlus } from 'lucide-react'
 import type { Invite, InviteLink, Member, Project, Role } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import {
@@ -12,6 +12,9 @@ import {
   revokeInviteLink,
   updateMemberRole,
 } from '@/lib/projectsRepo'
+import { UpgradeModal } from '@/components/UpgradeModal'
+import { usePlan } from '@/state/PlanContext'
+import { FREE_COLLABORATOR_LIMIT } from '@/lib/plan'
 import { t, tp } from '@/i18n'
 import { tr } from '@/i18n/rich'
 
@@ -22,6 +25,8 @@ import { tr } from '@/i18n/rich'
  */
 export function CollaboratorsModal({ project, onClose }: { project: Project; onClose: () => void }) {
   const isOwner = (project.role ?? 'owner') === 'owner'
+  const { isPro, loading: planLoading } = usePlan()
+  const [upsell, setUpsell] = useState<string | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [links, setLinks] = useState<InviteLink[]>([])
@@ -34,6 +39,17 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
   const [copiedId, setCopiedId] = useState('')
 
   const linkUrl = (token: string) => `${window.location.origin}/?join=${token}`
+
+  // Seats in use, not counting the owner: people already on the project plus
+  // invites they haven't claimed yet. An open invite link is a seat about to be
+  // taken, so it counts too, otherwise one link is an unlimited side door.
+  const seatsUsed = members.filter((m) => m.role !== 'owner').length + invites.length + links.length
+  const seatLimited = !isPro && !planLoading && seatsUsed >= FREE_COLLABORATOR_LIMIT
+
+  /** The bottleneck they've just hit: bringing a second person in. */
+  const askForSeat = () => {
+    setUpsell(t('The free plan covers one teammate on a project. Upgrade to bring in everyone the change involves.'))
+  }
 
   const load = async () => {
     try {
@@ -51,6 +67,10 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
 
   const makeLink = async () => {
     setError('')
+    if (seatLimited) {
+      askForSeat()
+      return
+    }
     try {
       await createInviteLink(project.id, linkRole)
       await load()
@@ -90,6 +110,10 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
     const e = email.trim().toLowerCase()
     if (!e || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
       setError(t('Enter a valid email address.'))
+      return
+    }
+    if (seatLimited) {
+      askForSeat()
       return
     }
     setBusy(true)
@@ -197,6 +221,21 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
             )}
             {error && <div style={{ fontSize: '12px', color: '#fca5a5', marginBottom: '10px' }}>{error}</div>}
 
+            {/* Say it before they type an address, so the ask lands as a fact
+                about the plan rather than a rejected invite. */}
+            {isOwner && seatLimited && (
+              <button
+                type="button"
+                onClick={askForSeat}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', textAlign: 'left', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '10px', padding: '10px 12px', marginBottom: '10px', fontFamily: 'inherit', cursor: 'pointer' }}
+              >
+                <Lock size={14} color="var(--accent-text)" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.7)', lineHeight: 1.5 }}>
+                  {t('One teammate is included free. Adaptus Pro adds the rest of the team.')}
+                </span>
+              </button>
+            )}
+
             <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {loading ? (
                 <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.5)', padding: '8px 0' }}>{t('Loading…')}</div>
@@ -253,6 +292,8 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
           </button>
         </div>
       </div>
+
+      {upsell && <UpgradeModal reason={upsell} onClose={() => setUpsell(null)} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Copy, FileDown, Link2, Loader2, Presentation, Trash2 } from 'lucide-react'
+import { Check, Copy, FileDown, Link2, Loader2, Lock, Presentation, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { hasSupabase } from '@/lib/supabase'
 import { newProjectId } from '@/lib/id'
@@ -7,6 +7,8 @@ import { breakPoints, downloadPdf } from '@/lib/exports'
 import { downloadDeck } from '@/lib/deck'
 import { StatusBrief } from '@/components/StatusBrief'
 import { BrandingPanel } from '@/components/BrandingPanel'
+import { UpgradeModal } from '@/components/UpgradeModal'
+import { usePlan } from '@/state/PlanContext'
 import { t } from '@/i18n'
 
 /** The width the brief is laid out and exported at: 8.5in of letter paper at 96dpi. */
@@ -19,6 +21,11 @@ const EXPORT_W = 816
  * the link. Updates flow back through `onUpdate` (a project-level dispatch).
  */
 export function ShareModal({ project, onUpdate, onClose }: { project: Project; onUpdate: (p: Project) => void; onClose: () => void }) {
+  const { isPro, loading: planLoading } = usePlan()
+  // Branding is Pro; locked until the plan is known so a slow read can't flash
+  // the controls open.
+  const locked = !isPro || planLoading
+  const [upsell, setUpsell] = useState<string | null>(null)
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
   const [copied, setCopied] = useState(false)
@@ -47,6 +54,16 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
     return () => ro.disconnect()
   }, [])
 
+  /**
+   * The highest-intent moment in the app: they've just taken a branded report
+   * away to send to someone. Fired AFTER the file lands, so the export they
+   * came for is never held hostage to the ask.
+   */
+  const askAfterExport = () => {
+    if (!locked) return
+    setUpsell(t('Remove the watermark and unlock unbranded, client-ready PDF and PowerPoint exports.'))
+  }
+
   const token = project.shareToken ?? null
   const shareUrl = token ? `${window.location.origin}/?share=${token}` : ''
 
@@ -57,6 +74,10 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
   }
 
   const toggleBranding = () => {
+    if (locked) {
+      setUpsell(t('Removing the Adaptus mark from your brief is part of Pro. Upgrade and what you send out is entirely your own.'))
+      return
+    }
     const next = !hideBranding
     setHideBranding(next)
     onUpdate({ ...project, stageData: { ...project.stageData, executive: { ...project.stageData.executive, ask, hideBranding: next } } })
@@ -91,6 +112,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
       const el = briefRef.current
       if (!el) return
       await downloadPdf(el, `${fileBase()}-status-brief.pdf`, { breaks: breakPoints(el, '.bs') })
+      askAfterExport()
     } catch (err) {
       console.error('[adaptus] PDF generation failed', err)
     } finally {
@@ -106,7 +128,8 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
     commitAsk()
     setBusy('pptx')
     try {
-      await downloadDeck(previewProject, `${fileBase()}-status-brief.pptx`, 'brief')
+      await downloadDeck(previewProject, `${fileBase()}-status-brief.pptx`, 'brief', isPro)
+      askAfterExport()
     } catch (err) {
       console.error('[adaptus] PPTX generation failed', err)
     } finally {
@@ -161,6 +184,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
               </button>
             </div>
 
+
             {/* Link controls (shown once a link exists). Directly under the
                 share buttons: the link is what the user came here for, so it
                 shouldn't sit below the fields that only tune what it says. */}
@@ -200,20 +224,34 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             />
 
             {/* The user's own logo + colour, carried by every report below. */}
-            <BrandingPanel project={project} onUpdate={onUpdate} />
+            <BrandingPanel project={project} onUpdate={onUpdate} onUpgrade={() => setUpsell(t('Your logo and colour on every report are part of Pro.'))} />
 
-            {/* White-label toggle: make the brief look fully the user's own. */}
+            {/* White-label toggle: make the brief look fully the user's own.
+                Free users can click it — it opens the upsell rather than doing
+                nothing, so the lock explains itself. */}
             <label
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '12px', padding: '14px 16px', marginBottom: '24px' }}
+              onClick={locked ? toggleBranding : undefined}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', background: 'rgba(var(--fg),0.03)', border: `1px solid ${locked ? 'rgba(91,134,163,0.3)' : 'rgba(var(--fg),0.1)'}`, borderRadius: '12px', padding: '14px 16px', marginBottom: '24px' }}
             >
-              <input
-                type="checkbox"
-                checked={hideBranding}
-                onChange={toggleBranding}
-                style={{ width: '18px', height: '18px', marginTop: '1px', accentColor: '#3E6580', cursor: 'pointer', flexShrink: 0 }}
-              />
-              <span>
-                <span style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{t('Remove Adaptus branding')}</span>
+              {locked ? (
+                <span style={{ width: '18px', height: '18px', marginTop: '1px', flexShrink: 0, borderRadius: '5px', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-text)' }}>
+                  <Lock size={11} />
+                </span>
+              ) : (
+                <input
+                  type="checkbox"
+                  checked={hideBranding}
+                  onChange={toggleBranding}
+                  style={{ width: '18px', height: '18px', marginTop: '1px', accentColor: '#3E6580', cursor: 'pointer', flexShrink: 0 }}
+                />
+              )}
+              <span style={{ flex: 1 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
+                  {t('Remove Adaptus branding')}
+                  {locked && (
+                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '999px', padding: '2px 8px' }}>{t('Pro')}</span>
+                  )}
+                </span>
                 <span style={{ display: 'block', fontSize: '12px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5, marginTop: '3px' }}>
                   {t('Hide the logo and the “Build your own” link so the brief looks entirely your own.')}
                 </span>
@@ -227,7 +265,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>{t('Preview')}</div>
             <div id="brief-print" ref={previewWrapRef} style={{ overflow: 'hidden', height: preview.height || undefined }}>
               <div ref={previewInnerRef} style={{ width: `${EXPORT_W}px`, transform: `scale(${preview.scale})`, transformOrigin: 'top left' }}>
-                <StatusBrief project={previewProject} />
+                <StatusBrief project={previewProject} pro={isPro} />
               </div>
             </div>
 
@@ -237,7 +275,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 about 230px each. */}
             <div aria-hidden style={{ position: 'fixed', top: 0, left: '-10000px', width: `${EXPORT_W}px`, pointerEvents: 'none' }}>
               <div ref={briefRef}>
-                <StatusBrief project={previewProject} />
+                <StatusBrief project={previewProject} pro={isPro} />
               </div>
             </div>
           </>
@@ -253,6 +291,8 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
           </button>
         </div>
       </div>
+
+      {upsell && <UpgradeModal reason={upsell} onClose={() => setUpsell(null)} />}
     </div>
   )
 }

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, Check, ChevronDown, ChevronRight, FileDown, Link2, Loader2, Presentation, Share2 } from 'lucide-react'
 import { useStageEditor } from '@/state/AppContext'
+import { usePlan } from '@/state/PlanContext'
 import { useShare } from '@/state/ShareContext'
 import { AddButton, DelButton, TextInput } from '@/components/ui'
 import { buildTimeline, collectLaunchTasks, preparedness, type PrepTask } from '@/lib/format'
 import { breakPoints, downloadPdf, nodeBackground } from '@/lib/exports'
 import { downloadDeck } from '@/lib/deck'
+import { UpgradeModal } from '@/components/UpgradeModal'
 import { uid } from '@/lib/id'
 import { getLang, htmlLang, t, tp } from '@/i18n'
 
@@ -99,6 +101,8 @@ function GoLiveCountdown({ date }: { date: string }) {
 
 export function DashboardStage() {
   const openShare = useShare()
+  const { isPro } = usePlan()
+  const [upsell, setUpsell] = useState<string | null>(null)
   const { project, data: milestones, update: updateMilestones } = useStageEditor('milestones')
   const { update: updateTesting } = useStageEditor('testing')
   const { update: updateDeps } = useStageEditor('dependencies')
@@ -214,11 +218,14 @@ export function DashboardStage() {
     if (!el || tlBusy) return
     setTlBusy(kind)
     try {
-      if (kind === 'pptx') await downloadDeck(project, `${fileBase}-timeline.pptx`, 'timeline')
+      if (kind === 'pptx') await downloadDeck(project, `${fileBase}-timeline.pptx`, 'timeline', isPro)
       else {
         const background = nodeBackground(el)
         await downloadPdf(el, `${fileBase}-timeline.pdf`, { breaks: breakPoints(el, '[data-tl-row]'), background })
       }
+      // They've just exported something they intend to send on; ask here, with
+      // the file already saved, rather than in front of the button.
+      if (!isPro) setUpsell(t('Remove the watermark and unlock unbranded, client-ready PDF and PowerPoint exports.'))
     } catch (err) {
       console.error('[adaptus] timeline export failed', err)
     } finally {
@@ -510,6 +517,8 @@ export function DashboardStage() {
           </div>
         )}
       </div>
+
+      {upsell && <UpgradeModal reason={upsell} onClose={() => setUpsell(null)} />}
     </div>
   )
 }

@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react'
-import { ImageUp, Trash2 } from 'lucide-react'
+import { ImageUp, Lock, Sparkles, Trash2 } from 'lucide-react'
 import type { Project } from '@/types'
 import { DEFAULT_BRAND, brandOf, downscaleLogo, normalizeHex } from '@/lib/brand'
+import { usePlan } from '@/state/PlanContext'
 import { t, tp } from '@/i18n'
 
 /** What the file picker will take. PNG matters: a logo often needs transparency. */
@@ -12,9 +13,17 @@ const MAX_UPLOAD_MB = 8
  * Put the user's own logo and colour on every report they hand out. Both are
  * stored on the project (`stageData.executive`), so the shared brief, the PDF,
  * the deck and the printed report all pick them up.
+ *
+ * This is the Pro feature. Free users see the panel — showing what they'd get
+ * beats hiding it — but every control is inert and the whole thing is one big
+ * upgrade button.
  */
-export function BrandingPanel({ project, onUpdate }: { project: Project; onUpdate: (p: Project) => void }) {
-  const brand = brandOf(project)
+export function BrandingPanel({ project, onUpdate, onUpgrade }: { project: Project; onUpdate: (p: Project) => void; onUpgrade: () => void }) {
+  const { isPro, loading } = usePlan()
+  // Locked until the plan is known, so a slow read can never flash the controls
+  // open to a free user.
+  const locked = !isPro || loading
+  const brand = brandOf(project, isPro)
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   // What's in the hex box while typing: it's only committed once it parses, so
@@ -57,13 +66,25 @@ export function BrandingPanel({ project, onUpdate }: { project: Project; onUpdat
   }
 
   return (
-    <div style={{ background: 'rgba(var(--fg),0.03)', border: '1px solid rgba(var(--fg),0.1)', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{t('Your branding')}</div>
+    <div style={{ position: 'relative', background: 'rgba(var(--fg),0.03)', border: `1px solid ${locked ? 'rgba(91,134,163,0.3)' : 'rgba(var(--fg),0.1)'}`, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{t('Your branding')}</span>
+        {locked && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '999px', padding: '2px 8px' }}>
+            <Lock size={10} /> {t('Pro')}
+          </span>
+        )}
+      </div>
       <div style={{ fontSize: '12px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5, margin: '3px 0 14px' }}>
         {t('Add your logo and colour and every report carries them: the shared link, the PDF, the slides, and the printed report.')}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', flexWrap: 'wrap' }}>
+      {/* Locked: the controls below stay on screen (so the value is visible) but
+          are inert, and the whole panel becomes one upgrade button. */}
+      <div
+        style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', flexWrap: 'wrap', opacity: locked ? 0.45 : 1, pointerEvents: locked ? 'none' : 'auto', filter: locked ? 'grayscale(0.5)' : 'none' }}
+        aria-hidden={locked}
+      >
         {/* Logo */}
         <div style={{ flex: '1 1 200px', minWidth: 0 }}>
           <div className="cq-lbl">{t('Logo')}</div>
@@ -148,7 +169,17 @@ export function BrandingPanel({ project, onUpdate }: { project: Project; onUpdat
         </div>
       </div>
 
-      {error && (
+      {locked && (
+        <button
+          type="button"
+          onClick={onUpgrade}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '14px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '11px 18px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          <Sparkles size={15} /> {t('Unlock your branding with Pro')}
+        </button>
+      )}
+
+      {!locked && error && (
         <div style={{ marginTop: '10px', fontSize: '12px', color: '#fca5a5' }}>{error}</div>
       )}
     </div>

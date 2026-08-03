@@ -7,6 +7,12 @@ import type { Project } from '@/types'
  * report they hand out (the shared brief, the PDF, the deck, the printed report).
  * Both live in `stageData.executive`, so they ride along in the project's JSONB
  * and reach anonymous viewers of a shared brief with no extra DB plumbing.
+ *
+ * Branding is the Pro feature, so every read goes through `brandOf(project, pro)`
+ * and an unentitled project resolves to the Adaptus defaults no matter what its
+ * JSON says. Gating here rather than at each render site means a project that
+ * was branded on Pro (or edited by hand) simply reverts, and there's no report
+ * surface that can accidentally skip the check.
  */
 
 /** The Adaptus accent, used whenever a project hasn't set its own colour. */
@@ -55,23 +61,34 @@ export interface Brand {
   color: string
   /** Black or white, whichever reads on `color`. */
   fg: string
-  /** Logo as a data URL, or '' when none was uploaded. */
+  /** Logo as a data URL, or '' when none was uploaded (or not entitled). */
   logo: string
   /** Logo width ÷ height, so exports can size it without measuring. */
   logoRatio: number
   /** Whether the user set a colour of their own (vs. inheriting the default). */
   custom: boolean
+  /** Drop the Adaptus mark and the growth CTA. Pro only. */
+  whiteLabel: boolean
+  /** Whether branding is unlocked — what the upsell prompts key off. */
+  pro: boolean
 }
 
-export function brandOf(project: Project): Brand {
+/**
+ * Resolve a project's branding for a given entitlement. `pro` is the OWNER's
+ * plan on a public share page (`project.ownerPro`) and the viewer's own plan
+ * (`usePlan().isPro`) everywhere inside the app.
+ */
+export function brandOf(project: Project, pro: boolean): Brand {
   const exec = project.stageData.executive
-  const color = normalizeHex(exec.brandColor ?? '') ?? DEFAULT_BRAND
+  const color = (pro ? normalizeHex(exec.brandColor ?? '') : null) ?? DEFAULT_BRAND
   return {
     color,
     fg: readableOn(color),
-    logo: exec.brandLogo ?? '',
+    logo: pro ? exec.brandLogo ?? '' : '',
     logoRatio: exec.brandLogoRatio || 1,
     custom: color !== DEFAULT_BRAND,
+    whiteLabel: pro && !!exec.hideBranding,
+    pro,
   }
 }
 

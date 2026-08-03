@@ -17,7 +17,8 @@ the URL + anon key and I'll wire the app to the cloud.
 - **SQL Editor → New query**, paste the entire contents of `supabase/schema.sql`, and **Run**.
 - It creates the `profiles`, `projects`, `project_members`, `project_invites` tables plus the row-level-security policies. Safe to re-run.
 - Then run the remaining idempotent files **in this order** (each is its own query, safe to re-run):
-  `share_links.sql` → `collaboration.sql` → `feedback.sql` → `invite_links.sql` → `progress_events.sql`.
+  `share_links.sql` → `collaboration.sql` → `feedback.sql` → `invite_links.sql` → `progress_events.sql` → `plans.sql`.
+  - `plans.sql` adds the free/pro plan to `profiles`. Users can read their own plan but a trigger stops them writing it, so a plan only changes from the SQL editor or a service-role webhook: `update public.profiles set plan = 'pro' where email = 'them@example.com';`. It also re-creates `get_shared_project` so a public brief knows whether its owner is entitled to white-labelling — run it **after** `share_links.sql`.
   - `progress_events.sql` is the privacy-preserving progress tracker: a DB trigger on `projects` logs only *how far* users get (generic stage id + index), never plan content. It runs server-side (invisible to clients), and the table has no RLS policies, so you read it only with the service role in the SQL editor (funnel queries are at the bottom of that file).
 
 ## 4. Turn on Google sign-in

@@ -26,12 +26,13 @@ const statusWord = (p: number) => (p >= 80 ? t('On track') : p >= 50 ? t('At ris
 const itemScore = (likelihood: number, impact: number) => Math.round((likelihood * impact) / 9 * 10 * 10) / 10
 const sevClass = (score: number) => (score <= 3 ? 'g' : score <= 6 ? 'a' : 'r')
 
-export function StatusBrief({ project, publicView = false }: { project: Project; publicView?: boolean }) {
+export function StatusBrief({ project, publicView = false, pro = false }: { project: Project; publicView?: boolean; pro?: boolean }) {
   const sd = project.stageData
   const prep = preparedness(project)
   const avg = avgRisk(sd.risk.items)
-  // The user's own logo + colour, or the Adaptus default when unbranded.
-  const brand = brandOf(project)
+  // The user's own logo + colour (Pro), or the Adaptus default. On the public
+  // page `pro` is the OWNER's plan, since the viewer has no account at all.
+  const brand = brandOf(project, pro)
 
   const goLive = sd.milestones.goLiveDate
     ? new Date(sd.milestones.goLiveDate + 'T00:00:00').toLocaleDateString(htmlLang(getLang()), { month: 'short', day: 'numeric', year: 'numeric' })
@@ -49,8 +50,8 @@ export function StatusBrief({ project, publicView = false }: { project: Project;
 
   const metrics = sd.adoption.metrics.filter((m) => m.name.trim())
   const ask = sd.executive.ask?.trim()
-  // White-label: when on, the brief carries no "Adaptus" mark and no CTA.
-  const branded = !sd.executive.hideBranding
+  // White-label: when on (Pro only), the brief carries no "Adaptus" mark and no CTA.
+  const branded = !brand.whiteLabel
 
   // Outstanding launch tasks, grouped by category (same source the Launch
   // Preparation dashboard uses), so the brief shows what's still left to do.

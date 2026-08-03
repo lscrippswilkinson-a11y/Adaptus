@@ -22,6 +22,9 @@ Google.
 3. **Environment Variables** — add both (values from `.env.local`):
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_UPGRADE_URL` (optional) — the hosted payment link the "Upgrade to Pro"
+     button opens. Without it the upgrade modal still sells Pro but says checkout
+     isn't open yet, so nothing links nowhere.
 4. **Deploy.** You'll get a URL like `https://adaptus-xxxx.vercel.app`.
 
 Every future `git push` to `main` auto-deploys.

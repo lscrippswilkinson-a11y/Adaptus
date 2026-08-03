@@ -47,7 +47,9 @@ export function SharedBriefPage({ token }: { token: string }) {
           <div style={{ textAlign: 'center', color: 'rgba(var(--fg),0.5)', fontSize: '14px', marginTop: '80px' }}>{t('Loading…')}</div>
         )}
 
-        {state.status === 'ok' && <StatusBrief project={state.project} publicView />}
+        {/* Branding is decided by the OWNER's plan (the share RPC returns it):
+            a free user's brief carries the Adaptus mark whatever its JSON says. */}
+        {state.status === 'ok' && <StatusBrief project={state.project} publicView pro={!!state.project.ownerPro} />}
 
         {(state.status === 'missing' || state.status === 'error') && (
           <div style={{ textAlign: 'center', marginTop: '80px' }}>

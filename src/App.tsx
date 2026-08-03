@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { AppProvider, useApp } from '@/state/AppContext'
 import { AuthProvider, useAuth } from '@/state/AuthContext'
+import { PlanProvider } from '@/state/PlanContext'
 import { ThemeProvider } from '@/state/ThemeContext'
 import { LanguageProvider, useT } from '@/i18n/LanguageContext'
 import { WizardModeProvider } from '@/state/WizardModeContext'
@@ -33,10 +34,14 @@ function Gate() {
     if (loading) return <Splash />
     if (!session) return <SignIn />
   }
+  // PlanProvider sits inside the auth gate (it reads the signed-in user's plan)
+  // and outside AppProvider, so the dashboard's project limit can read it.
   return (
-    <AppProvider>
-      <Root />
-    </AppProvider>
+    <PlanProvider>
+      <AppProvider>
+        <Root />
+      </AppProvider>
+    </PlanProvider>
   )
 }
 

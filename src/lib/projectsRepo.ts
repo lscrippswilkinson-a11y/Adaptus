@@ -1,6 +1,7 @@
 import type { FeedbackItem, Invite, InviteLink, Member, Project, Role, StageData, StageId } from '@/types'
 import { supabase } from '@/lib/supabase'
 import { migrateProject } from '@/lib/storage'
+import { isPlan, type Plan } from '@/lib/plan'
 
 /** Shape of a row in the Supabase `projects` table. */
 interface ProjectRow {
@@ -17,8 +18,13 @@ interface ProjectRow {
   share_token?: string | null
 }
 
-/** The public-safe subset returned by the get_shared_project RPC (no owner). */
-type SharedRow = Omit<ProjectRow, 'owner_id' | 'description' | 'share_token'>
+/**
+ * The public-safe subset returned by the get_shared_project RPC (no owner).
+ * `owner_plan` is the one thing about the owner it does return: an anonymous
+ * recipient has no session, so it's the only way the brief can know whether the
+ * person who shared it is entitled to the white-labelling it asks for.
+ */
+type SharedRow = Omit<ProjectRow, 'owner_id' | 'description' | 'share_token'> & { owner_plan?: string }
 
 /**
  * Project fields that aren't stage slices and have no column of their own ride
@@ -53,7 +59,17 @@ function rowToProject(r: ProjectRow | SharedRow): Project {
     currentStage: r.current_stage ?? 0,
     stageData: r.stage_data as StageData,
     shareToken: 'share_token' in r ? r.share_token : null,
+    // Only the share RPC carries this; in-app the viewer's own plan is used.
+    ownerPro: 'owner_plan' in r ? r.owner_plan === 'pro' : undefined,
   })
+}
+
+/** The signed-in user's plan. Anything unrecognised (or no row yet) is free. */
+export async function fetchPlan(userId: string): Promise<Plan> {
+  const { data, error } = await supabase.from('profiles').select('plan').eq('id', userId).maybeSingle()
+  if (error) throw error
+  const plan = (data as { plan?: unknown } | null)?.plan
+  return isPlan(plan) ? plan : 'free'
 }
 
 /** Columns that change as the user edits (owner_id is set only on insert). */

@@ -384,6 +384,12 @@ export interface Project {
   shareToken?: string | null
   /** The signed-in user's role on this project (client-only; not persisted). */
   role?: Role
+  /**
+   * Whether the project's OWNER is on Pro, as reported by the share RPC. Set
+   * only on a publicly-fetched brief, where there's no session to read a plan
+   * from; undefined everywhere else. Client-only, never persisted.
+   */
+  ownerPro?: boolean
 }
 
 /* ---- Top-level app/view state ---- */
