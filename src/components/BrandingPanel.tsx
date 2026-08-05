@@ -14,16 +14,16 @@ const MAX_UPLOAD_MB = 8
  * stored on the project (`stageData.executive`), so the shared brief, the PDF,
  * the deck and the printed report all pick them up.
  *
- * This is the Pro feature. Free users see the panel — showing what they'd get
+ * This is the Premium feature. Free users see the panel — showing what they'd get
  * beats hiding it — but every control is inert and the whole thing is one big
  * upgrade button.
  */
 export function BrandingPanel({ project, onUpdate, onUpgrade }: { project: Project; onUpdate: (p: Project) => void; onUpgrade: () => void }) {
-  const { isPro, loading } = usePlan()
+  const { isPremium, loading } = usePlan()
   // Locked until the plan is known, so a slow read can never flash the controls
   // open to a free user.
-  const locked = !isPro || loading
-  const brand = brandOf(project, isPro)
+  const locked = !isPremium || loading
+  const brand = brandOf(project, isPremium)
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState('')
   // What's in the hex box while typing: it's only committed once it parses, so
@@ -71,7 +71,7 @@ export function BrandingPanel({ project, onUpdate, onUpgrade }: { project: Proje
         <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>{t('Your branding')}</span>
         {locked && (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '999px', padding: '2px 8px' }}>
-            <Lock size={10} /> {t('Pro')}
+            <Lock size={10} /> {t('Premium')}
           </span>
         )}
       </div>
@@ -175,7 +175,7 @@ export function BrandingPanel({ project, onUpdate, onUpgrade }: { project: Proje
           onClick={onUpgrade}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '14px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '11px 18px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', fontFamily: 'inherit' }}
         >
-          <Sparkles size={15} /> {t('Unlock your branding with Pro')}
+          <Sparkles size={15} /> {t('Unlock your branding with Premium')}
         </button>
       )}
 

@@ -29,8 +29,12 @@ export interface Phase {
   label: string
 }
 
-/** Essential steps form the core path; advanced steps are optional depth. */
-export type StageTier = 'essential' | 'advanced'
+/**
+ * Essential steps form the core path and are free forever. Premium steps are
+ * the optional depth for a big or risky change, and are what a Premium plan
+ * unlocks — see `src/lib/plan.ts`.
+ */
+export type StageTier = 'essential' | 'premium'
 
 export interface Stage {
   id: StageId
@@ -389,7 +393,7 @@ export interface Project {
    * only on a publicly-fetched brief, where there's no session to read a plan
    * from; undefined everywhere else. Client-only, never persisted.
    */
-  ownerPro?: boolean
+  ownerPremium?: boolean
 }
 
 /* ---- Top-level app/view state ---- */

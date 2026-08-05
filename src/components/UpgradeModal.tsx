@@ -1,10 +1,11 @@
 import { Check, Lock, Sparkles, X } from 'lucide-react'
-import { PRO_BENEFITS, UPGRADE_URL } from '@/lib/plan'
+import { PREMIUM_BENEFITS, UPGRADE_URL } from '@/lib/plan'
 import { t } from '@/i18n'
 
 /**
- * The one place Pro is sold. Every lock in the app opens this: the branding
- * panel, the "remove Adaptus branding" toggle, and the second project.
+ * The one place Premium is sold. Every lock in the app opens this: the branding
+ * panel, the "remove Adaptus branding" toggle, the second project, the premium
+ * steps and the portfolio view.
  *
  * `reason` is the line at the top — the sentence that names what the user was
  * just trying to do — because an upsell that answers the question the user
@@ -24,7 +25,7 @@ export function UpgradeModal({ reason, onClose }: { reason?: string; onClose: ()
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={t('Upgrade to Adaptus Pro')}
+        aria-label={t('Upgrade to Adaptus Premium')}
         style={{ background: 'var(--surface-card)', border: '1px solid rgba(var(--fg),0.08)', borderRadius: '20px', width: '480px', maxWidth: '92vw', overflow: 'hidden' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -39,19 +40,19 @@ export function UpgradeModal({ reason, onClose }: { reason?: string; onClose: ()
             <X size={15} />
           </button>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '11px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)', marginBottom: '10px' }}>
-            <Sparkles size={14} /> {t('Adaptus Pro')}
+            <Sparkles size={14} /> {t('Adaptus Premium')}
           </div>
           <h2 style={{ margin: 0, fontSize: '21px', fontWeight: 800, color: '#fff', lineHeight: 1.25, letterSpacing: '-0.3px' }}>
-            {t('Make it your report, not ours')}
+            {t('Everything Adaptus can do')}
           </h2>
           <p style={{ margin: '8px 0 0', fontSize: '13.5px', color: 'rgba(255,255,255,0.8)', lineHeight: 1.55 }}>
-            {reason ?? t('Put your own logo and colour on everything you hand to leadership, and run as many change projects as you need.')}
+            {reason ?? t('Your own branding on every report, the deeper premium steps, your whole portfolio in one view, and as many projects and teammates as the change needs.')}
           </p>
         </div>
 
         <div style={{ padding: '22px 30px 26px' }}>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '14px' }}>
-            {PRO_BENEFITS.map((b) => (
+            {PREMIUM_BENEFITS.map((b) => (
               <li key={b.title} style={{ display: 'flex', alignItems: 'flex-start', gap: '11px' }}>
                 <span style={{ flexShrink: 0, width: '20px', height: '20px', marginTop: '1px', borderRadius: '6px', background: 'rgba(91,134,163,0.18)', border: '1px solid rgba(91,134,163,0.35)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-text)' }}>
                   <Check size={12} strokeWidth={3} />
@@ -71,13 +72,13 @@ export function UpgradeModal({ reason, onClose }: { reason?: string; onClose: ()
               rel="noopener noreferrer"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '9px', marginTop: '24px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', borderRadius: '12px', padding: '14px 24px', color: 'var(--on-accent)', fontWeight: 800, fontSize: '15px', textDecoration: 'none' }}
             >
-              <Sparkles size={17} /> {t('Upgrade to Pro')}
+              <Sparkles size={17} /> {t('Upgrade to Premium')}
             </a>
           ) : (
             // No payment link configured yet: say so plainly rather than ship a
             // button that goes nowhere.
             <div style={{ marginTop: '24px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px', padding: '14px 16px', fontSize: '13px', color: 'var(--text)', lineHeight: 1.6 }}>
-              {t('Pro isn’t open for purchase just yet. Check back shortly.')}
+              {t('Premium isn’t open for purchase just yet. Check back shortly.')}
             </div>
           )}
 
@@ -112,8 +113,60 @@ export function UpgradePrompt({ title, body, cta, onUpgrade }: { title: string; 
         onClick={onUpgrade}
         style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '10px', padding: '11px 18px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '13.5px', cursor: 'pointer', fontFamily: 'inherit' }}
       >
-        <Sparkles size={15} /> {cta ?? t('Upgrade to Pro')}
+        <Sparkles size={15} /> {cta ?? t('Upgrade to Premium')}
       </button>
+    </div>
+  )
+}
+
+/**
+ * A locked feature shown rather than hidden: the real thing renders underneath,
+ * blurred and inert, with the ask sitting on top of it. Used for the portfolio
+ * view and the premium steps, where what's behind the lock is a *picture* — a
+ * user who can see their own teams going amber understands the offer in a way
+ * no bullet list achieves.
+ *
+ * The preview is `aria-hidden` and `inert`, so a screen reader and the tab order
+ * both get the ask and never the decorative content behind it.
+ */
+export function PremiumTeaser({ title, body, cta, onUpgrade, children }: { title: string; body: string; cta?: string; onUpgrade: () => void; children: React.ReactNode }) {
+  return (
+    <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden' }}>
+      <div
+        aria-hidden
+        // `inert` keeps the blurred preview out of the tab order. React 18 does
+        // not know the attribute, hence the string cast.
+        {...({ inert: '' } as Record<string, string>)}
+        style={{ filter: 'blur(5px) saturate(0.75)', opacity: 0.5, pointerEvents: 'none', userSelect: 'none' }}
+      >
+        {children}
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+          background: 'radial-gradient(closest-side, rgba(var(--bg-rgb),0.55), rgba(var(--bg-rgb),0.82))',
+        }}
+      >
+        <div style={{ maxWidth: '420px', textAlign: 'center', background: 'var(--surface-card)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '16px', padding: '22px 26px', boxShadow: '0 14px 40px rgba(0,0,0,0.35)' }}>
+          <div style={{ width: '40px', height: '40px', margin: '0 auto 12px', borderRadius: '12px', background: 'rgba(91,134,163,0.18)', border: '1px solid rgba(91,134,163,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Lock size={19} color="var(--accent-text)" />
+          </div>
+          <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.2px' }}>{title}</div>
+          <div style={{ fontSize: '13px', color: 'rgba(var(--fg),0.62)', lineHeight: 1.55, margin: '6px 0 16px' }}>{body}</div>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg,#5B86A3,#3E6580)', border: 'none', borderRadius: '11px', padding: '12px 22px', color: 'var(--on-accent)', fontWeight: 700, fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            <Sparkles size={16} /> {cta ?? t('See what Premium adds')}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

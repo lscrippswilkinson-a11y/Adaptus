@@ -151,8 +151,10 @@ for (const [file, fields] of [
   ['src/components/stages/ResistanceStage.tsx', ['label', 'desc']],
   ['src/components/stages/SustainmentStage.tsx', ['label']],
   ['src/components/SecurityPage.tsx', ['title', 'body']],
-  // Pro benefit list: literals in a data table, translated at render by t().
+  // Premium benefit list: literals in a data table, translated at render by t().
   ['src/lib/plan.ts', ['title', 'body']],
+  // Trend-chart series labels, likewise translated where they're drawn.
+  ['src/lib/snapshots.ts', ['label']],
 ]) byField(file, fields)
 byArray('src/components/stages/RiskStage.tsx', ['LIKELIHOOD', 'IMPACT'])
 for (const file of ['src/components/stages/DashboardStage.tsx', 'src/components/StatusBrief.tsx',

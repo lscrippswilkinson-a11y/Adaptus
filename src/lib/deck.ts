@@ -23,11 +23,11 @@ const DECK = { BG: '11141F', BAND: '2C4A5F', PANEL: '1B2130', LINE: '2A3242', MU
 
 /**
  * The deck palette for a project: the shared dark base, re-accented in its brand
- * colour. `pro` gates the branding — an unentitled project resolves back to the
+ * colour. `premium` gates the branding — an unentitled project resolves back to the
  * Adaptus accent with no logo and keeps the "Made with Adaptus" line.
  */
-function deckPalette(project: Project, pro: boolean) {
-  const brand = brandOf(project, pro)
+function deckPalette(project: Project, premium: boolean) {
+  const brand = brandOf(project, premium)
   return {
     ...DECK,
     ACCENT: bare(brand.color),
@@ -289,8 +289,8 @@ function buildAdoptionSlide(pptx: any, project: Project, deck: Deck) {
 }
 
 /** Build every slide of the status brief: summary, open tasks, timeline, adoption. */
-export function buildBriefDeck(pptx: any, project: Project, pro: boolean) {
-  const deck = deckPalette(project, pro)
+export function buildBriefDeck(pptx: any, project: Project, premium: boolean) {
+  const deck = deckPalette(project, premium)
   buildStatusSlide(pptx, project, deck)
   buildTasksSlides(pptx, project, deck)
   buildTimelineSlide(pptx, project, deck)
@@ -298,20 +298,20 @@ export function buildBriefDeck(pptx: any, project: Project, pro: boolean) {
 }
 
 /** Build the timeline on its own, for the dashboard's quick export. */
-export function buildTimelineDeck(pptx: any, project: Project, pro: boolean) {
-  buildTimelineSlide(pptx, project, deckPalette(project, pro))
+export function buildTimelineDeck(pptx: any, project: Project, premium: boolean) {
+  buildTimelineSlide(pptx, project, deckPalette(project, premium))
 }
 
 /**
  * Write a .pptx for a project. `kind` picks what goes in it: the full brief, or
- * just the timeline. `pro` gates the exporter's branding, same as every other
+ * just the timeline. `premium` gates the exporter's branding, same as every other
  * report surface.
  */
-export async function downloadDeck(project: Project, filename: string, kind: 'brief' | 'timeline' = 'brief', pro = false) {
+export async function downloadDeck(project: Project, filename: string, kind: 'brief' | 'timeline' = 'brief', premium = false) {
   const { default: PptxGenJS } = await import('pptxgenjs')
   const pptx = new PptxGenJS()
   pptx.layout = 'LAYOUT_WIDE' // 13.33 x 7.5 in (16:9)
-  if (kind === 'timeline') buildTimelineDeck(pptx, project, pro)
-  else buildBriefDeck(pptx, project, pro)
+  if (kind === 'timeline') buildTimelineDeck(pptx, project, premium)
+  else buildBriefDeck(pptx, project, premium)
   await pptx.writeFile({ fileName: filename })
 }

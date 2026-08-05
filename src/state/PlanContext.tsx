@@ -7,7 +7,7 @@ import { useAuth } from '@/state/AuthContext'
 interface PlanValue {
   plan: Plan
   /** The one flag every gate reads. */
-  isPro: boolean
+  isPremium: boolean
   /** False until the plan is known; gates stay locked while it's true. */
   loading: boolean
   /** Re-read the plan (after returning from checkout). */
@@ -45,7 +45,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       })
       .catch((err) => {
         // A failed read must not lock a paying customer out of what they bought,
-        // but it mustn't hand out Pro either: keep whatever we last knew.
+        // but it mustn't hand out Premium either: keep whatever we last knew.
         console.error('[adaptus] failed to read plan (keeping last known)', err)
       })
       .finally(() => {
@@ -71,7 +71,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('focus', onFocus)
   }, [cloud, userId, refresh])
 
-  return <PlanCtx.Provider value={{ plan, isPro: plan === 'pro', loading, refresh }}>{children}</PlanCtx.Provider>
+  return <PlanCtx.Provider value={{ plan, isPremium: plan === 'pro', loading, refresh }}>{children}</PlanCtx.Provider>
 }
 
 export function usePlan(): PlanValue {

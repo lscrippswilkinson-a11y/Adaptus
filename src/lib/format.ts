@@ -3,7 +3,7 @@ import { ESSENTIAL_COUNT, ESSENTIAL_IDS } from '@/data/stages'
 import { LAUNCH_ITEMS } from '@/data/constants'
 import { t, tp } from '@/i18n'
 
-/** Completed essential steps for a project (advanced steps are optional bonus). */
+/** Completed essential steps for a project (premium steps are optional bonus). */
 export function essentialsDone(project: Project): number {
   return project.completedStages.filter((id) => ESSENTIAL_IDS.has(id)).length
 }

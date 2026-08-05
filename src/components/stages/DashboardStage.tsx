@@ -101,7 +101,7 @@ function GoLiveCountdown({ date }: { date: string }) {
 
 export function DashboardStage() {
   const openShare = useShare()
-  const { isPro } = usePlan()
+  const { isPremium } = usePlan()
   const [upsell, setUpsell] = useState<string | null>(null)
   const { project, data: milestones, update: updateMilestones } = useStageEditor('milestones')
   const { update: updateTesting } = useStageEditor('testing')
@@ -218,14 +218,14 @@ export function DashboardStage() {
     if (!el || tlBusy) return
     setTlBusy(kind)
     try {
-      if (kind === 'pptx') await downloadDeck(project, `${fileBase}-timeline.pptx`, 'timeline', isPro)
+      if (kind === 'pptx') await downloadDeck(project, `${fileBase}-timeline.pptx`, 'timeline', isPremium)
       else {
         const background = nodeBackground(el)
         await downloadPdf(el, `${fileBase}-timeline.pdf`, { breaks: breakPoints(el, '[data-tl-row]'), background })
       }
       // They've just exported something they intend to send on; ask here, with
       // the file already saved, rather than in front of the button.
-      if (!isPro) setUpsell(t('Remove the watermark and unlock unbranded, client-ready PDF and PowerPoint exports.'))
+      if (!isPremium) setUpsell(t('Remove the watermark and unlock unbranded, client-ready PDF and PowerPoint exports.'))
     } catch (err) {
       console.error('[adaptus] timeline export failed', err)
     } finally {

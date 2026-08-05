@@ -2,6 +2,7 @@ import type { FeedbackItem, Invite, InviteLink, Member, Project, Role, StageData
 import { supabase } from '@/lib/supabase'
 import { migrateProject } from '@/lib/storage'
 import { isPlan, type Plan } from '@/lib/plan'
+import type { Metrics, Snapshot } from '@/lib/snapshots'
 
 /** Shape of a row in the Supabase `projects` table. */
 interface ProjectRow {
@@ -60,7 +61,7 @@ function rowToProject(r: ProjectRow | SharedRow): Project {
     stageData: r.stage_data as StageData,
     shareToken: 'share_token' in r ? r.share_token : null,
     // Only the share RPC carries this; in-app the viewer's own plan is used.
-    ownerPro: 'owner_plan' in r ? r.owner_plan === 'pro' : undefined,
+    ownerPremium: 'owner_plan' in r ? r.owner_plan === 'pro' : undefined,
   })
 }
 
@@ -121,6 +122,61 @@ export async function fetchSharedProject(token: string): Promise<Project | null>
   if (error) throw error
   if (!data) return null
   return rowToProject(data as SharedRow)
+}
+
+/* --------------------------------------------------------- history / trends */
+
+interface SnapshotRow {
+  project_id: string
+  day: string
+  progress: number | null
+  readiness: number | null
+  change_load: number | null
+  risk: number | null
+  teams: number | null
+  people: number | null
+}
+
+/**
+ * Record (or refresh) today's reading for a project. Goes through the
+ * `record_snapshot` RPC rather than a table write: the function is SECURITY
+ * DEFINER and owns the one-row-per-day upsert, so the client never needs an
+ * insert policy it could be tricked into abusing. See supabase/history.sql.
+ *
+ * Best-effort by design — the caller swallows failures. A missing day in a
+ * trend chart is a cosmetic loss; a failed save that surfaced as an error would
+ * make the user think their plan didn't save.
+ */
+export async function recordSnapshot(projectId: string, m: Metrics): Promise<void> {
+  const { error } = await supabase.rpc('record_snapshot', {
+    p_project: projectId,
+    p_progress: m.progress,
+    p_readiness: m.readiness,
+    p_change_load: m.changeLoad,
+    p_risk: m.risk,
+    p_teams: m.teams,
+    p_people: m.people,
+  })
+  if (error) throw error
+}
+
+/** Every daily reading the signed-in user can see, oldest first. */
+export async function fetchSnapshots(): Promise<Snapshot[]> {
+  const { data, error } = await supabase
+    .from('project_snapshots')
+    .select('project_id, day, progress, readiness, change_load, risk, teams, people')
+    .order('day', { ascending: true })
+  if (error) throw error
+  return (data ?? []).map((r: SnapshotRow) => ({
+    projectId: r.project_id,
+    day: r.day,
+    progress: r.progress ?? 0,
+    readiness: r.readiness,
+    changeLoad: r.change_load,
+    risk: r.risk,
+    teams: r.teams ?? 0,
+    people: r.people ?? 0,
+  }))
 }
 
 /* ----------------------------------------------------------- collaboration */

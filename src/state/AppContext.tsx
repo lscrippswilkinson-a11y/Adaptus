@@ -15,7 +15,8 @@ import { loadProjects, loadStoredProjects, saveProjects } from '@/lib/storage'
 import { newProjectId } from '@/lib/id'
 import { hasSupabase } from '@/lib/supabase'
 import { useAuth } from '@/state/AuthContext'
-import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, inviteCollaborator, updateProject } from '@/lib/projectsRepo'
+import { acceptInviteLink, acceptPendingInvites, deleteProjectRemote, fetchMyRoles, fetchProjects, insertProject, inviteCollaborator, recordSnapshot, updateProject } from '@/lib/projectsRepo'
+import { metricsKey, projectMetrics } from '@/lib/snapshots'
 
 interface AppContextValue {
   state: AppState
@@ -55,6 +56,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Emails to invite as editors, keyed by project id, queued until the project
   // is first inserted into Supabase (invites FK the project and need an owner).
   const pendingInvites = useRef<Record<string, string[]>>({})
+  // Last reading we sent per project, so an edit that doesn't move any of the
+  // measured numbers (renaming the project, editing a description) doesn't cost
+  // a round trip to rewrite an identical row. Keyed by project id.
+  const lastSnapshot = useRef<Record<string, string>>({})
 
   const addProject = useCallback((project: Project, invites: string[] = []) => {
     if (cloud && invites.length) pendingInvites.current[project.id] = invites
@@ -186,6 +191,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
               delete pendingInvites.current[p.id]
             }
           } else if (before !== p) await updateProject(p) // edited (reference changed)
+
+          // Keep today's history reading in step with what was just saved.
+          // Recorded for FREE users too: the day someone upgrades, the trend
+          // charts should already have their history in them rather than
+          // starting from an empty page. Never allowed to break the sync.
+          const key = metricsKey(projectMetrics(p))
+          if (lastSnapshot.current[p.id] !== key) {
+            try {
+              await recordSnapshot(p.id, projectMetrics(p))
+              lastSnapshot.current[p.id] = key
+            } catch (err) {
+              console.error('[adaptus] failed to record history snapshot (continuing)', err)
+            }
+          }
         }
         if (prev) {
           for (const p of prev) {

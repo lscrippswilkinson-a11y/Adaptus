@@ -18,6 +18,7 @@ import { useApp } from '@/state/AppContext'
 import { usePlan } from '@/state/PlanContext'
 import { FREE_PROJECT_LIMIT } from '@/lib/plan'
 import { UpgradeModal } from '@/components/UpgradeModal'
+import { Portfolio } from '@/components/Portfolio'
 import { ESSENTIAL_COUNT, STAGES } from '@/data/stages'
 import { avgRisk, essentialsDone, isComplete, pct, riskColor, riskLabel } from '@/lib/format'
 import { emptyProject } from '@/data/seed'
@@ -66,7 +67,7 @@ const primaryBtn: React.CSSProperties = {
 export function Dashboard() {
   const { t, tp } = useLanguage()
   const { state, dispatch, addProject } = useApp()
-  const { isPro, loading: planLoading } = usePlan()
+  const { isPremium, loading: planLoading } = usePlan()
   const { session, signOut } = useAuth()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [upsell, setUpsell] = useState<string | null>(null)
@@ -86,7 +87,7 @@ export function Dashboard() {
   // Free plan: one project of your OWN. Projects someone else shared with you
   // stay fully usable and don't count — you didn't create them.
   const owned = state.projects.filter((p) => !p.role || p.role === 'owner').length
-  const atLimit = !isPro && !planLoading && owned >= FREE_PROJECT_LIMIT
+  const atLimit = !isPremium && !planLoading && owned >= FREE_PROJECT_LIMIT
 
   /**
    * Every "new project" affordance funnels through here, so there's one place
@@ -133,8 +134,19 @@ export function Dashboard() {
 
 
   // "Pick up where you left off" points at the first project still in progress.
+  // On a free plan it must not send them into a premium step: the card is the
+  // dashboard's one call to action, and pointing it at a lock would make the
+  // app feel gated rather than free-with-more-available. Walk forward to the
+  // next step they can actually work on; if the rest are all premium, leave it
+  // where it is, and the step itself makes the ask.
   const active = state.projects.find((p) => !isComplete(p))
-  const nextStage = active ? STAGES[active.currentStage] : null
+  let resumeIdx = active?.currentStage ?? 0
+  if (active && !isPremium && !planLoading) {
+    let i = resumeIdx
+    while (i < STAGES.length && STAGES[i].tier === 'premium') i++
+    if (i < STAGES.length) resumeIdx = i
+  }
+  const nextStage = active ? STAGES[resumeIdx] : null
 
   return (
     <div className="cq-root">
@@ -188,7 +200,7 @@ export function Dashboard() {
             {active && nextStage ? (
               <button
                 type="button"
-                onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: active.currentStage })}
+                onClick={() => dispatch({ type: 'OPEN_PROJECT', id: active.id, stageIdx: resumeIdx })}
                 style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(91,134,163,0.1)', border: '1px solid rgba(91,134,163,0.3)', borderRadius: '14px', padding: '18px 22px', marginBottom: '22px', cursor: 'pointer', fontFamily: 'inherit' }}
               >
                 <div style={{ width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0, background: 'rgba(91,134,163,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -282,6 +294,7 @@ export function Dashboard() {
               </div>
             )}
 
+            <Portfolio projects={state.projects} />
           </>
         )}
       </div>

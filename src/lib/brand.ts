@@ -8,10 +8,10 @@ import type { Project } from '@/types'
  * Both live in `stageData.executive`, so they ride along in the project's JSONB
  * and reach anonymous viewers of a shared brief with no extra DB plumbing.
  *
- * Branding is the Pro feature, so every read goes through `brandOf(project, pro)`
+ * Branding is the Premium feature, so every read goes through `brandOf(project, premium)`
  * and an unentitled project resolves to the Adaptus defaults no matter what its
  * JSON says. Gating here rather than at each render site means a project that
- * was branded on Pro (or edited by hand) simply reverts, and there's no report
+ * was branded on Premium (or edited by hand) simply reverts, and there's no report
  * surface that can accidentally skip the check.
  */
 
@@ -67,28 +67,28 @@ export interface Brand {
   logoRatio: number
   /** Whether the user set a colour of their own (vs. inheriting the default). */
   custom: boolean
-  /** Drop the Adaptus mark and the growth CTA. Pro only. */
+  /** Drop the Adaptus mark and the growth CTA. Premium only. */
   whiteLabel: boolean
   /** Whether branding is unlocked — what the upsell prompts key off. */
-  pro: boolean
+  premium: boolean
 }
 
 /**
- * Resolve a project's branding for a given entitlement. `pro` is the OWNER's
- * plan on a public share page (`project.ownerPro`) and the viewer's own plan
- * (`usePlan().isPro`) everywhere inside the app.
+ * Resolve a project's branding for a given entitlement. `premium` is the OWNER's
+ * plan on a public share page (`project.ownerPremium`) and the viewer's own plan
+ * (`usePlan().isPremium`) everywhere inside the app.
  */
-export function brandOf(project: Project, pro: boolean): Brand {
+export function brandOf(project: Project, premium: boolean): Brand {
   const exec = project.stageData.executive
-  const color = (pro ? normalizeHex(exec.brandColor ?? '') : null) ?? DEFAULT_BRAND
+  const color = (premium ? normalizeHex(exec.brandColor ?? '') : null) ?? DEFAULT_BRAND
   return {
     color,
     fg: readableOn(color),
-    logo: pro ? exec.brandLogo ?? '' : '',
+    logo: premium ? exec.brandLogo ?? '' : '',
     logoRatio: exec.brandLogoRatio || 1,
     custom: color !== DEFAULT_BRAND,
-    whiteLabel: pro && !!exec.hideBranding,
-    pro,
+    whiteLabel: premium && !!exec.hideBranding,
+    premium,
   }
 }
 

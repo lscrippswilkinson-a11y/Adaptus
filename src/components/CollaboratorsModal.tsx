@@ -25,7 +25,7 @@ import { tr } from '@/i18n/rich'
  */
 export function CollaboratorsModal({ project, onClose }: { project: Project; onClose: () => void }) {
   const isOwner = (project.role ?? 'owner') === 'owner'
-  const { isPro, loading: planLoading } = usePlan()
+  const { isPremium, loading: planLoading } = usePlan()
   const [upsell, setUpsell] = useState<string | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
@@ -44,7 +44,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
   // invites they haven't claimed yet. An open invite link is a seat about to be
   // taken, so it counts too, otherwise one link is an unlimited side door.
   const seatsUsed = members.filter((m) => m.role !== 'owner').length + invites.length + links.length
-  const seatLimited = !isPro && !planLoading && seatsUsed >= FREE_COLLABORATOR_LIMIT
+  const seatLimited = !isPremium && !planLoading && seatsUsed >= FREE_COLLABORATOR_LIMIT
 
   /** The bottleneck they've just hit: bringing a second person in. */
   const askForSeat = () => {
@@ -231,7 +231,7 @@ export function CollaboratorsModal({ project, onClose }: { project: Project; onC
               >
                 <Lock size={14} color="var(--accent-text)" style={{ flexShrink: 0 }} />
                 <span style={{ fontSize: '12px', color: 'rgba(var(--fg),0.7)', lineHeight: 1.5 }}>
-                  {t('One teammate is included free. Adaptus Pro adds the rest of the team.')}
+                  {t('One teammate is included free. Adaptus Premium adds the rest of the team.')}
                 </span>
               </button>
             )}

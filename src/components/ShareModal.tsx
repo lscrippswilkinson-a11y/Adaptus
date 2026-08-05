@@ -21,10 +21,10 @@ const EXPORT_W = 816
  * the link. Updates flow back through `onUpdate` (a project-level dispatch).
  */
 export function ShareModal({ project, onUpdate, onClose }: { project: Project; onUpdate: (p: Project) => void; onClose: () => void }) {
-  const { isPro, loading: planLoading } = usePlan()
-  // Branding is Pro; locked until the plan is known so a slow read can't flash
+  const { isPremium, loading: planLoading } = usePlan()
+  // Branding is Premium; locked until the plan is known so a slow read can't flash
   // the controls open.
-  const locked = !isPro || planLoading
+  const locked = !isPremium || planLoading
   const [upsell, setUpsell] = useState<string | null>(null)
   const [ask, setAsk] = useState(project.stageData.executive.ask ?? '')
   const [hideBranding, setHideBranding] = useState(project.stageData.executive.hideBranding ?? false)
@@ -75,7 +75,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
 
   const toggleBranding = () => {
     if (locked) {
-      setUpsell(t('Removing the Adaptus mark from your brief is part of Pro. Upgrade and what you send out is entirely your own.'))
+      setUpsell(t('Removing the Adaptus mark from your brief is part of Premium. Upgrade and what you send out is entirely your own.'))
       return
     }
     const next = !hideBranding
@@ -128,7 +128,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
     commitAsk()
     setBusy('pptx')
     try {
-      await downloadDeck(previewProject, `${fileBase()}-status-brief.pptx`, 'brief', isPro)
+      await downloadDeck(previewProject, `${fileBase()}-status-brief.pptx`, 'brief', isPremium)
       askAfterExport()
     } catch (err) {
       console.error('[adaptus] PPTX generation failed', err)
@@ -224,7 +224,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             />
 
             {/* The user's own logo + colour, carried by every report below. */}
-            <BrandingPanel project={project} onUpdate={onUpdate} onUpgrade={() => setUpsell(t('Your logo and colour on every report are part of Pro.'))} />
+            <BrandingPanel project={project} onUpdate={onUpdate} onUpgrade={() => setUpsell(t('Your logo and colour on every report are part of Premium.'))} />
 
             {/* White-label toggle: make the brief look fully the user's own.
                 Free users can click it — it opens the upsell rather than doing
@@ -249,7 +249,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '14px', fontWeight: 600, color: 'var(--text)' }}>
                   {t('Remove Adaptus branding')}
                   {locked && (
-                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '999px', padding: '2px 8px' }}>{t('Pro')}</span>
+                    <span style={{ fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--accent-text)', background: 'rgba(91,134,163,0.15)', border: '1px solid rgba(91,134,163,0.35)', borderRadius: '999px', padding: '2px 8px' }}>{t('Premium')}</span>
                   )}
                 </span>
                 <span style={{ display: 'block', fontSize: '12px', color: 'rgba(var(--fg),0.55)', lineHeight: 1.5, marginTop: '3px' }}>
@@ -265,7 +265,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
             <div className="cq-lbl" style={{ marginBottom: '10px' }}>{t('Preview')}</div>
             <div id="brief-print" ref={previewWrapRef} style={{ overflow: 'hidden', height: preview.height || undefined }}>
               <div ref={previewInnerRef} style={{ width: `${EXPORT_W}px`, transform: `scale(${preview.scale})`, transformOrigin: 'top left' }}>
-                <StatusBrief project={previewProject} pro={isPro} />
+                <StatusBrief project={previewProject} premium={isPremium} />
               </div>
             </div>
 
@@ -275,7 +275,7 @@ export function ShareModal({ project, onUpdate, onClose }: { project: Project; o
                 about 230px each. */}
             <div aria-hidden style={{ position: 'fixed', top: 0, left: '-10000px', width: `${EXPORT_W}px`, pointerEvents: 'none' }}>
               <div ref={briefRef}>
-                <StatusBrief project={previewProject} pro={isPro} />
+                <StatusBrief project={previewProject} premium={isPremium} />
               </div>
             </div>
           </>

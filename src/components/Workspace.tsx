@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { ArrowLeft, ArrowRight, Check, Eye, Share2, Sparkles, Users } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Check, Eye, Lock, Share2, Sparkles, Users } from 'lucide-react'
 import type { FeedbackItem, Project } from '@/types'
 import { useApp } from '@/state/AppContext'
+import { usePlan } from '@/state/PlanContext'
+import { PremiumTeaser, UpgradeModal } from '@/components/UpgradeModal'
 import { useLocalStorage } from '@/hooks/useLocalStorage'
 import { hasSupabase } from '@/lib/supabase'
 import { fetchFeedback } from '@/lib/projectsRepo'
-import { PHASES, STAGES } from '@/data/stages'
+import { PHASES, PREMIUM_COUNT, STAGES } from '@/data/stages'
 import { pct, preparedness } from '@/lib/format'
 import { STAGE_COMPONENTS } from '@/components/stages'
 import { ReadOnlyCtx, StageScreenCtx } from '@/components/StageFlow'
@@ -70,20 +72,40 @@ export function Workspace({ project }: { project: Project }) {
 
   const [sharing, setSharing] = useState(false)
   const [collab, setCollab] = useState(false)
-  // Advanced (optional, in-depth) steps are hidden from the sidebar until the
-  // user explicitly toggles them on — they do NOT auto-reveal when an advanced
+  const [upsell, setUpsell] = useState<string | null>(null)
+  // Premium (optional, in-depth) steps are hidden from the sidebar until the
+  // user explicitly toggles them on — they do NOT auto-reveal when a premium
   // step happens to be the active one. Remembered per project (per browser).
-  const [showAdvanced, setShowAdvanced] = useLocalStorage(`adaptus.showAdvanced.${project.id}`, false)
-  const advancedCount = STAGES.filter((s) => s.tier === 'advanced').length
+  const [showPremium, setShowPremium] = useLocalStorage(`adaptus.showPremium.${project.id}`, false)
   const isOwner = (project.role ?? 'owner') === 'owner'
   const isViewer = project.role === 'viewer'
+
+  // Premium steps are a paid feature. `entitled` is the OWNER's question for a
+  // shared project — a viewer or editor works inside someone else's project and
+  // simply sees whatever that project's owner has; but the plan we can read is
+  // the signed-in user's, so a collaborator on a free account still gets the
+  // ask. Locked steps stay hidden rather than appearing greyed-out mid-flow.
+  const { isPremium, loading: planLoading } = usePlan()
+  const premiumLocked = !isPremium && !planLoading
+  const revealed = showPremium && !premiumLocked
+  /** The step currently open is itself behind the lock. */
+  const lockedStage = stage.tier === 'premium' && premiumLocked
+
+  /** The toggle at the foot of the sidebar: reveal, or ask, at the bottleneck. */
+  const togglePremium = () => {
+    if (premiumLocked) {
+      setUpsell(t('The premium steps go deeper for a big or risky change: key people, what could go wrong, pushback, testing, what you’re waiting on, and making it stick.'))
+      return
+    }
+    setShowPremium((v) => !v)
+  }
 
   // Section-level Previous/Next. Advancing auto-completes the current step:
   // COMPLETE_STAGE both marks it done and moves on (skipped for viewers, or when
   // the launch dashboard isn't fully prepared, or when it's already complete).
-  // Next/Previous walk the visible path: when advanced steps are hidden they're
+  // Next/Previous walk the visible path: when premium steps are hidden they're
   // skipped entirely, so the flow stays essential-only until the toggle is on.
-  const isVisible = (i: number) => STAGES[i].tier === 'essential' || showAdvanced
+  const isVisible = (i: number) => STAGES[i].tier === 'essential' || revealed
   let prevIdx = -1
   for (let i = state.stageIdx - 1; i >= 0; i--) if (isVisible(i)) { prevIdx = i; break }
   let nextIdx = -1
@@ -95,7 +117,8 @@ export function Workspace({ project }: { project: Project }) {
     if (!nextStage) return
     // Stage completion is logged server-side by a DB trigger on the projects
     // table (see supabase/progress_events.sql), so there's nothing to do here.
-    if (!isViewer && !done && canComplete) dispatch({ type: 'COMPLETE_STAGE', toIdx: nextIdx })
+    // A locked premium step is never auto-completed on the way past it.
+    if (!isViewer && !done && canComplete && !lockedStage) dispatch({ type: 'COMPLETE_STAGE', toIdx: nextIdx })
     else dispatch({ type: 'GO_TO_STAGE', stageIdx: nextIdx })
   }
 
@@ -164,7 +187,7 @@ export function Workspace({ project }: { project: Project }) {
           <div style={{ flex: 1 }}>
             {PHASES.map((phase, pi) => {
               const visible = STAGES.map((s, i) => ({ s, i }))
-                .filter(({ s }) => s.phase === phase.id && (s.tier === 'essential' || showAdvanced))
+                .filter(({ s }) => s.phase === phase.id && (s.tier === 'essential' || revealed))
               const doneCount = visible.filter(({ s }) => project.completedStages.includes(s.id)).length
               return (
                 <div key={phase.id} style={{ marginBottom: '6px' }}>
@@ -211,7 +234,7 @@ export function Workspace({ project }: { project: Project }) {
                         {openByStage[s.id] > 0 && (
                           <span title={tp('{count} open feedback', { count: openByStage[s.id] })} style={{ fontSize: '10px', fontWeight: 700, color: 'var(--on-accent)', background: '#5B86A3', borderRadius: '999px', minWidth: '16px', height: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', flexShrink: 0 }}>{openByStage[s.id]}</span>
                         )}
-                        {s.tier === 'advanced' && !openByStage[s.id] && (
+                        {s.tier === 'premium' && !openByStage[s.id] && (
                           <span style={{ fontSize: '9px', color: 'rgba(var(--fg),0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', flexShrink: 0 }}>{t('opt')}</span>
                         )}
                       </button>
@@ -222,32 +245,34 @@ export function Workspace({ project }: { project: Project }) {
             })}
           </div>
 
-          {/* Advanced-steps toggle, with hover-revealed help. Advanced steps stay
-              hidden until this is on — they never auto-reveal on navigation. */}
+          {/* Premium-steps toggle, with hover-revealed help. Premium steps stay
+              hidden until this is on — they never auto-reveal on navigation. On
+              a free plan the same button is the ask: this is a bottleneck the
+              user walked into, which is the only place Premium is ever sold. */}
           <div className="adv-help-wrap" style={{ position: 'relative', margin: '8px 14px 4px' }}>
             <button
               type="button"
-              onClick={() => setShowAdvanced((v) => !v)}
+              onClick={togglePremium}
               style={{
                 width: '100%',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                background: showAdvanced ? 'rgba(var(--fg),0.04)' : 'linear-gradient(135deg, rgba(91,134,163,0.28), rgba(91,134,163,0.18))',
-                border: `1px solid ${showAdvanced ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.6)'}`,
+                background: revealed ? 'rgba(var(--fg),0.04)' : 'linear-gradient(135deg, rgba(91,134,163,0.28), rgba(91,134,163,0.18))',
+                border: `1px solid ${revealed ? 'rgba(var(--fg),0.12)' : 'rgba(91,134,163,0.6)'}`,
                 borderRadius: '10px',
-                padding: showAdvanced ? '11px 12px' : '13px 14px',
-                color: showAdvanced ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
-                fontSize: showAdvanced ? '12.5px' : '13.5px',
+                padding: revealed ? '11px 12px' : '13px 14px',
+                color: revealed ? 'rgba(var(--fg),0.6)' : 'var(--accent-text)',
+                fontSize: revealed ? '12.5px' : '13.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
-                boxShadow: showAdvanced ? 'none' : '0 3px 14px rgba(91,134,163,0.22)',
+                boxShadow: revealed ? 'none' : '0 3px 14px rgba(91,134,163,0.22)',
               }}
             >
-              <Sparkles size={showAdvanced ? 15 : 17} />
-              {showAdvanced ? t('Hide advanced steps') : tp('Show advanced steps ({count})', { count: advancedCount })}
+              {premiumLocked ? <Lock size={16} /> : <Sparkles size={revealed ? 15 : 17} />}
+              {revealed ? t('Hide premium steps') : tp('Show premium steps ({count})', { count: PREMIUM_COUNT })}
             </button>
             <div
               className="adv-help"
@@ -268,6 +293,11 @@ export function Workspace({ project }: { project: Project }) {
                   node={<span style={{ color: 'rgba(var(--fg),0.75)', fontWeight: 600 }}>{t('Skip them')}</span>}
                 />
               </div>
+              {premiumLocked && (
+                <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(var(--fg),0.1)', color: 'var(--accent-text)', fontWeight: 600 }}>
+                  {t('Part of Adaptus Premium. The essential steps stay free.')}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -276,8 +306,11 @@ export function Workspace({ project }: { project: Project }) {
         <div ref={mainRef} style={{ flex: 1, padding: '26px 34px', overflowY: 'auto', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '22px' }}>
             <div>
-              {stage.tier === 'advanced' && (
+              {stage.tier === 'premium' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: onIntro ? 0 : '10px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--accent-text)', border: '1px solid rgba(91,134,163,0.35)', background: 'rgba(91,134,163,0.12)', borderRadius: '20px', padding: '4px 10px' }}>
+                    <Sparkles size={11} /> {t('Premium')}
+                  </span>
                   <span style={{ fontSize: '11px', color: 'rgba(var(--fg),0.55)', border: '1px solid rgba(var(--fg),0.12)', borderRadius: '20px', padding: '4px 10px' }}>{t('Optional')}</span>
                 </div>
               )}
@@ -301,12 +334,30 @@ export function Workspace({ project }: { project: Project }) {
 
           {/* Remount on stage/project change so input-local state resets cleanly.
               For viewers, ReadOnlyCtx forces the flat summary view and the
-              disabled fieldset makes every input read-only. */}
-          <ReadOnlyCtx.Provider value={isViewer}>
-            <fieldset disabled={isViewer} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
+              disabled fieldset makes every input read-only.
+
+              A locked premium step is reachable when a project was left on one
+              (or was built while subscribed), so it renders the real step behind
+              the teaser's blur rather than an empty page. ReadOnlyCtx is forced
+              on for the same reason it is for viewers: it drops the guided
+              wizard for the flat summary, which is both a better picture and a
+              lot less machinery to run behind a lock. */}
+          <ReadOnlyCtx.Provider value={isViewer || lockedStage}>
+            <fieldset disabled={isViewer || lockedStage} style={{ border: 'none', padding: 0, margin: 0, minInlineSize: 0 }}>
               <StageScreenCtx.Provider value={setOnIntro}>
                 <ShareCtx.Provider value={() => setSharing(true)}>
-                  {StageComponent && <StageComponent key={`${project.id}-${stage.id}`} />}
+                  {StageComponent &&
+                    (lockedStage ? (
+                      <PremiumTeaser
+                        title={t('A premium step')}
+                        body={t('This is one of six deeper steps for a big or risky change. The essential steps stay free.')}
+                        onUpgrade={() => setUpsell(tp('“{step}” is one of the premium steps. They go deeper for a big or risky change.', { step: t(stage.label) }))}
+                      >
+                        <StageComponent key={`${project.id}-${stage.id}`} />
+                      </PremiumTeaser>
+                    ) : (
+                      <StageComponent key={`${project.id}-${stage.id}`} />
+                    ))}
                 </ShareCtx.Provider>
               </StageScreenCtx.Provider>
             </fieldset>
@@ -350,6 +401,7 @@ export function Workspace({ project }: { project: Project }) {
         />
       )}
       {collab && <CollaboratorsModal project={project} onClose={() => setCollab(false)} />}
+      {upsell && <UpgradeModal reason={upsell} onClose={() => setUpsell(null)} />}
     </div>
   )
 }

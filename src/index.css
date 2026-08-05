@@ -59,6 +59,17 @@ body,
   --surface-1-border: rgba(255, 255, 255, 0.07);
   --box-shadow: none;
   --bg-base: #0b0d18;
+  --bg-rgb: 11, 13, 24; /* --bg-base as channels, for scrims that fade to the canvas */
+  /*
+   * Trend-chart series. Three hues that stay distinguishable under deutan,
+   * protan and tritan colour blindness, validated against this theme's card
+   * surface for lightness band, chroma, CVD separation and contrast. They are
+   * NOT the status ramp (green/amber/red): those mean "good/warning/bad"
+   * everywhere else in the app and must not double as series identity.
+   */
+  --series-progress: #4c9bd1;
+  --series-readiness: #ba8a22;
+  --series-risk: #d0619a;
   --bg-image:
     radial-gradient(1100px 760px at 25% -10%, rgba(91, 134, 163, 0.16), transparent 60%),
     radial-gradient(900px 650px at 95% 5%, rgba(91, 134, 163, 0.06), transparent 55%),
@@ -81,6 +92,11 @@ body,
   --surface-1-border: rgba(17, 24, 39, 0.1);
   --box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
   --bg-base: #f8f9fa;
+  --bg-rgb: 248, 249, 250;
+  /* Same three hues, re-stepped for a white card (not an automatic flip). */
+  --series-progress: #2e6e9e;
+  --series-readiness: #c9861a;
+  --series-risk: #b03a72;
   --bg-image:
     radial-gradient(1100px 760px at 25% -10%, rgba(91, 134, 163, 0.05), transparent 60%),
     linear-gradient(180deg, #fbfcfd 0%, #f8f9fa 45%, #f1f3f5 100%);
